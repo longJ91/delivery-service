@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 /**
  * 장바구니 서비스
@@ -45,30 +46,27 @@ public class CartService implements ManageCartUseCase {
 
     @Override
     public CartItem addItem(String customerId, AddCartItemCommand command) {
-        // 상품 조회
+        // 상품 조회 및 판매 가능 여부 확인 (Optional 체이닝)
         Product product = loadProductPort.findById(command.productId())
+                .filter(Product::isSellable)
                 .orElseThrow(() -> new ProductNotFoundException(command.productId()));
 
-        // 판매 가능 여부 확인
-        if (!product.isSellable()) {
-            throw new IllegalStateException("Product is not sellable: " + command.productId());
-        }
+        // 변형 상품 조회 (Optional 활용)
+        Optional<ProductVariant> variantOpt = Optional.ofNullable(command.variantId())
+                .flatMap(product::findVariant)
+                .map(variant -> {
+                    if (!variant.hasStock()) {
+                        throw new IllegalStateException("Variant is out of stock: " + command.variantId());
+                    }
+                    return variant;
+                });
 
-        // 가격 및 이름 결정
-        String productName = product.getName();
-        String variantName = null;
-        BigDecimal unitPrice = product.getBasePrice();
-        String thumbnailUrl = product.getImageUrls().isEmpty() ? null : product.getImageUrls().get(0);
-
-        if (command.variantId() != null) {
-            ProductVariant variant = product.findVariant(command.variantId())
-                    .orElseThrow(() -> new IllegalArgumentException("Variant not found: " + command.variantId()));
-            if (!variant.hasStock()) {
-                throw new IllegalStateException("Variant is out of stock: " + command.variantId());
-            }
-            variantName = variant.name();
-            unitPrice = product.calculatePrice(command.variantId());
-        }
+        // 가격 및 이름 결정 (함수형 추출)
+        String variantName = variantOpt.map(ProductVariant::name).orElse(null);
+        BigDecimal unitPrice = variantOpt
+                .map(v -> product.calculatePrice(command.variantId()))
+                .orElse(product.getBasePrice());
+        String thumbnailUrl = product.getImageUrls().stream().findFirst().orElse(null);
 
         // 장바구니 조회 또는 생성
         Cart cart = loadCartPort.findByCustomerId(customerId)
@@ -77,7 +75,7 @@ public class CartService implements ManageCartUseCase {
         // 상품 추가
         CartItem item = cart.addItem(
                 command.productId(),
-                productName,
+                product.getName(),
                 command.variantId(),
                 variantName,
                 product.getSellerId(),

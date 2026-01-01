@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Webhook Service - Application Service
@@ -50,23 +52,23 @@ public class WebhookService implements ManageWebhookUseCase {
     public WebhookSubscription updateSubscription(UpdateSubscriptionCommand command) {
         WebhookSubscription subscription = getSubscriptionWithOwnerCheck(command.sellerId(), command.subscriptionId());
 
-        if (command.name() != null && !command.name().isBlank()) {
-            subscription.updateName(command.name());
-        }
+        // Optional + filter로 조건부 업데이트 (함수형)
+        Optional.ofNullable(command.name())
+                .filter(name -> !name.isBlank())
+                .ifPresent(subscription::updateName);
 
-        if (command.endpointUrl() != null && !command.endpointUrl().isBlank()) {
-            subscription.updateEndpoint(command.endpointUrl());
-        }
+        Optional.ofNullable(command.endpointUrl())
+                .filter(url -> !url.isBlank())
+                .ifPresent(subscription::updateEndpoint);
 
-        if (command.subscribedEvents() != null && !command.subscribedEvents().isEmpty()) {
-            // 기존 이벤트 모두 제거 후 새로 추가
-            for (WebhookEventType eventType : WebhookEventType.values()) {
-                subscription.unsubscribeEvent(eventType);
-            }
-            for (WebhookEventType eventType : command.subscribedEvents()) {
-                subscription.subscribeEvent(eventType);
-            }
-        }
+        // Stream으로 이벤트 구독 갱신 (함수형)
+        Optional.ofNullable(command.subscribedEvents())
+                .filter(events -> !events.isEmpty())
+                .ifPresent(events -> {
+                    Stream.of(WebhookEventType.values())
+                            .forEach(subscription::unsubscribeEvent);
+                    events.forEach(subscription::subscribeEvent);
+                });
 
         return saveWebhookPort.saveSubscription(subscription);
     }

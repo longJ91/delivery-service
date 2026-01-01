@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Seller Service - Application Service
@@ -50,13 +52,14 @@ public class SellerService implements ManageSellerUseCase {
                 .sellerType(command.sellerType())
                 .status(SellerStatus.PENDING);
 
-        if (command.warehouseAddress() != null) {
-            builder.warehouseAddress(command.warehouseAddress().toDomain());
-        }
+        // Optional.ifPresent로 조건부 설정 (함수형)
+        Optional.ofNullable(command.warehouseAddress())
+                .map(ManageSellerUseCase.WarehouseAddressCommand::toDomain)
+                .ifPresent(builder::warehouseAddress);
 
-        if (command.categoryIds() != null) {
-            builder.categoryIds(new ArrayList<>(command.categoryIds()));
-        }
+        Optional.ofNullable(command.categoryIds())
+                .map(ArrayList::new)
+                .ifPresent(builder::categoryIds);
 
         Seller seller = builder.build();
         return saveSellerPort.save(seller);
@@ -66,14 +69,22 @@ public class SellerService implements ManageSellerUseCase {
     public Seller updateSellerInfo(UpdateSellerInfoCommand command) {
         Seller seller = getSeller(command.sellerId());
 
+        // Optional.orElseGet으로 조건부 값 결정 (함수형)
         seller.updateInfo(
-                command.businessName() != null ? command.businessName() : seller.getBusinessName(),
-                command.representativeName() != null ? command.representativeName() : seller.getRepresentativeName(),
-                command.email() != null ? command.email() : seller.getEmail(),
-                command.phoneNumber() != null ? command.phoneNumber() : seller.getPhoneNumber()
+                getOrDefault(command.businessName(), seller::getBusinessName),
+                getOrDefault(command.representativeName(), seller::getRepresentativeName),
+                getOrDefault(command.email(), seller::getEmail),
+                getOrDefault(command.phoneNumber(), seller::getPhoneNumber)
         );
 
         return saveSellerPort.save(seller);
+    }
+
+    /**
+     * null이 아니면 새 값을 반환하고, null이면 기본값 공급자에서 값을 가져옴
+     */
+    private <T> T getOrDefault(T value, Supplier<T> defaultSupplier) {
+        return Optional.ofNullable(value).orElseGet(defaultSupplier);
     }
 
     @Override

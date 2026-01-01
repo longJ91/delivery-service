@@ -114,20 +114,18 @@ public class Product {
      * 재고 차감
      */
     public void decreaseStock(String variantId, int quantity) {
-        if (variantId != null) {
-            for (int i = 0; i < variants.size(); i++) {
-                if (variants.get(i).id().equals(variantId)) {
-                    variants.set(i, variants.get(i).decreaseStock(quantity));
-                    break;
-                }
-            }
-        } else {
-            // 단일 상품의 경우
-            this.totalStockQuantity -= quantity;
-            if (this.totalStockQuantity < 0) {
-                throw new IllegalArgumentException("Not enough stock");
-            }
-        }
+        // Optional.ifPresentOrElse로 변형/단일 상품 분기 (함수형)
+        Optional.ofNullable(variantId)
+                .ifPresentOrElse(
+                        vid -> variants.replaceAll(v ->
+                                v.id().equals(vid) ? v.decreaseStock(quantity) : v),
+                        () -> {
+                            this.totalStockQuantity -= quantity;
+                            if (this.totalStockQuantity < 0) {
+                                throw new IllegalArgumentException("Not enough stock");
+                            }
+                        }
+                );
         updateStockStatus();
         this.updatedAt = LocalDateTime.now();
     }
@@ -136,16 +134,13 @@ public class Product {
      * 재고 추가
      */
     public void increaseStock(String variantId, int quantity) {
-        if (variantId != null) {
-            for (int i = 0; i < variants.size(); i++) {
-                if (variants.get(i).id().equals(variantId)) {
-                    variants.set(i, variants.get(i).increaseStock(quantity));
-                    break;
-                }
-            }
-        } else {
-            this.totalStockQuantity += quantity;
-        }
+        // Optional.ifPresentOrElse로 변형/단일 상품 분기 (함수형)
+        Optional.ofNullable(variantId)
+                .ifPresentOrElse(
+                        vid -> variants.replaceAll(v ->
+                                v.id().equals(vid) ? v.increaseStock(quantity) : v),
+                        () -> this.totalStockQuantity += quantity
+                );
         updateStockStatus();
         this.updatedAt = LocalDateTime.now();
     }

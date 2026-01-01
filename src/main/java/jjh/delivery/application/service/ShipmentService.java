@@ -9,6 +9,10 @@ import jjh.delivery.domain.shipment.exception.ShipmentNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+
 /**
  * Shipment Service - Application Layer
  */
@@ -18,6 +22,17 @@ public class ShipmentService implements ManageShipmentUseCase {
 
     private final LoadShipmentPort loadShipmentPort;
     private final SaveShipmentPort saveShipmentPort;
+
+    // Strategy Map 패턴: 상태별 핸들러 (함수형)
+    private static final Map<ShipmentStatus, BiConsumer<Shipment, UpdateShipmentStatusCommand>> STATUS_HANDLERS = Map.of(
+            ShipmentStatus.PICKED_UP, (s, cmd) -> s.pickUp(cmd.location()),
+            ShipmentStatus.IN_TRANSIT, (s, cmd) -> s.inTransit(cmd.location(), cmd.description()),
+            ShipmentStatus.OUT_FOR_DELIVERY, (s, cmd) -> s.outForDelivery(cmd.location()),
+            ShipmentStatus.DELIVERED, (s, cmd) -> s.deliver(cmd.location()),
+            ShipmentStatus.FAILED_ATTEMPT, (s, cmd) -> s.failDeliveryAttempt(cmd.location(), cmd.description()),
+            ShipmentStatus.CANCELLED, (s, cmd) -> s.cancel(cmd.description()),
+            ShipmentStatus.RETURNED, (s, cmd) -> s.returnToSender(cmd.location(), cmd.description())
+    );
 
     public ShipmentService(
             LoadShipmentPort loadShipmentPort,
@@ -56,20 +71,10 @@ public class ShipmentService implements ManageShipmentUseCase {
         Shipment shipment = loadShipmentPort.findById(command.shipmentId())
                 .orElseThrow(() -> new ShipmentNotFoundException(command.shipmentId()));
 
-        ShipmentStatus status = command.status();
-        String location = command.location();
-        String description = command.description();
-
-        switch (status) {
-            case PICKED_UP -> shipment.pickUp(location);
-            case IN_TRANSIT -> shipment.inTransit(location, description);
-            case OUT_FOR_DELIVERY -> shipment.outForDelivery(location);
-            case DELIVERED -> shipment.deliver(location);
-            case FAILED_ATTEMPT -> shipment.failDeliveryAttempt(location, description);
-            case CANCELLED -> shipment.cancel(description);
-            case RETURNED -> shipment.returnToSender(location, description);
-            default -> throw new IllegalArgumentException("지원하지 않는 상태 변경입니다: " + status);
-        }
+        // Strategy Map 패턴으로 상태별 핸들러 적용 (함수형)
+        Optional.ofNullable(STATUS_HANDLERS.get(command.status()))
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 상태 변경입니다: " + command.status()))
+                .accept(shipment, command);
 
         return saveShipmentPort.save(shipment);
     }

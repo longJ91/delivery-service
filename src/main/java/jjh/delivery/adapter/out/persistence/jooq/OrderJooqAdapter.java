@@ -13,10 +13,12 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.table;
@@ -37,42 +39,24 @@ public class OrderJooqAdapter implements OrderQueryPort {
 
     @Override
     public List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria) {
-        List<Condition> conditions = new ArrayList<>();
+        // Stream + Optional로 동적 조건 구성 (함수형)
+        Condition combinedCondition = Stream.of(
+                        toCondition(criteria.sellerIds(), ids -> field("seller_id").in(ids)),
+                        toCondition(criteria.statuses(),
+                                statuses -> field("status").in(statuses.stream().map(Enum::name).toList())),
+                        toCondition(criteria.minAmount(), amount -> field("total_amount").ge(amount)),
+                        toCondition(criteria.maxAmount(), amount -> field("total_amount").le(amount)),
+                        toCondition(criteria.fromDate(), date -> field("created_at").ge(date)),
+                        toCondition(criteria.toDate(), date -> field("created_at").le(date))
+                )
+                .flatMap(Optional::stream)
+                .reduce(Condition::and)
+                .orElse(DSL.trueCondition());
 
-        if (criteria.sellerIds() != null && !criteria.sellerIds().isEmpty()) {
-            conditions.add(field("seller_id").in(criteria.sellerIds()));
-        }
-
-        if (criteria.statuses() != null && !criteria.statuses().isEmpty()) {
-            List<String> statusStrings = criteria.statuses().stream()
-                    .map(Enum::name)
-                    .toList();
-            conditions.add(field("status").in(statusStrings));
-        }
-
-        if (criteria.minAmount() != null) {
-            conditions.add(field("total_amount").ge(criteria.minAmount()));
-        }
-
-        if (criteria.maxAmount() != null) {
-            conditions.add(field("total_amount").le(criteria.maxAmount()));
-        }
-
-        if (criteria.fromDate() != null) {
-            conditions.add(field("created_at").ge(criteria.fromDate()));
-        }
-
-        if (criteria.toDate() != null) {
-            conditions.add(field("created_at").le(criteria.toDate()));
-        }
-
-        Condition combinedCondition = conditions.isEmpty()
-                ? DSL.trueCondition()
-                : conditions.stream().reduce(Condition::and).orElse(DSL.trueCondition());
-
+        var sortField = Optional.ofNullable(criteria.sortBy()).orElse("created_at");
         var orderField = criteria.ascending()
-                ? field(criteria.sortBy() != null ? criteria.sortBy() : "created_at").asc()
-                : field(criteria.sortBy() != null ? criteria.sortBy() : "created_at").desc();
+                ? field(sortField).asc()
+                : field(sortField).desc();
 
         List<Record> records = dsl.select()
                 .from(table("orders"))
@@ -91,6 +75,22 @@ public class OrderJooqAdapter implements OrderQueryPort {
         return records.stream()
                 .map(r -> mapToOrder(r, itemsMap.getOrDefault(r.get("id", String.class), List.of())))
                 .toList();
+    }
+
+    /**
+     * 컬렉션 값이 null이 아니고 비어있지 않으면 조건 생성 (함수형 헬퍼)
+     */
+    private <T extends Iterable<?>> Optional<Condition> toCondition(T value, Function<T, Condition> mapper) {
+        return Optional.ofNullable(value)
+                .filter(v -> v.iterator().hasNext())
+                .map(mapper);
+    }
+
+    /**
+     * 단일 값이 null이 아니면 조건 생성 (함수형 헬퍼)
+     */
+    private <T> Optional<Condition> toCondition(T value, Function<T, Condition> mapper) {
+        return Optional.ofNullable(value).map(mapper);
     }
 
     @Override
@@ -129,34 +129,30 @@ public class OrderJooqAdapter implements OrderQueryPort {
 
     @Override
     public List<Order> findOrdersForReport(ReportCriteria criteria) {
+        // Stream + Optional로 조건 구성 (함수형)
+        Condition condition = Stream.of(
+                        toCondition(criteria.sellerId(), id -> field("seller_id").eq(id)),
+                        toCondition(criteria.fromDate(), date -> field("created_at").ge(date)),
+                        toCondition(criteria.toDate(), date -> field("created_at").le(date))
+                )
+                .flatMap(Optional::stream)
+                .reduce(Condition::and)
+                .orElse(DSL.trueCondition());
+
         List<Record> records = dsl.select()
                 .from(table("orders"))
-                .where(criteria.sellerId() != null
-                        ? field("seller_id").eq(criteria.sellerId())
-                        : DSL.trueCondition())
-                .and(criteria.fromDate() != null
-                        ? field("created_at").ge(criteria.fromDate())
-                        : DSL.trueCondition())
-                .and(criteria.toDate() != null
-                        ? field("created_at").le(criteria.toDate())
-                        : DSL.trueCondition())
+                .where(condition)
                 .orderBy(field("created_at").desc())
                 .fetch();
 
-        if (!criteria.includeItems()) {
-            return records.stream()
-                    .map(r -> mapToOrder(r, List.of()))
-                    .toList();
-        }
-
-        List<String> orderIds = records.stream()
-                .map(r -> r.get("id", String.class))
-                .toList();
-
-        Map<String, List<OrderItem>> itemsMap = fetchOrderItems(orderIds);
+        // 함수 합성: 아이템 포함 여부에 따라 다른 매핑 전략 (함수형)
+        Function<Record, String> extractId = r -> r.get("id", String.class);
+        Map<String, List<OrderItem>> itemsMap = criteria.includeItems()
+                ? fetchOrderItems(records.stream().map(extractId).toList())
+                : Map.of();
 
         return records.stream()
-                .map(r -> mapToOrder(r, itemsMap.getOrDefault(r.get("id", String.class), List.of())))
+                .map(r -> mapToOrder(r, itemsMap.getOrDefault(extractId.apply(r), List.of())))
                 .toList();
     }
 

@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * Review Service - Application Layer
@@ -39,11 +41,12 @@ public class ReviewService implements ManageReviewUseCase {
             throw new IllegalStateException("이미 해당 주문에 대한 리뷰가 존재합니다: " + command.orderId());
         }
 
-        List<ReviewImage> images = command.imageUrls() != null ?
-                command.imageUrls().stream()
-                        .map(url -> ReviewImage.ofNew(url, command.imageUrls().indexOf(url)))
-                        .toList()
-                : List.of();
+        // Optional + IntStream으로 이미지 처리 (성능 개선: O(n²) → O(n))
+        List<ReviewImage> images = Optional.ofNullable(command.imageUrls())
+                .map(urls -> IntStream.range(0, urls.size())
+                        .mapToObj(i -> ReviewImage.ofNew(urls.get(i), i))
+                        .toList())
+                .orElse(List.of());
 
         Review review = Review.builder()
                 .orderId(command.orderId())
@@ -70,13 +73,12 @@ public class ReviewService implements ManageReviewUseCase {
 
         review.updateContent(command.rating(), command.content());
 
-        // 이미지 교체
-        if (command.imageUrls() != null) {
-            List<ReviewImage> images = command.imageUrls().stream()
-                    .map(url -> ReviewImage.ofNew(url, command.imageUrls().indexOf(url)))
-                    .toList();
-            review.replaceImages(images);
-        }
+        // Optional + IntStream으로 이미지 교체 (함수형)
+        Optional.ofNullable(command.imageUrls())
+                .map(urls -> IntStream.range(0, urls.size())
+                        .mapToObj(i -> ReviewImage.ofNew(urls.get(i), i))
+                        .toList())
+                .ifPresent(review::replaceImages);
 
         return saveReviewPort.save(review);
     }

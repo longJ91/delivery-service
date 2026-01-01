@@ -12,9 +12,9 @@ import jjh.delivery.domain.customer.CustomerAddress;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Customer JPA Adapter - Driven Adapter (Outbound)
@@ -62,11 +62,10 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
     @Override
     @Transactional
     public Customer save(Customer customer) {
-        CustomerJpaEntity existing = repository.findByIdWithAddresses(customer.getId()).orElse(null);
-        if (existing != null) {
-            return updateExisting(existing, customer);
-        }
-        throw new IllegalStateException("Customer not found for update: " + customer.getId());
+        // Optional 체이닝으로 조회 및 업데이트 (함수형)
+        return repository.findByIdWithAddresses(customer.getId())
+                .map(existing -> updateExisting(existing, customer))
+                .orElseThrow(() -> new IllegalStateException("Customer not found for update: " + customer.getId()));
     }
 
     @Override
@@ -106,49 +105,48 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
     }
 
     private void syncAddresses(CustomerJpaEntity existing, Customer customer) {
-        // 기존 주소 ID 집합
-        Set<String> existingAddressIds = new HashSet<>();
-        existing.getAddresses().forEach(addr -> existingAddressIds.add(addr.getId()));
+        // Stream으로 ID 집합 수집 (함수형)
+        Set<String> domainAddressIds = customer.getAddresses().stream()
+                .map(CustomerAddress::id)
+                .collect(Collectors.toSet());
 
-        // 도메인 주소 ID 집합
-        Set<String> domainAddressIds = new HashSet<>();
-        customer.getAddresses().forEach(addr -> domainAddressIds.add(addr.id()));
-
-        // 삭제할 주소 (기존에 있지만 도메인에 없는 것)
+        // 삭제할 주소 필터링 (기존에 있지만 도메인에 없는 것)
         existing.getAddresses().removeIf(addr -> !domainAddressIds.contains(addr.getId()));
 
-        // 추가/업데이트할 주소
-        for (CustomerAddress domainAddr : customer.getAddresses()) {
-            CustomerAddressJpaEntity existingAddr = existing.getAddresses().stream()
-                    .filter(addr -> addr.getId().equals(domainAddr.id()))
-                    .findFirst()
-                    .orElse(null);
+        // ifPresentOrElse로 추가/업데이트 처리 (함수형)
+        customer.getAddresses().forEach(domainAddr ->
+                existing.getAddresses().stream()
+                        .filter(addr -> addr.getId().equals(domainAddr.id()))
+                        .findFirst()
+                        .ifPresentOrElse(
+                                existingAddr -> updateAddress(existingAddr, domainAddr),
+                                () -> existing.addAddress(createAddressEntity(domainAddr))
+                        )
+        );
+    }
 
-            if (existingAddr != null) {
-                // 기존 주소 업데이트
-                existingAddr.setName(domainAddr.name());
-                existingAddr.setRecipientName(domainAddr.recipientName());
-                existingAddr.setPhoneNumber(domainAddr.phoneNumber());
-                existingAddr.setPostalCode(domainAddr.postalCode());
-                existingAddr.setAddress1(domainAddr.address1());
-                existingAddr.setAddress2(domainAddr.address2());
-                existingAddr.setDefault(domainAddr.isDefault());
-            } else {
-                // 새 주소 추가
-                CustomerAddressJpaEntity newAddr = new CustomerAddressJpaEntity(
-                        domainAddr.id(),
-                        domainAddr.name(),
-                        domainAddr.recipientName(),
-                        domainAddr.phoneNumber(),
-                        domainAddr.postalCode(),
-                        domainAddr.address1(),
-                        domainAddr.address2(),
-                        domainAddr.isDefault(),
-                        domainAddr.createdAt()
-                );
-                existing.addAddress(newAddr);
-            }
-        }
+    private void updateAddress(CustomerAddressJpaEntity entity, CustomerAddress domain) {
+        entity.setName(domain.name());
+        entity.setRecipientName(domain.recipientName());
+        entity.setPhoneNumber(domain.phoneNumber());
+        entity.setPostalCode(domain.postalCode());
+        entity.setAddress1(domain.address1());
+        entity.setAddress2(domain.address2());
+        entity.setDefault(domain.isDefault());
+    }
+
+    private CustomerAddressJpaEntity createAddressEntity(CustomerAddress domain) {
+        return new CustomerAddressJpaEntity(
+                domain.id(),
+                domain.name(),
+                domain.recipientName(),
+                domain.phoneNumber(),
+                domain.postalCode(),
+                domain.address1(),
+                domain.address2(),
+                domain.isDefault(),
+                domain.createdAt()
+        );
     }
 
     // ==================== LoadCustomerCredentialsPort ====================

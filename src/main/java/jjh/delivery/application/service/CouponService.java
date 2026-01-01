@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Coupon Service - Application Service
@@ -64,23 +66,30 @@ public class CouponService implements ManageCouponUseCase {
         Coupon updatedCoupon = Coupon.builder()
                 .id(existingCoupon.getId())
                 .code(existingCoupon.getCode())
-                .name(command.name() != null ? command.name() : existingCoupon.getName())
-                .description(command.description() != null ? command.description() : existingCoupon.getDescription())
+                .name(getOrDefault(command.name(), existingCoupon::getName))
+                .description(getOrDefault(command.description(), existingCoupon::getDescription))
                 .discountType(existingCoupon.getDiscountType())
                 .discountValue(existingCoupon.getDiscountValue())
-                .minimumOrderAmount(command.minimumOrderAmount() != null ? command.minimumOrderAmount() : existingCoupon.getMinimumOrderAmount())
-                .maximumDiscountAmount(command.maximumDiscountAmount() != null ? command.maximumDiscountAmount() : existingCoupon.getMaximumDiscountAmount())
+                .minimumOrderAmount(getOrDefault(command.minimumOrderAmount(), existingCoupon::getMinimumOrderAmount))
+                .maximumDiscountAmount(getOrDefault(command.maximumDiscountAmount(), existingCoupon::getMaximumDiscountAmount))
                 .scope(existingCoupon.getScope())
                 .scopeTargetId(existingCoupon.getScopeTargetId())
                 .totalQuantity(command.totalQuantity() > 0 ? command.totalQuantity() : existingCoupon.getTotalQuantity())
                 .usedQuantity(existingCoupon.getUsedQuantity())
-                .validFrom(command.validFrom() != null ? command.validFrom() : existingCoupon.getValidFrom())
-                .validUntil(command.validUntil() != null ? command.validUntil() : existingCoupon.getValidUntil())
+                .validFrom(getOrDefault(command.validFrom(), existingCoupon::getValidFrom))
+                .validUntil(getOrDefault(command.validUntil(), existingCoupon::getValidUntil))
                 .isActive(existingCoupon.isActive())
                 .createdAt(existingCoupon.getCreatedAt())
                 .build();
 
         return saveCouponPort.save(updatedCoupon);
+    }
+
+    /**
+     * null이 아니면 새 값을 반환하고, null이면 기본값 공급자에서 값을 가져옴
+     */
+    private <T> T getOrDefault(T value, Supplier<T> defaultSupplier) {
+        return Optional.ofNullable(value).orElseGet(defaultSupplier);
     }
 
     @Override
