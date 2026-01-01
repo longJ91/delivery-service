@@ -1,3 +1,66 @@
 spring:
   application:
     name: delivery
+
+  # PostgreSQL + JPA
+  datasource:
+    url: jdbc:postgresql://localhost:5432/delivery
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_batch_fetch_size: 100
+    open-in-view: false
+
+  # Kafka
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: delivery-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      acks: all
+      retries: 3
+
+  # Elasticsearch
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:localhost:9200}
+
+# Server
+server:
+  port: 8080
+  shutdown: graceful
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    jjh.delivery: INFO
+    org.springframework.kafka: WARN
+    org.hibernate.SQL: DEBUG
+    org.jooq: DEBUG

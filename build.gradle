@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'jjh'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 description = 'Delivery Service Project'
 
 java {
@@ -32,6 +32,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-kafka'
 	implementation 'org.springframework.boot:spring-boot-starter-webclient'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.apache.kafka:kafka-streams'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
