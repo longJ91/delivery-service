@@ -19,7 +19,7 @@ public interface OrderSearchPort {
 
     List<Order> findByCustomerId(String customerId);
 
-    List<Order> findByShopId(String shopId);
+    List<Order> findBySellerId(String sellerId);
 
     void reindexAll();
 }

@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * Order Elasticsearch Adapter - Driven Adapter (Outbound)
- * Elasticsearch를 사용한 검색 구현
+ * Elasticsearch를 사용한 검색 구현 (v2 - Product Delivery)
  */
 @Component
 public class OrderElasticsearchAdapter implements OrderSearchPort {
@@ -72,8 +72,8 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
             mustQueries.add(Query.of(q -> q.term(t -> t.field("customerId").value(query.customerId()))));
         }
 
-        if (query.shopId() != null) {
-            mustQueries.add(Query.of(q -> q.term(t -> t.field("shopId").value(query.shopId()))));
+        if (query.sellerId() != null) {
+            mustQueries.add(Query.of(q -> q.term(t -> t.field("sellerId").value(query.sellerId()))));
         }
 
         if (query.status() != null) {
@@ -121,8 +121,8 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
     }
 
     @Override
-    public List<Order> findByShopId(String shopId) {
-        return repository.findByShopId(shopId).stream()
+    public List<Order> findBySellerId(String sellerId) {
+        return repository.findBySellerId(sellerId).stream()
                 .map(OrderDocument::toDomain)
                 .toList();
     }

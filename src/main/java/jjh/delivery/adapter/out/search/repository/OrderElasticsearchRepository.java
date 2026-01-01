@@ -12,11 +12,11 @@ public interface OrderElasticsearchRepository extends ElasticsearchRepository<Or
 
     List<OrderDocument> findByCustomerId(String customerId);
 
-    List<OrderDocument> findByShopId(String shopId);
+    List<OrderDocument> findBySellerId(String sellerId);
 
     List<OrderDocument> findByStatus(String status);
 
     List<OrderDocument> findByCustomerIdAndStatus(String customerId, String status);
 
-    List<OrderDocument> findByShopIdAndStatus(String shopId, String status);
+    List<OrderDocument> findBySellerIdAndStatus(String sellerId, String status);
 }

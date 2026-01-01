@@ -16,7 +16,7 @@ public interface LoadOrderPort {
 
     List<Order> findByCustomerId(String customerId);
 
-    List<Order> findByShopId(String shopId);
+    List<Order> findBySellerId(String sellerId);
 
     List<Order> findByStatus(OrderStatus status);
 

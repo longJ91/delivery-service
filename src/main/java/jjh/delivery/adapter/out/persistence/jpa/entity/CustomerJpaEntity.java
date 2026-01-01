@@ -24,6 +24,9 @@ public class CustomerJpaEntity {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
+    @Column(nullable = false)
+    private String password;
+
     @Column(nullable = false, length = 100)
     private String name;
 
@@ -59,6 +62,7 @@ public class CustomerJpaEntity {
     public CustomerJpaEntity(
             String id,
             String email,
+            String password,
             String name,
             String phoneNumber,
             CustomerStatus status,
@@ -68,6 +72,7 @@ public class CustomerJpaEntity {
     ) {
         this.id = id;
         this.email = email;
+        this.password = password;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.status = status;
@@ -97,6 +102,10 @@ public class CustomerJpaEntity {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public String getName() {
@@ -138,6 +147,10 @@ public class CustomerJpaEntity {
     // Setters for update
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setName(String name) {

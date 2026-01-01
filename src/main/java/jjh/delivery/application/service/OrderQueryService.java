@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Order Query Service
+ * Order Query Service (v2 - Product Delivery)
  * 복잡한 조회 전용 서비스 (jOOQ 활용)
  */
 @Service
@@ -30,11 +30,11 @@ public class OrderQueryService {
     }
 
     public List<OrderStatistics> getOrderStatistics(
-            String shopId,
+            String sellerId,
             LocalDateTime from,
             LocalDateTime to
     ) {
-        return orderQueryPort.getOrderStatisticsByShop(shopId, from, to);
+        return orderQueryPort.getOrderStatisticsBySeller(sellerId, from, to);
     }
 
     public List<Order> generateOrderReport(ReportCriteria criteria) {

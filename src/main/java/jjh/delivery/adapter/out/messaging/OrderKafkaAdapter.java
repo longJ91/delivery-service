@@ -65,8 +65,8 @@ public class OrderKafkaAdapter implements OrderEventPort {
 
     private String resolveTopic(OrderEvent event) {
         return switch (event) {
-            case OrderCreatedEvent _ -> TOPIC_ORDER_CREATED;
-            case OrderStatusChangedEvent _ -> TOPIC_ORDER_STATUS_CHANGED;
+            case OrderCreatedEvent e -> TOPIC_ORDER_CREATED;
+            case OrderStatusChangedEvent e -> TOPIC_ORDER_STATUS_CHANGED;
         };
     }
 }

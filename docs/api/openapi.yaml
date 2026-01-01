@@ -1,56 +1,511 @@
 openapi: 3.0.3
 info:
-  title: Delivery Service API
+  title: Delivery Service API v2
   description: |
-    배달 서비스 백엔드 API 명세서
+    물품 배송 서비스 백엔드 API 명세서
 
     ## Architecture
     - Hexagonal Architecture (Ports & Adapters)
     - Spring Boot 4.0.1 / Java 21
+    - Event-Driven Architecture
 
-    ## Features
-    - 주문 생성 및 관리
-    - 주문 상태 추적
-    - 고객/가게별 주문 조회
-  version: 1.0.0
+    ## Service Type
+    - Product Delivery Service (물품 배송 서비스)
+    - Courier-based delivery (택배사 연동)
+    - Domestic shipping only (국내 배송)
+    - Return/Exchange supported (반품/교환 지원)
+
+    ## Domains
+    1. Customer - 고객 관리
+    2. Product - 상품 관리
+    3. Seller - 판매자 관리
+    4. Cart - 장바구니
+    5. Order - 주문 관리
+    6. Payment - 결제 관리
+    7. Shipment - 배송 관리
+    8. Return - 반품/교환 관리
+    9. Review - 리뷰 관리
+    10. Promotion - 쿠폰/프로모션
+  version: 2.0.0
   contact:
     name: Delivery Service Team
   license:
     name: MIT
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8080/api/v2
     description: Local Development Server
-  - url: https://api.delivery.com
+  - url: https://api.delivery.com/api/v2
     description: Production Server
 
 tags:
+  - name: Auth
+    description: 인증 API
+  - name: Customers
+    description: 고객 관리 API
+  - name: Products
+    description: 상품 관리 API
+  - name: Sellers
+    description: 판매자 API
+  - name: Cart
+    description: 장바구니 API
   - name: Orders
     description: 주문 관리 API
+  - name: Payments
+    description: 결제 관리 API
+  - name: Shipments
+    description: 배송 관리 API
+  - name: Returns
+    description: 반품/교환 관리 API
+  - name: Reviews
+    description: 리뷰 관리 API
+  - name: Coupons
+    description: 쿠폰 관리 API
+  - name: Seller Admin
+    description: 판매자 관리 API
+  - name: Webhooks
+    description: 외부 시스템 연동 웹훅
 
 paths:
-  /api/v1/orders:
+  # ============================================
+  # Auth API
+  # ============================================
+  /auth/register:
     post:
-      tags:
-        - Orders
+      tags: [Auth]
+      summary: 회원가입
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: 이미 존재하는 이메일
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 로그인
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: 인증 실패
+
+  # ============================================
+  # Customer API
+  # ============================================
+  /customers/me:
+    get:
+      tags: [Customers]
+      summary: 내 정보 조회
+      operationId: getMyProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [Customers]
+      summary: 내 정보 수정
+      operationId: updateMyProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /customers/me/addresses:
+    get:
+      tags: [Customers]
+      summary: 배송지 목록 조회
+      operationId: getMyAddresses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressListResponse'
+
+    post:
+      tags: [Customers]
+      summary: 배송지 등록
+      operationId: createAddress
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressResponse'
+
+  /customers/me/addresses/{addressId}:
+    put:
+      tags: [Customers]
+      summary: 배송지 수정
+      operationId: updateAddress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AddressId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAddressRequest'
+      responses:
+        '200':
+          description: 수정 성공
+
+    delete:
+      tags: [Customers]
+      summary: 배송지 삭제
+      operationId: deleteAddress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AddressId'
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /customers/me/addresses/{addressId}/default:
+    patch:
+      tags: [Customers]
+      summary: 기본 배송지 설정
+      operationId: setDefaultAddress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AddressId'
+      responses:
+        '200':
+          description: 설정 성공
+
+  /customers/me/coupons:
+    get:
+      tags: [Customers]
+      summary: 내 쿠폰 목록
+      operationId: getMyCoupons
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [AVAILABLE, USED, EXPIRED]
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerCouponListResponse'
+
+  # ============================================
+  # Product API
+  # ============================================
+  /categories:
+    get:
+      tags: [Products]
+      summary: 카테고리 목록 조회
+      operationId: getCategories
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+
+  /products:
+    get:
+      tags: [Products]
+      summary: 상품 목록 조회
+      operationId: getProducts
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: sellerId
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [recent, price_asc, price_desc, rating, sales]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  /products/{productId}:
+    get:
+      tags: [Products]
+      summary: 상품 상세 조회
+      operationId: getProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /products/{productId}/reviews:
+    get:
+      tags: [Products]
+      summary: 상품 리뷰 목록
+      operationId: getProductReviews
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [recent, rating_high, rating_low]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+
+  # ============================================
+  # Seller API (Public)
+  # ============================================
+  /sellers/{sellerId}:
+    get:
+      tags: [Sellers]
+      summary: 판매자 정보 조회
+      operationId: getSeller
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/products:
+    get:
+      tags: [Sellers]
+      summary: 판매자 상품 목록
+      operationId: getSellerProducts
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  # ============================================
+  # Cart API
+  # ============================================
+  /cart:
+    get:
+      tags: [Cart]
+      summary: 장바구니 조회
+      operationId: getCart
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+
+    delete:
+      tags: [Cart]
+      summary: 장바구니 비우기
+      operationId: clearCart
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /cart/items:
+    post:
+      tags: [Cart]
+      summary: 장바구니 상품 추가
+      operationId: addToCart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToCartRequest'
+      responses:
+        '201':
+          description: 추가 성공
+
+  /cart/items/{itemId}:
+    patch:
+      tags: [Cart]
+      summary: 장바구니 수량 변경
+      operationId: updateCartItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: 수정 성공
+
+    delete:
+      tags: [Cart]
+      summary: 장바구니 상품 삭제
+      operationId: removeFromCart
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 삭제 성공
+
+  # ============================================
+  # Order API
+  # ============================================
+  /orders:
+    get:
+      tags: [Orders]
+      summary: 내 주문 목록 조회
+      operationId: getMyOrders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+    post:
+      tags: [Orders]
       summary: 주문 생성
-      description: 새로운 주문을 생성합니다.
       operationId: createOrder
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateOrderRequest'
-            example:
-              customerId: "customer-123"
-              shopId: "shop-456"
-              items:
-                - menuId: "menu-001"
-                  menuName: "치킨"
-                  quantity: 2
-                  unitPrice: 18000
-              deliveryAddress: "서울시 강남구 테헤란로 123"
       responses:
         '201':
           description: 주문 생성 성공
@@ -59,42 +514,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
         '400':
-          description: 입력값 검증 실패
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
+          $ref: '#/components/responses/ValidationError'
 
-  /api/v1/orders/{orderId}:
+  /orders/{orderId}:
     get:
-      tags:
-        - Orders
-      summary: 주문 조회
-      description: 주문 ID로 주문 정보를 조회합니다.
+      tags: [Orders]
+      summary: 주문 상세 조회
       operationId: getOrder
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
       responses:
         '200':
-          description: 주문 조회 성공
+          description: 조회 성공
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderResponse'
+                $ref: '#/components/schemas/OrderDetailResponse'
         '404':
-          description: 주문을 찾을 수 없음
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+          $ref: '#/components/responses/NotFound'
 
-  /api/v1/orders/{orderId}/status:
-    patch:
-      tags:
-        - Orders
-      summary: 주문 상태 변경
-      description: 주문 상태를 변경합니다.
-      operationId: updateOrderStatus
+  /orders/{orderId}/cancel:
+    post:
+      tags: [Orders]
+      summary: 주문 취소
+      operationId: cancelOrder
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
       requestBody:
@@ -102,458 +549,1905 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateOrderStatusRequest'
-            example:
-              status: "ACCEPTED"
+              $ref: '#/components/schemas/CancelOrderRequest'
       responses:
         '200':
-          description: 상태 변경 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '400':
-          description: 입력값 검증 실패
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-        '404':
-          description: 주문을 찾을 수 없음
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+          description: 취소 성공
         '409':
-          description: 상태 전이 불가
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidStateErrorResponse'
+          $ref: '#/components/responses/Conflict'
 
-  /api/v1/orders/{orderId}/accept:
+  /orders/{orderId}/confirm-receipt:
     post:
-      tags:
-        - Orders
-      summary: 주문 수락
-      description: |
-        주문을 수락합니다.
-        - 현재 상태: PENDING
-        - 변경 상태: ACCEPTED
-      operationId: acceptOrder
+      tags: [Orders]
+      summary: 구매 확정
+      operationId: confirmReceipt
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
       responses:
         '200':
-          description: 주문 수락 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '404':
-          description: 주문을 찾을 수 없음
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+          description: 구매 확정 성공
         '409':
-          description: 상태 전이 불가
+          $ref: '#/components/responses/Conflict'
+
+  /orders/{orderId}/shipment:
+    get:
+      tags: [Orders]
+      summary: 주문 배송 정보 조회
+      operationId: getOrderShipment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 조회 성공
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidStateErrorResponse'
+                $ref: '#/components/schemas/ShipmentResponse'
 
-  /api/v1/orders/{orderId}/prepare:
+  # ============================================
+  # Payment API
+  # ============================================
+  /payments:
     post:
-      tags:
-        - Orders
-      summary: 조리 시작
-      description: |
-        주문 조리를 시작합니다.
-        - 현재 상태: ACCEPTED
-        - 변경 상태: PREPARING
+      tags: [Payments]
+      summary: 결제 요청
+      operationId: createPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '200':
+          description: 결제 요청 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: 결제 상세 조회
+      operationId: getPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /payments/{paymentId}/confirm:
+    post:
+      tags: [Payments]
+      summary: 결제 확인
+      operationId: confirmPayment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+      responses:
+        '200':
+          description: 결제 확인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  # ============================================
+  # Shipment API
+  # ============================================
+  /shipments/{shipmentId}:
+    get:
+      tags: [Shipments]
+      summary: 배송 정보 조회
+      operationId: getShipment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ShipmentId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+
+  /shipments/{shipmentId}/tracking:
+    get:
+      tags: [Shipments]
+      summary: 배송 추적 조회
+      operationId: getShipmentTracking
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ShipmentId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentTrackingResponse'
+
+  # ============================================
+  # Return API
+  # ============================================
+  /returns:
+    get:
+      tags: [Returns]
+      summary: 내 반품 목록 조회
+      operationId: getMyReturns
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ReturnStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnListResponse'
+
+    post:
+      tags: [Returns]
+      summary: 반품/교환 요청
+      operationId: createReturn
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReturnRequest'
+      responses:
+        '201':
+          description: 요청 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/{returnId}:
+    get:
+      tags: [Returns]
+      summary: 반품 상세 조회
+      operationId: getReturn
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnDetailResponse'
+
+  /returns/{returnId}/cancel:
+    post:
+      tags: [Returns]
+      summary: 반품 취소
+      operationId: cancelReturn
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 취소 성공
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ============================================
+  # Review API
+  # ============================================
+  /reviews:
+    post:
+      tags: [Reviews]
+      summary: 리뷰 작성
+      operationId: createReview
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: 작성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+
+  /reviews/{reviewId}:
+    put:
+      tags: [Reviews]
+      summary: 리뷰 수정
+      operationId: updateReview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReviewRequest'
+      responses:
+        '200':
+          description: 수정 성공
+
+    delete:
+      tags: [Reviews]
+      summary: 리뷰 삭제
+      operationId: deleteReview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '204':
+          description: 삭제 성공
+
+  # ============================================
+  # Coupon API
+  # ============================================
+  /coupons:
+    get:
+      tags: [Coupons]
+      summary: 사용 가능 쿠폰 목록
+      operationId: getAvailableCoupons
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: string
+        - name: sellerId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponListResponse'
+
+  /coupons/{couponCode}/claim:
+    post:
+      tags: [Coupons]
+      summary: 쿠폰 발급
+      operationId: claimCoupon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: couponCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 발급 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerCouponResponse'
+        '409':
+          description: 이미 발급됨 또는 소진
+
+  # ============================================
+  # Seller Admin API
+  # ============================================
+  /sellers/me:
+    get:
+      tags: [Seller Admin]
+      summary: 내 판매자 정보 조회
+      operationId: getMySellerProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerDetailResponse'
+
+  /sellers/me/products:
+    get:
+      tags: [Seller Admin]
+      summary: 내 상품 목록
+      operationId: getMyProducts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+    post:
+      tags: [Seller Admin]
+      summary: 상품 등록
+      operationId: createProduct
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetailResponse'
+
+  /sellers/me/products/{productId}:
+    put:
+      tags: [Seller Admin]
+      summary: 상품 수정
+      operationId: updateProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '200':
+          description: 수정 성공
+
+    delete:
+      tags: [Seller Admin]
+      summary: 상품 삭제
+      operationId: deleteProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /sellers/me/products/{productId}/stock:
+    patch:
+      tags: [Seller Admin]
+      summary: 재고 수정
+      operationId: updateProductStock
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStockRequest'
+      responses:
+        '200':
+          description: 수정 성공
+
+  /sellers/me/orders:
+    get:
+      tags: [Seller Admin]
+      summary: 주문 목록 (판매자)
+      operationId: getSellerOrders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+  /sellers/me/orders/{orderId}/confirm:
+    post:
+      tags: [Seller Admin]
+      summary: 주문 확정
+      operationId: confirmOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 확정 성공
+
+  /sellers/me/orders/{orderId}/prepare:
+    post:
+      tags: [Seller Admin]
+      summary: 상품 준비 시작
       operationId: startPreparing
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
       responses:
         '200':
-          description: 조리 시작 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '404':
-          description: 주문을 찾을 수 없음
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
-        '409':
-          description: 상태 전이 불가
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidStateErrorResponse'
+          description: 준비 시작 성공
 
-  /api/v1/orders/{orderId}/ready:
+  /sellers/me/orders/{orderId}/ship:
     post:
-      tags:
-        - Orders
-      summary: 배달 준비 완료
-      description: |
-        주문이 배달 준비 완료되었음을 표시합니다.
-        - 현재 상태: PREPARING
-        - 변경 상태: READY_FOR_DELIVERY
-      operationId: readyForDelivery
+      tags: [Seller Admin]
+      summary: 출고 완료 (운송장 등록)
+      operationId: shipOrder
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipOrderRequest'
       responses:
         '200':
-          description: 배달 준비 완료
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '404':
-          description: 주문을 찾을 수 없음
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
-        '409':
-          description: 상태 전이 불가
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidStateErrorResponse'
+          description: 출고 성공
 
-  /api/v1/orders/{orderId}/cancel:
-    post:
-      tags:
-        - Orders
-      summary: 주문 취소
-      description: |
-        주문을 취소합니다.
-        - 취소 가능 상태: PENDING, ACCEPTED, PREPARING, READY_FOR_DELIVERY
-        - 취소 불가 상태: PICKED_UP, DELIVERED, CANCELLED
-      operationId: cancelOrder
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      responses:
-        '200':
-          description: 주문 취소 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '404':
-          description: 주문을 찾을 수 없음
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
-        '409':
-          description: 취소 불가 상태
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InvalidStateErrorResponse'
-
-  /api/v1/orders/customer/{customerId}:
+  /sellers/me/returns:
     get:
-      tags:
-        - Orders
-      summary: 고객별 주문 조회
-      description: 특정 고객의 모든 주문을 조회합니다.
-      operationId: getOrdersByCustomer
+      tags: [Seller Admin]
+      summary: 반품 목록 (판매자)
+      operationId: getSellerReturns
+      security:
+        - bearerAuth: []
       parameters:
-        - name: customerId
-          in: path
-          required: true
-          description: 고객 ID
+        - name: status
+          in: query
           schema:
-            type: string
-          example: "customer-123"
+            $ref: '#/components/schemas/ReturnStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
       responses:
         '200':
           description: 조회 성공
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OrderResponse'
+                $ref: '#/components/schemas/ReturnListResponse'
 
-  /api/v1/orders/shop/{shopId}:
-    get:
-      tags:
-        - Orders
-      summary: 가게별 주문 조회
-      description: 특정 가게의 모든 주문을 조회합니다.
-      operationId: getOrdersByShop
+  /sellers/me/returns/{returnId}/approve:
+    post:
+      tags: [Seller Admin]
+      summary: 반품 승인
+      operationId: approveReturn
+      security:
+        - bearerAuth: []
       parameters:
-        - name: shopId
-          in: path
-          required: true
-          description: 가게 ID
-          schema:
-            type: string
-          example: "shop-456"
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 승인 성공
+
+  /sellers/me/returns/{returnId}/reject:
+    post:
+      tags: [Seller Admin]
+      summary: 반품 거절
+      operationId: rejectReturn
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectReturnRequest'
+      responses:
+        '200':
+          description: 거절 성공
+
+  /sellers/me/reviews:
+    get:
+      tags: [Seller Admin]
+      summary: 리뷰 목록 (판매자)
+      operationId: getSellerReviews
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
       responses:
         '200':
           description: 조회 성공
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OrderResponse'
+                $ref: '#/components/schemas/ReviewListResponse'
+
+  /sellers/me/reviews/{reviewId}/reply:
+    post:
+      tags: [Seller Admin]
+      summary: 리뷰 답글 작성
+      operationId: createReviewReply
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReplyRequest'
+      responses:
+        '201':
+          description: 작성 성공
+
+    put:
+      tags: [Seller Admin]
+      summary: 리뷰 답글 수정
+      operationId: updateReviewReply
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReplyRequest'
+      responses:
+        '200':
+          description: 수정 성공
+
+    delete:
+      tags: [Seller Admin]
+      summary: 리뷰 답글 삭제
+      operationId: deleteReviewReply
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '204':
+          description: 삭제 성공
+
+  # ============================================
+  # Webhooks
+  # ============================================
+  /webhooks/payments/{provider}:
+    post:
+      tags: [Webhooks]
+      summary: 결제 웹훅
+      operationId: handlePaymentWebhook
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [toss, kakaopay, naverpay]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 처리 완료
+
+  /webhooks/shipments/{carrier}:
+    post:
+      tags: [Webhooks]
+      summary: 배송 웹훅
+      operationId: handleShipmentWebhook
+      parameters:
+        - name: carrier
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [cj, hanjin, lotte, logen, post]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 처리 완료
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
     OrderId:
       name: orderId
       in: path
       required: true
-      description: 주문 ID
       schema:
         type: string
-      example: "order-789"
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: string
+    SellerId:
+      name: sellerId
+      in: path
+      required: true
+      schema:
+        type: string
+    AddressId:
+      name: addressId
+      in: path
+      required: true
+      schema:
+        type: string
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema:
+        type: string
+    ShipmentId:
+      name: shipmentId
+      in: path
+      required: true
+      schema:
+        type: string
+    ReturnId:
+      name: returnId
+      in: path
+      required: true
+      schema:
+        type: string
+    ReviewId:
+      name: reviewId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    ValidationError:
+      description: 입력값 검증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: 인증 필요
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: 리소스를 찾을 수 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: 상태 충돌
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    # ============================================
+    # Enums
+    # ============================================
+    OrderStatus:
+      type: string
+      enum:
+        - PENDING
+        - PAID
+        - CONFIRMED
+        - PREPARING
+        - SHIPPED
+        - IN_TRANSIT
+        - OUT_FOR_DELIVERY
+        - DELIVERED
+        - CANCELLED
+        - RETURN_REQUESTED
+        - RETURNED
+
+    ShipmentStatus:
+      type: string
+      enum:
+        - PENDING
+        - READY_TO_SHIP
+        - PICKED_UP
+        - IN_TRANSIT
+        - OUT_FOR_DELIVERY
+        - DELIVERED
+        - FAILED
+        - RETURNED
+
+    ShippingCarrier:
+      type: string
+      enum:
+        - CJ_LOGISTICS
+        - HANJIN
+        - LOTTE
+        - LOGEN
+        - POST_OFFICE
+        - EPOST
+        - GS_POSTBOX
+        - CU_POST
+        - OTHER
+
+    ReturnStatus:
+      type: string
+      enum:
+        - REQUESTED
+        - APPROVED
+        - REJECTED
+        - COLLECTING
+        - COLLECTED
+        - INSPECTING
+        - COMPLETED
+        - CANCELLED
+
+    ReturnReason:
+      type: string
+      enum:
+        - CHANGE_OF_MIND
+        - WRONG_ITEM
+        - DEFECTIVE
+        - DIFFERENT_FROM_DESC
+        - DELAYED_DELIVERY
+        - OTHER
+
+    ReturnType:
+      type: string
+      enum:
+        - REFUND
+        - EXCHANGE
+
+    ProductStatus:
+      type: string
+      enum:
+        - DRAFT
+        - ACTIVE
+        - OUT_OF_STOCK
+        - INACTIVE
+        - DELETED
+
+    PaymentStatus:
+      type: string
+      enum:
+        - PENDING
+        - COMPLETED
+        - FAILED
+        - CANCELLED
+        - PARTIALLY_REFUNDED
+        - FULLY_REFUNDED
+
+    PaymentMethod:
+      type: string
+      enum:
+        - CARD
+        - KAKAO_PAY
+        - NAVER_PAY
+        - TOSS
+        - BANK_TRANSFER
+        - VIRTUAL_ACCOUNT
+
+    DiscountType:
+      type: string
+      enum:
+        - FIXED_AMOUNT
+        - PERCENTAGE
+
+    # ============================================
     # Request Schemas
+    # ============================================
+    RegisterRequest:
+      type: object
+      required: [email, password, name, phone]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        phone:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        profileImageUrl:
+          type: string
+
+    CreateAddressRequest:
+      type: object
+      required: [name, recipientName, recipientPhone, postalCode, roadAddress]
+      properties:
+        name:
+          type: string
+        recipientName:
+          type: string
+        recipientPhone:
+          type: string
+        postalCode:
+          type: string
+        roadAddress:
+          type: string
+        detailAddress:
+          type: string
+        isDefault:
+          type: boolean
+
+    AddToCartRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+        variantId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+
+    UpdateCartItemRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+
     CreateOrderRequest:
       type: object
-      required:
-        - customerId
-        - shopId
-        - items
-        - deliveryAddress
+      required: [sellerId, items, shippingAddress]
       properties:
-        customerId:
+        sellerId:
           type: string
-          description: 고객 ID
-          example: "customer-123"
-        shopId:
-          type: string
-          description: 가게 ID
-          example: "shop-456"
         items:
           type: array
-          description: 주문 항목 목록
-          minItems: 1
-          maxItems: 50
           items:
             $ref: '#/components/schemas/OrderItemRequest'
-        deliveryAddress:
+        shippingAddress:
+          $ref: '#/components/schemas/ShippingAddressRequest'
+        orderMemo:
           type: string
-          description: 배송 주소
-          maxLength: 500
-          example: "서울시 강남구 테헤란로 123"
+        couponId:
+          type: string
 
     OrderItemRequest:
       type: object
-      required:
-        - menuId
-        - menuName
-        - quantity
-        - unitPrice
+      required: [productId, productName, quantity, unitPrice]
       properties:
-        menuId:
+        productId:
           type: string
-          description: 메뉴 ID
-          example: "menu-001"
-        menuName:
+        productName:
           type: string
-          description: 메뉴명
-          example: "치킨"
+        variantId:
+          type: string
+        variantName:
+          type: string
+        sku:
+          type: string
+        optionValues:
+          type: object
+          additionalProperties:
+            type: string
         quantity:
           type: integer
-          description: 수량
           minimum: 1
-          example: 2
         unitPrice:
           type: number
-          format: decimal
-          description: 단가
-          minimum: 0
-          exclusiveMinimum: true
-          example: 18000
 
-    UpdateOrderStatusRequest:
+    ShippingAddressRequest:
       type: object
-      required:
-        - status
+      required: [recipientName, phoneNumber, postalCode, address1]
       properties:
-        status:
-          $ref: '#/components/schemas/OrderStatus'
+        recipientName:
+          type: string
+        phoneNumber:
+          type: string
+        postalCode:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        deliveryNote:
+          type: string
 
+    CancelOrderRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    CreatePaymentRequest:
+      type: object
+      required: [orderId, method, amount]
+      properties:
+        orderId:
+          type: string
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        amount:
+          type: number
+
+    ConfirmPaymentRequest:
+      type: object
+      required: [paymentKey]
+      properties:
+        paymentKey:
+          type: string
+        transactionId:
+          type: string
+
+    CreateReturnRequest:
+      type: object
+      required: [orderId, type, reason, items]
+      properties:
+        orderId:
+          type: string
+        type:
+          $ref: '#/components/schemas/ReturnType'
+        reason:
+          $ref: '#/components/schemas/ReturnReason'
+        reasonDetail:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              orderItemIndex:
+                type: integer
+              quantity:
+                type: integer
+        images:
+          type: array
+          items:
+            type: string
+        pickupAddress:
+          $ref: '#/components/schemas/ShippingAddressRequest'
+
+    CreateReviewRequest:
+      type: object
+      required: [orderId, productId, rating]
+      properties:
+        orderId:
+          type: string
+        productId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        content:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+
+    UpdateReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        content:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+
+    CreateProductRequest:
+      type: object
+      required: [categoryId, name, price]
+      properties:
+        categoryId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        sku:
+          type: string
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              imageUrl:
+                type: string
+              isPrimary:
+                type: boolean
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              sku:
+                type: string
+              price:
+                type: number
+              stock:
+                type: integer
+              optionValues:
+                type: object
+                additionalProperties:
+                  type: string
+
+    UpdateStockRequest:
+      type: object
+      properties:
+        stock:
+          type: integer
+        variantId:
+          type: string
+        variantStock:
+          type: integer
+
+    ShipOrderRequest:
+      type: object
+      required: [carrier, trackingNumber]
+      properties:
+        carrier:
+          $ref: '#/components/schemas/ShippingCarrier'
+        trackingNumber:
+          type: string
+
+    RejectReturnRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    CreateReplyRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    # ============================================
     # Response Schemas
+    # ============================================
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+
+    CustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        profileImageUrl:
+          type: string
+        status:
+          type: string
+        pointBalance:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    AddressResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        recipientName:
+          type: string
+        recipientPhone:
+          type: string
+        postalCode:
+          type: string
+        roadAddress:
+          type: string
+        detailAddress:
+          type: string
+        isDefault:
+          type: boolean
+
+    AddressListResponse:
+      type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressResponse'
+
+    CategoryListResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryResponse'
+
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        depth:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryResponse'
+
+    ProductListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSummaryResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    ProductSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        discountPrice:
+          type: number
+        thumbnailUrl:
+          type: string
+        ratingAvg:
+          type: number
+        reviewCount:
+          type: integer
+        sellerId:
+          type: string
+        sellerName:
+          type: string
+
+    ProductDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        sellerId:
+          type: string
+        sellerName:
+          type: string
+        categoryId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        discountPrice:
+          type: number
+        stock:
+          type: integer
+        sku:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        isFeatured:
+          type: boolean
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              imageUrl:
+                type: string
+              isPrimary:
+                type: boolean
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              sku:
+                type: string
+              price:
+                type: number
+              stock:
+                type: integer
+              optionValues:
+                type: object
+                additionalProperties:
+                  type: string
+        ratingAvg:
+          type: number
+        reviewCount:
+          type: integer
+        salesCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    SellerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        sellerType:
+          type: string
+        ratingAvg:
+          type: number
+        reviewCount:
+          type: integer
+        productCount:
+          type: integer
+        status:
+          type: string
+
+    SellerDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/SellerResponse'
+        - type: object
+          properties:
+            companyName:
+              type: string
+            representativeName:
+              type: string
+            businessNumber:
+              type: string
+            phone:
+              type: string
+            csPhone:
+              type: string
+            csEmail:
+              type: string
+
+    CartResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItemResponse'
+        totalAmount:
+          type: number
+        totalItems:
+          type: integer
+
+    CartItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        variantId:
+          type: string
+        variantName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        subtotal:
+          type: number
+        thumbnailUrl:
+          type: string
+        sellerId:
+          type: string
+        sellerName:
+          type: string
+        stock:
+          type: integer
+        isAvailable:
+          type: boolean
+
     OrderResponse:
       type: object
       properties:
         id:
           type: string
-          description: 주문 ID
-          example: "order-789"
+        orderNumber:
+          type: string
         customerId:
           type: string
-          description: 고객 ID
-          example: "customer-123"
-        shopId:
+        sellerId:
           type: string
-          description: 가게 ID
-          example: "shop-456"
         items:
           type: array
-          description: 주문 항목 목록
           items:
             $ref: '#/components/schemas/OrderItemResponse'
         status:
           $ref: '#/components/schemas/OrderStatus'
+        subtotalAmount:
+          type: number
+        shippingFee:
+          type: number
+        discountAmount:
+          type: number
         totalAmount:
           type: number
-          format: decimal
-          description: 총 금액
-          example: 36000
-        deliveryAddress:
-          type: string
-          description: 배송 주소
-          example: "서울시 강남구 테헤란로 123"
+        shippingAddress:
+          $ref: '#/components/schemas/ShippingAddressResponse'
         createdAt:
           type: string
           format: date-time
-          description: 생성 일시
-          example: "2025-01-01T10:00:00"
-        updatedAt:
-          type: string
-          format: date-time
-          description: 수정 일시
-          example: "2025-01-01T10:00:00"
 
     OrderItemResponse:
       type: object
       properties:
-        menuId:
+        productId:
           type: string
-          description: 메뉴 ID
-          example: "menu-001"
-        menuName:
+        productName:
           type: string
-          description: 메뉴명
-          example: "치킨"
+        variantId:
+          type: string
+        variantName:
+          type: string
+        sku:
+          type: string
+        optionValues:
+          type: object
+          additionalProperties:
+            type: string
         quantity:
           type: integer
-          description: 수량
-          example: 2
         unitPrice:
           type: number
-          format: decimal
-          description: 단가
-          example: 18000
         subtotal:
           type: number
-          format: decimal
-          description: 소계
-          example: 36000
 
-    # Enum Schemas
-    OrderStatus:
-      type: string
-      description: |
-        주문 상태
-
-        **상태 전이 규칙:**
-        - PENDING → ACCEPTED, CANCELLED
-        - ACCEPTED → PREPARING, CANCELLED
-        - PREPARING → READY_FOR_DELIVERY, CANCELLED
-        - READY_FOR_DELIVERY → PICKED_UP, CANCELLED
-        - PICKED_UP → DELIVERED
-        - DELIVERED → (종료)
-        - CANCELLED → (종료)
-      enum:
-        - PENDING
-        - ACCEPTED
-        - PREPARING
-        - READY_FOR_DELIVERY
-        - PICKED_UP
-        - DELIVERED
-        - CANCELLED
-      example: "PENDING"
-
-    # Error Schemas
-    ValidationErrorResponse:
+    ShippingAddressResponse:
       type: object
-      description: 입력값 검증 실패 응답 (RFC 7807)
+      properties:
+        recipientName:
+          type: string
+        phoneNumber:
+          type: string
+        postalCode:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        deliveryNote:
+          type: string
+
+    OrderDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/OrderResponse'
+        - type: object
+          properties:
+            sellerName:
+              type: string
+            orderMemo:
+              type: string
+            shipment:
+              $ref: '#/components/schemas/ShipmentSummaryResponse'
+            paidAt:
+              type: string
+              format: date-time
+            confirmedAt:
+              type: string
+              format: date-time
+            shippedAt:
+              type: string
+              format: date-time
+            deliveredAt:
+              type: string
+              format: date-time
+
+    OrderListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderSummaryResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+
+    OrderSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        sellerId:
+          type: string
+        sellerName:
+          type: string
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalAmount:
+          type: number
+        itemCount:
+          type: integer
+        thumbnailUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+
+    PaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+        orderId:
+          type: string
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        amount:
+          type: number
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        checkoutUrl:
+          type: string
+        paidAt:
+          type: string
+          format: date-time
+
+    ShipmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        carrier:
+          $ref: '#/components/schemas/ShippingCarrier'
+        carrierName:
+          type: string
+        trackingNumber:
+          type: string
+        trackingUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+        estimatedDeliveryDate:
+          type: string
+          format: date
+        deliveredAt:
+          type: string
+          format: date-time
+
+    ShipmentSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        carrier:
+          $ref: '#/components/schemas/ShippingCarrier'
+        carrierName:
+          type: string
+        trackingNumber:
+          type: string
+        trackingUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+
+    ShipmentTrackingResponse:
+      type: object
+      properties:
+        shipmentId:
+          type: string
+        carrier:
+          $ref: '#/components/schemas/ShippingCarrier'
+        trackingNumber:
+          type: string
+        status:
+          $ref: '#/components/schemas/ShipmentStatus'
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              location:
+                type: string
+              description:
+                type: string
+              occurredAt:
+                type: string
+                format: date-time
+
+    ReturnResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        type:
+          $ref: '#/components/schemas/ReturnType'
+        status:
+          $ref: '#/components/schemas/ReturnStatus'
+        reason:
+          $ref: '#/components/schemas/ReturnReason'
+        estimatedRefundAmount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    ReturnDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ReturnResponse'
+        - type: object
+          properties:
+            orderNumber:
+              type: string
+            reasonDetail:
+              type: string
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  productName:
+                    type: string
+                  variantName:
+                    type: string
+                  quantity:
+                    type: integer
+                  refundAmount:
+                    type: number
+            pickupShipment:
+              $ref: '#/components/schemas/ShipmentSummaryResponse'
+            refundAmount:
+              type: number
+            approvedAt:
+              type: string
+              format: date-time
+            collectedAt:
+              type: string
+              format: date-time
+            completedAt:
+              type: string
+              format: date-time
+
+    ReturnListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReturnSummaryResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+
+    ReturnSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        orderNumber:
+          type: string
+        type:
+          $ref: '#/components/schemas/ReturnType'
+        status:
+          $ref: '#/components/schemas/ReturnStatus'
+        reason:
+          $ref: '#/components/schemas/ReturnReason'
+        refundAmount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    ReviewResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        productId:
+          type: string
+        rating:
+          type: integer
+        content:
+          type: string
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              imageUrl:
+                type: string
+        reply:
+          type: object
+          properties:
+            content:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ReviewListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewSummaryResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        ratingDistribution:
+          type: object
+          additionalProperties:
+            type: integer
+
+    ReviewSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        rating:
+          type: integer
+        content:
+          type: string
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              imageUrl:
+                type: string
+        reply:
+          type: object
+          properties:
+            content:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    CouponResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: number
+        minimumOrderAmount:
+          type: number
+        maximumDiscountAmount:
+          type: number
+        validUntil:
+          type: string
+          format: date-time
+
+    CouponListResponse:
+      type: object
+      properties:
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CouponResponse'
+
+    CustomerCouponResponse:
+      allOf:
+        - $ref: '#/components/schemas/CouponResponse'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum: [AVAILABLE, USED, EXPIRED]
+
+    CustomerCouponListResponse:
+      type: object
+      properties:
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerCouponResponse'
+
+    ErrorResponse:
+      type: object
       properties:
         type:
           type: string
           format: uri
-          example: "https://api.delivery.com/errors/validation"
         title:
           type: string
-          example: "Validation Failed"
         status:
           type: integer
-          example: 400
         detail:
           type: string
-          example: "입력값 검증에 실패했습니다"
         errors:
           type: object
           additionalProperties:
             type: string
-          example:
-            customerId: "고객 ID는 필수입니다"
-            items: "주문 항목은 최소 1개 이상이어야 합니다"
         timestamp:
           type: string
           format: date-time
-          example: "2025-01-01T10:00:00Z"
-
-    OrderNotFoundErrorResponse:
-      type: object
-      description: 주문을 찾을 수 없음 응답 (RFC 7807)
-      properties:
-        type:
-          type: string
-          format: uri
-          example: "https://api.delivery.com/errors/order-not-found"
-        title:
-          type: string
-          example: "Order Not Found"
-        status:
-          type: integer
-          example: 404
-        detail:
-          type: string
-          example: "Order not found: order-789"
-        orderId:
-          type: string
-          example: "order-789"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2025-01-01T10:00:00Z"
-
-    InvalidStateErrorResponse:
-      type: object
-      description: 상태 전이 불가 응답 (RFC 7807)
-      properties:
-        type:
-          type: string
-          format: uri
-          example: "https://api.delivery.com/errors/invalid-state"
-        title:
-          type: string
-          example: "Invalid State Transition"
-        status:
-          type: integer
-          example: 409
-        detail:
-          type: string
-          example: "Cannot transition from DELIVERED to CANCELLED"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2025-01-01T10:00:00Z"

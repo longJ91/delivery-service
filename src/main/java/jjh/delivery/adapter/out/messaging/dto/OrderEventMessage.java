@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Kafka Message DTOs
+ * Kafka Message DTOs (v2 - Product Delivery)
  */
 public sealed interface OrderEventMessage {
 
@@ -20,9 +20,9 @@ public sealed interface OrderEventMessage {
             String orderId,
             String eventType,
             String customerId,
-            String shopId,
+            String sellerId,
             BigDecimal totalAmount,
-            String deliveryAddress,
+            String shippingAddress,
             LocalDateTime occurredAt
     ) implements OrderEventMessage {
 
@@ -31,9 +31,9 @@ public sealed interface OrderEventMessage {
                     event.orderId(),
                     "ORDER_CREATED",
                     event.customerId(),
-                    event.shopId(),
+                    event.sellerId(),
                     event.totalAmount(),
-                    event.deliveryAddress(),
+                    event.shippingAddress(),
                     event.occurredAt()
             );
         }

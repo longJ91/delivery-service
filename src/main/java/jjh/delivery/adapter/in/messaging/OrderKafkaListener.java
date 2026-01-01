@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Order Kafka Listener - Driving Adapter (Inbound)
- * 외부 시스템으로부터의 이벤트 수신
+ * 외부 시스템으로부터의 이벤트 수신 (v2 - Product Delivery)
  */
 @Component
 public class OrderKafkaListener {
@@ -27,45 +27,44 @@ public class OrderKafkaListener {
     }
 
     /**
-     * 배달 픽업 이벤트 수신
-     * 배달 서비스에서 주문을 픽업했을 때 호출
+     * 배송 출발 이벤트 수신
+     * 배송 서비스에서 주문을 출발 처리했을 때 호출
      */
     @KafkaListener(
-            topics = "delivery.picked-up",
+            topics = "shipment.out-for-delivery",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void handleDeliveryPickedUp(
-            @Payload DeliveryPickedUpEvent event,
+    public void handleOutForDelivery(
+            @Payload ShipmentOutForDeliveryEvent event,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,
             Acknowledgment acknowledgment
     ) {
-        log.info("Received delivery picked up event: orderId={}, partition={}, offset={}",
+        log.info("Received out for delivery event: orderId={}, partition={}, offset={}",
                 event.orderId(), partition, offset);
 
         try {
-            updateOrderStatusUseCase.updateStatus(event.orderId(), OrderStatus.PICKED_UP);
+            updateOrderStatusUseCase.updateStatus(event.orderId(), OrderStatus.OUT_FOR_DELIVERY);
             acknowledgment.acknowledge();
-            log.info("Successfully processed delivery picked up event: orderId={}", event.orderId());
+            log.info("Successfully processed out for delivery event: orderId={}", event.orderId());
         } catch (Exception e) {
-            log.error("Failed to process delivery picked up event: orderId={}", event.orderId(), e);
-            // 재처리를 위해 acknowledge하지 않음
+            log.error("Failed to process out for delivery event: orderId={}", event.orderId(), e);
             throw e;
         }
     }
 
     /**
-     * 배달 완료 이벤트 수신
+     * 배송 완료 이벤트 수신
      */
     @KafkaListener(
-            topics = "delivery.completed",
+            topics = "shipment.delivered",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void handleDeliveryCompleted(
-            @Payload DeliveryCompletedEvent event,
+            @Payload ShipmentDeliveredEvent event,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             Acknowledgment acknowledgment
     ) {
@@ -81,17 +80,49 @@ public class OrderKafkaListener {
         }
     }
 
+    /**
+     * 배송 중 이벤트 수신 (허브 이동)
+     */
+    @KafkaListener(
+            topics = "shipment.in-transit",
+            groupId = "${spring.kafka.consumer.group-id}",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void handleInTransit(
+            @Payload ShipmentInTransitEvent event,
+            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            Acknowledgment acknowledgment
+    ) {
+        log.info("Received in transit event: orderId={}", event.orderId());
+
+        try {
+            updateOrderStatusUseCase.updateStatus(event.orderId(), OrderStatus.IN_TRANSIT);
+            acknowledgment.acknowledge();
+            log.info("Successfully processed in transit event: orderId={}", event.orderId());
+        } catch (Exception e) {
+            log.error("Failed to process in transit event: orderId={}", event.orderId(), e);
+            throw e;
+        }
+    }
+
     // Event DTOs
-    public record DeliveryPickedUpEvent(
+    public record ShipmentOutForDeliveryEvent(
             String orderId,
-            String deliveryId,
-            String riderId
+            String shipmentId,
+            String carrierId
     ) {}
 
-    public record DeliveryCompletedEvent(
+    public record ShipmentDeliveredEvent(
             String orderId,
-            String deliveryId,
-            String riderId,
-            java.time.LocalDateTime completedAt
+            String shipmentId,
+            String carrierId,
+            java.time.LocalDateTime deliveredAt
+    ) {}
+
+    public record ShipmentInTransitEvent(
+            String orderId,
+            String shipmentId,
+            String carrierId,
+            String currentLocation
     ) {}
 }

@@ -16,11 +16,11 @@ public interface SearchOrderUseCase {
 
     List<Order> findByCustomerId(String customerId);
 
-    List<Order> findByShopId(String shopId);
+    List<Order> findBySellerId(String sellerId);
 
     record SearchOrderQuery(
             String customerId,
-            String shopId,
+            String sellerId,
             OrderStatus status,
             LocalDateTime fromDate,
             LocalDateTime toDate,
@@ -40,7 +40,7 @@ public interface SearchOrderUseCase {
 
         public static class Builder {
             private String customerId;
-            private String shopId;
+            private String sellerId;
             private OrderStatus status;
             private LocalDateTime fromDate;
             private LocalDateTime toDate;
@@ -53,8 +53,8 @@ public interface SearchOrderUseCase {
                 return this;
             }
 
-            public Builder shopId(String shopId) {
-                this.shopId = shopId;
+            public Builder sellerId(String sellerId) {
+                this.sellerId = sellerId;
                 return this;
             }
 
@@ -90,7 +90,7 @@ public interface SearchOrderUseCase {
 
             public SearchOrderQuery build() {
                 return new SearchOrderQuery(
-                        customerId, shopId, status, fromDate, toDate, keyword, page, size
+                        customerId, sellerId, status, fromDate, toDate, keyword, page, size
                 );
             }
         }

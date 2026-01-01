@@ -18,9 +18,10 @@ import java.util.List;
 
 /**
  * Order REST Controller - Driving Adapter (Inbound)
+ * v2 - Product Delivery
  */
 @RestController
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/v2/orders")
 public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
@@ -64,9 +65,15 @@ public class OrderController {
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
-    @PostMapping("/{orderId}/accept")
-    public ResponseEntity<OrderResponse> acceptOrder(@PathVariable String orderId) {
-        Order order = updateOrderStatusUseCase.acceptOrder(orderId);
+    @PostMapping("/{orderId}/pay")
+    public ResponseEntity<OrderResponse> payOrder(@PathVariable String orderId) {
+        Order order = updateOrderStatusUseCase.payOrder(orderId);
+        return ResponseEntity.ok(mapper.toResponse(order));
+    }
+
+    @PostMapping("/{orderId}/confirm")
+    public ResponseEntity<OrderResponse> confirmOrder(@PathVariable String orderId) {
+        Order order = updateOrderStatusUseCase.confirmOrder(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
@@ -76,9 +83,9 @@ public class OrderController {
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
-    @PostMapping("/{orderId}/ready")
-    public ResponseEntity<OrderResponse> readyForDelivery(@PathVariable String orderId) {
-        Order order = updateOrderStatusUseCase.readyForDelivery(orderId);
+    @PostMapping("/{orderId}/ship")
+    public ResponseEntity<OrderResponse> shipOrder(@PathVariable String orderId) {
+        Order order = updateOrderStatusUseCase.shipOrder(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
@@ -88,15 +95,21 @@ public class OrderController {
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
+    @PostMapping("/{orderId}/return")
+    public ResponseEntity<OrderResponse> requestReturn(@PathVariable String orderId) {
+        Order order = updateOrderStatusUseCase.requestReturn(orderId);
+        return ResponseEntity.ok(mapper.toResponse(order));
+    }
+
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable String customerId) {
         List<Order> orders = searchOrderUseCase.findByCustomerId(customerId);
         return ResponseEntity.ok(mapper.toResponseList(orders));
     }
 
-    @GetMapping("/shop/{shopId}")
-    public ResponseEntity<List<OrderResponse>> getOrdersByShop(@PathVariable String shopId) {
-        List<Order> orders = searchOrderUseCase.findByShopId(shopId);
+    @GetMapping("/seller/{sellerId}")
+    public ResponseEntity<List<OrderResponse>> getOrdersBySeller(@PathVariable String sellerId) {
+        List<Order> orders = searchOrderUseCase.findBySellerId(sellerId);
         return ResponseEntity.ok(mapper.toResponseList(orders));
     }
 }

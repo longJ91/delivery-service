@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Order Application Service
+ * Order Application Service (v2 - Product Delivery)
  * Use Case 구현체 - 비즈니스 흐름 조합 (도메인 로직은 Domain 객체에 위임)
  */
 @Service
@@ -53,9 +53,12 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     public Order createOrder(CreateOrderCommand command) {
         Order order = Order.builder()
                 .customerId(command.customerId())
-                .shopId(command.shopId())
+                .sellerId(command.sellerId())
                 .items(toOrderItems(command.items()))
-                .deliveryAddress(command.deliveryAddress())
+                .shippingAddress(command.shippingAddress())
+                .orderMemo(command.orderMemo())
+                .shippingMemo(command.shippingMemo())
+                .couponId(command.couponId())
                 .build();
 
         Order savedOrder = saveOrderPort.save(order);
@@ -71,12 +74,27 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     private List<OrderItem> toOrderItems(List<OrderItemCommand> commands) {
         return commands.stream()
-                .map(cmd -> new OrderItem(
-                        cmd.menuId(),
-                        cmd.menuName(),
-                        cmd.quantity(),
-                        cmd.unitPrice()
-                ))
+                .map(cmd -> {
+                    if (cmd.variantId() != null) {
+                        return OrderItem.ofVariant(
+                                cmd.productId(),
+                                cmd.productName(),
+                                cmd.variantId(),
+                                cmd.variantName(),
+                                cmd.sku(),
+                                cmd.optionValues(),
+                                cmd.quantity(),
+                                cmd.unitPrice()
+                        );
+                    } else {
+                        return OrderItem.of(
+                                cmd.productId(),
+                                cmd.productName(),
+                                cmd.quantity(),
+                                cmd.unitPrice()
+                        );
+                    }
+                })
                 .toList();
     }
 
@@ -97,11 +115,22 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order acceptOrder(String orderId) {
+    public Order payOrder(String orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
-        order.accept();
+        order.pay();
+
+        return saveAndPublishStatusChange(order, previousStatus);
+    }
+
+    @Override
+    @Transactional
+    public Order confirmOrder(String orderId) {
+        Order order = getOrderOrThrow(orderId);
+        OrderStatus previousStatus = order.getStatus();
+
+        order.confirm();
 
         return saveAndPublishStatusChange(order, previousStatus);
     }
@@ -119,11 +148,11 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order readyForDelivery(String orderId) {
+    public Order shipOrder(String orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
-        order.readyForDelivery();
+        order.ship();
 
         return saveAndPublishStatusChange(order, previousStatus);
     }
@@ -141,12 +170,25 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
+    public Order requestReturn(String orderId) {
+        Order order = getOrderOrThrow(orderId);
+        OrderStatus previousStatus = order.getStatus();
+
+        order.requestReturn();
+
+        return saveAndPublishStatusChange(order, previousStatus);
+    }
+
+    @Override
+    @Transactional
     public Order updateStatus(String orderId, OrderStatus newStatus) {
         return switch (newStatus) {
-            case ACCEPTED -> acceptOrder(orderId);
+            case PAID -> payOrder(orderId);
+            case CONFIRMED -> confirmOrder(orderId);
             case PREPARING -> startPreparing(orderId);
-            case READY_FOR_DELIVERY -> readyForDelivery(orderId);
+            case SHIPPED -> shipOrder(orderId);
             case CANCELLED -> cancelOrder(orderId);
+            case RETURN_REQUESTED -> requestReturn(orderId);
             default -> throw new IllegalArgumentException(
                     "Cannot directly update to status: " + newStatus);
         };
@@ -172,7 +214,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     }
 
     @Override
-    public List<Order> findByShopId(String shopId) {
-        return orderSearchPort.findByShopId(shopId);
+    public List<Order> findBySellerId(String sellerId) {
+        return orderSearchPort.findBySellerId(sellerId);
     }
 }

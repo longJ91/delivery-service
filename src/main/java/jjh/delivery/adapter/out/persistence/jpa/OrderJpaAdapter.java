@@ -41,8 +41,8 @@ public class OrderJpaAdapter implements LoadOrderPort, SaveOrderPort {
     }
 
     @Override
-    public List<Order> findByShopId(String shopId) {
-        return mapper.toDomainList(repository.findByShopIdWithItems(shopId));
+    public List<Order> findBySellerId(String sellerId) {
+        return mapper.toDomainList(repository.findBySellerIdWithItems(sellerId));
     }
 
     @Override
@@ -75,7 +75,7 @@ public class OrderJpaAdapter implements LoadOrderPort, SaveOrderPort {
 
     private OrderJpaEntity updateEntity(OrderJpaEntity entity, Order order) {
         entity.setStatus(order.getStatus());
-        entity.setTotalAmount(order.calculateTotalAmount());
+        entity.setTotalAmount(order.getTotalAmount());
         entity.setUpdatedAt(order.getUpdatedAt());
         return entity;
     }

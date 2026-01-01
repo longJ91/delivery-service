@@ -4,6 +4,7 @@ import jjh.delivery.application.port.out.OrderQueryPort;
 import jjh.delivery.domain.order.Order;
 import jjh.delivery.domain.order.OrderItem;
 import jjh.delivery.domain.order.OrderStatus;
+import jjh.delivery.domain.order.ShippingAddress;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -23,6 +24,7 @@ import static org.jooq.impl.DSL.table;
 /**
  * Order jOOQ Adapter - Driven Adapter (Outbound)
  * jOOQ를 사용한 복잡한 쿼리 구현
+ * v2 - Product Delivery
  */
 @Component
 public class OrderJooqAdapter implements OrderQueryPort {
@@ -37,8 +39,8 @@ public class OrderJooqAdapter implements OrderQueryPort {
     public List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria) {
         List<Condition> conditions = new ArrayList<>();
 
-        if (criteria.shopIds() != null && !criteria.shopIds().isEmpty()) {
-            conditions.add(field("shop_id").in(criteria.shopIds()));
+        if (criteria.sellerIds() != null && !criteria.sellerIds().isEmpty()) {
+            conditions.add(field("seller_id").in(criteria.sellerIds()));
         }
 
         if (criteria.statuses() != null && !criteria.statuses().isEmpty()) {
@@ -92,13 +94,13 @@ public class OrderJooqAdapter implements OrderQueryPort {
     }
 
     @Override
-    public List<OrderStatistics> getOrderStatisticsByShop(
-            String shopId,
+    public List<OrderStatistics> getOrderStatisticsBySeller(
+            String sellerId,
             LocalDateTime from,
             LocalDateTime to
     ) {
         return dsl.select(
-                        field("shop_id"),
+                        field("seller_id"),
                         DSL.count().as("total_orders"),
                         DSL.count(DSL.case_()
                                 .when(field("status").eq("DELIVERED"), 1)
@@ -110,13 +112,13 @@ public class OrderJooqAdapter implements OrderQueryPort {
                         DSL.avg(field("total_amount", BigDecimal.class)).as("avg_order_amount")
                 )
                 .from(table("orders"))
-                .where(shopId != null ? field("shop_id").eq(shopId) : DSL.trueCondition())
+                .where(sellerId != null ? field("seller_id").eq(sellerId) : DSL.trueCondition())
                 .and(from != null ? field("created_at").ge(from) : DSL.trueCondition())
                 .and(to != null ? field("created_at").le(to) : DSL.trueCondition())
-                .groupBy(field("shop_id"))
+                .groupBy(field("seller_id"))
                 .fetch()
                 .map(r -> new OrderStatistics(
-                        r.get("shop_id", String.class),
+                        r.get("seller_id", String.class),
                         r.get("total_orders", Long.class),
                         r.get("completed_orders", Long.class),
                         r.get("cancelled_orders", Long.class),
@@ -129,8 +131,8 @@ public class OrderJooqAdapter implements OrderQueryPort {
     public List<Order> findOrdersForReport(ReportCriteria criteria) {
         List<Record> records = dsl.select()
                 .from(table("orders"))
-                .where(criteria.shopId() != null
-                        ? field("shop_id").eq(criteria.shopId())
+                .where(criteria.sellerId() != null
+                        ? field("seller_id").eq(criteria.sellerId())
                         : DSL.trueCondition())
                 .and(criteria.fromDate() != null
                         ? field("created_at").ge(criteria.fromDate())
@@ -171,9 +173,9 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .collect(Collectors.groupingBy(
                         r -> r.get("order_id", String.class),
                         Collectors.mapping(
-                                r -> new OrderItem(
-                                        r.get("menu_id", String.class),
-                                        r.get("menu_name", String.class),
+                                r -> OrderItem.of(
+                                        r.get("product_id", String.class),
+                                        r.get("product_name", String.class),
                                         r.get("quantity", Integer.class),
                                         r.get("unit_price", BigDecimal.class)
                                 ),
@@ -185,11 +187,19 @@ public class OrderJooqAdapter implements OrderQueryPort {
     private Order mapToOrder(Record record, List<OrderItem> items) {
         return Order.builder()
                 .id(record.get("id", String.class))
+                .orderNumber(record.get("order_number", String.class))
                 .customerId(record.get("customer_id", String.class))
-                .shopId(record.get("shop_id", String.class))
+                .sellerId(record.get("seller_id", String.class))
                 .items(items)
                 .status(OrderStatus.valueOf(record.get("status", String.class)))
-                .deliveryAddress(record.get("delivery_address", String.class))
+                .shippingAddress(ShippingAddress.of(
+                        record.get("shipping_recipient_name", String.class),
+                        record.get("shipping_phone_number", String.class),
+                        record.get("shipping_postal_code", String.class),
+                        record.get("shipping_address1", String.class),
+                        record.get("shipping_address2", String.class),
+                        record.get("shipping_delivery_note", String.class)
+                ))
                 .createdAt(record.get("created_at", LocalDateTime.class))
                 .build();
     }

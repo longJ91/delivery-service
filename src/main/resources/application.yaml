@@ -70,6 +70,12 @@ springdoc:
     version: 1.0.0
     description: 배달 서비스 백엔드 API
 
+# JWT
+jwt:
+  secret: ${JWT_SECRET:delivery-service-jwt-secret-key-for-development-only-change-in-production-min-256-bits}
+  access-token-expiration: 3600000  # 1 hour
+  refresh-token-expiration: 604800000  # 7 days
+
 # Logging
 logging:
   level:

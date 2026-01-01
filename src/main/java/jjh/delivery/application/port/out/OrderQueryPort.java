@@ -10,17 +10,18 @@ import java.util.List;
 /**
  * Order Query Port - Driven Port (Outbound)
  * 복잡한 쿼리를 위한 포트 (jOOQ 구현)
+ * v2 - Product Delivery
  */
 public interface OrderQueryPort {
 
     List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria);
 
-    List<OrderStatistics> getOrderStatisticsByShop(String shopId, LocalDateTime from, LocalDateTime to);
+    List<OrderStatistics> getOrderStatisticsBySeller(String sellerId, LocalDateTime from, LocalDateTime to);
 
     List<Order> findOrdersForReport(ReportCriteria criteria);
 
     record ComplexQueryCriteria(
-            List<String> shopIds,
+            List<String> sellerIds,
             List<OrderStatus> statuses,
             BigDecimal minAmount,
             BigDecimal maxAmount,
@@ -33,14 +34,14 @@ public interface OrderQueryPort {
     ) {}
 
     record ReportCriteria(
-            String shopId,
+            String sellerId,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             boolean includeItems
     ) {}
 
     record OrderStatistics(
-            String shopId,
+            String sellerId,
             long totalOrders,
             long completedOrders,
             long cancelledOrders,

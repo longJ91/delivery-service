@@ -20,12 +20,12 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, String
     @Query("SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.customerId = :customerId ORDER BY o.createdAt DESC")
     List<OrderJpaEntity> findByCustomerIdWithItems(@Param("customerId") String customerId);
 
-    @Query("SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.shopId = :shopId ORDER BY o.createdAt DESC")
-    List<OrderJpaEntity> findByShopIdWithItems(@Param("shopId") String shopId);
+    @Query("SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.sellerId = :sellerId ORDER BY o.createdAt DESC")
+    List<OrderJpaEntity> findBySellerIdWithItems(@Param("sellerId") String sellerId);
 
     List<OrderJpaEntity> findByStatus(OrderStatus status);
 
     List<OrderJpaEntity> findByCustomerId(String customerId);
 
-    List<OrderJpaEntity> findByShopId(String shopId);
+    List<OrderJpaEntity> findBySellerId(String sellerId);
 }

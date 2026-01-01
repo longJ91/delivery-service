@@ -5,16 +5,21 @@ import jjh.delivery.domain.order.OrderStatus;
 
 /**
  * Update Order Status Use Case - Driving Port (Inbound)
+ * v2 - Product Delivery
  */
 public interface UpdateOrderStatusUseCase {
 
-    Order acceptOrder(String orderId);
+    Order payOrder(String orderId);
+
+    Order confirmOrder(String orderId);
 
     Order startPreparing(String orderId);
 
-    Order readyForDelivery(String orderId);
+    Order shipOrder(String orderId);
 
     Order cancelOrder(String orderId);
+
+    Order requestReturn(String orderId);
 
     Order updateStatus(String orderId, OrderStatus newStatus);
 }
