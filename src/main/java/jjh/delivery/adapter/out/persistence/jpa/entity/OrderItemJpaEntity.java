@@ -1,14 +1,20 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 /**
- * Order Item JPA Entity
+ * Order Item JPA Entity (v2 - Product Delivery)
  */
 @Entity
-@Table(name = "order_items")
+@Table(name = "order_items", indexes = {
+        @Index(name = "idx_order_items_product_id", columnList = "product_id"),
+        @Index(name = "idx_order_items_variant_id", columnList = "variant_id")
+})
 public class OrderItemJpaEntity {
 
     @Id
@@ -19,11 +25,24 @@ public class OrderItemJpaEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private OrderJpaEntity order;
 
-    @Column(name = "menu_id", nullable = false, length = 36)
-    private String menuId;
+    @Column(name = "product_id", nullable = false, length = 36)
+    private String productId;
 
-    @Column(name = "menu_name", nullable = false, length = 200)
-    private String menuName;
+    @Column(name = "product_name", nullable = false, length = 200)
+    private String productName;
+
+    @Column(name = "variant_id", length = 36)
+    private String variantId;
+
+    @Column(name = "variant_name", length = 200)
+    private String variantName;
+
+    @Column(name = "sku", length = 50)
+    private String sku;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "option_values", columnDefinition = "jsonb")
+    private Map<String, String> optionValues;
 
     @Column(nullable = false)
     private int quantity;
@@ -35,15 +54,51 @@ public class OrderItemJpaEntity {
     }
 
     public OrderItemJpaEntity(
-            String menuId,
-            String menuName,
+            String productId,
+            String productName,
+            String variantId,
+            String variantName,
+            String sku,
+            Map<String, String> optionValues,
             int quantity,
             BigDecimal unitPrice
     ) {
-        this.menuId = menuId;
-        this.menuName = menuName;
+        this.productId = productId;
+        this.productName = productName;
+        this.variantId = variantId;
+        this.variantName = variantName;
+        this.sku = sku;
+        this.optionValues = optionValues;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+    }
+
+    /**
+     * Factory method for simple product (no variant)
+     */
+    public static OrderItemJpaEntity of(
+            String productId,
+            String productName,
+            int quantity,
+            BigDecimal unitPrice
+    ) {
+        return new OrderItemJpaEntity(productId, productName, null, null, null, null, quantity, unitPrice);
+    }
+
+    /**
+     * Factory method for variant product
+     */
+    public static OrderItemJpaEntity ofVariant(
+            String productId,
+            String productName,
+            String variantId,
+            String variantName,
+            String sku,
+            Map<String, String> optionValues,
+            int quantity,
+            BigDecimal unitPrice
+    ) {
+        return new OrderItemJpaEntity(productId, productName, variantId, variantName, sku, optionValues, quantity, unitPrice);
     }
 
     void setOrder(OrderJpaEntity order) {
@@ -59,12 +114,28 @@ public class OrderItemJpaEntity {
         return order;
     }
 
-    public String getMenuId() {
-        return menuId;
+    public String getProductId() {
+        return productId;
     }
 
-    public String getMenuName() {
-        return menuName;
+    public String getProductName() {
+        return productName;
+    }
+
+    public String getVariantId() {
+        return variantId;
+    }
+
+    public String getVariantName() {
+        return variantName;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public Map<String, String> getOptionValues() {
+        return optionValues;
     }
 
     public int getQuantity() {
@@ -73,5 +144,19 @@ public class OrderItemJpaEntity {
 
     public BigDecimal getUnitPrice() {
         return unitPrice;
+    }
+
+    /**
+     * Check if this item has variant
+     */
+    public boolean hasVariant() {
+        return variantId != null && !variantId.isBlank();
+    }
+
+    /**
+     * Calculate subtotal
+     */
+    public BigDecimal calculateSubtotal() {
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 }

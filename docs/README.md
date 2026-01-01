@@ -2,20 +2,72 @@
 
 ## Overview
 
-배달 서비스 백엔드 애플리케이션 문서입니다.
+물품 배송 서비스 백엔드 애플리케이션 문서입니다.
 
 - **Architecture**: Hexagonal Architecture (Ports & Adapters)
 - **Framework**: Spring Boot 4.0.1
 - **Language**: Java 21
+- **Service Type**: Product Delivery (물품 배송)
+
+## Directory Structure
+
+```
+docs/
+├── README.md                    # 메인 문서 인덱스
+├── architecture/                # 아키텍처 & 설계
+│   ├── README.md
+│   ├── ARCHITECTURE.md          # 시스템 아키텍처
+│   └── PROJECT_STRUCTURE.md     # 프로젝트 구조
+├── api/                         # API 문서
+│   ├── README.md
+│   ├── API.md                   # REST API 레퍼런스
+│   └── openapi.yaml             # OpenAPI 3.0 스펙
+├── database/                    # 데이터베이스
+│   ├── README.md
+│   ├── SCHEMA.md                # 스키마 설계 문서
+│   ├── schema_v2.sql            # DDL (물품 배송)
+│   ├── schema.sql               # DDL (음식 배달, legacy)
+│   └── MIGRATION.md             # 마이그레이션 계획
+└── guides/                      # 가이드
+    ├── README.md
+    └── TECH_STACK.md            # 기술 스택
+```
 
 ## Documentation Index
 
+### Architecture & Design
+
 | Document | Description |
 |----------|-------------|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | 시스템 아키텍처 및 레이어 설명 |
-| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | 프로젝트 디렉토리 구조 |
-| [TECH_STACK.md](./TECH_STACK.md) | 기술 스택 및 사용 방법 |
-| [API.md](./API.md) | REST API 레퍼런스 |
+| [architecture/ARCHITECTURE.md](./architecture/ARCHITECTURE.md) | 시스템 아키텍처 (Hexagonal) |
+| [architecture/PROJECT_STRUCTURE.md](./architecture/PROJECT_STRUCTURE.md) | 프로젝트 디렉토리 구조 |
+
+### API Documentation
+
+| Document | Description |
+|----------|-------------|
+| [api/API.md](./api/API.md) | REST API 레퍼런스 |
+| [api/openapi.yaml](./api/openapi.yaml) | OpenAPI 3.0 스펙 (Swagger) |
+
+### Database
+
+| Document | Description |
+|----------|-------------|
+| [database/SCHEMA.md](./database/SCHEMA.md) | 스키마 설계 문서 |
+| [database/schema_v2.sql](./database/schema_v2.sql) | PostgreSQL DDL |
+| [database/MIGRATION.md](./database/MIGRATION.md) | 마이그레이션 계획 |
+
+### Guides & References
+
+| Document | Description |
+|----------|-------------|
+| [guides/TECH_STACK.md](./guides/TECH_STACK.md) | 기술 스택 및 사용 방법 |
+
+## Swagger UI
+
+애플리케이션 실행 후 아래 URL에서 API 문서 확인:
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/api-docs
 
 ## Quick Start
 
@@ -25,16 +77,24 @@
 - Docker (PostgreSQL, Kafka, Elasticsearch)
 - Gradle
 
-### Run with Docker Compose
+### Run
 
 ```bash
+# 빌드
+./gradlew build
+
+# 실행
 ./gradlew bootRun
+
+# 테스트
+./gradlew test
 ```
 
-### Build
+### Database Setup
 
 ```bash
-./gradlew build
+# 스키마 적용
+psql -U postgres -d delivery -f docs/database/schema_v2.sql
 ```
 
 ## Key Features

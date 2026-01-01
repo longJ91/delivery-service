@@ -1,0 +1,559 @@
+openapi: 3.0.3
+info:
+  title: Delivery Service API
+  description: |
+    배달 서비스 백엔드 API 명세서
+
+    ## Architecture
+    - Hexagonal Architecture (Ports & Adapters)
+    - Spring Boot 4.0.1 / Java 21
+
+    ## Features
+    - 주문 생성 및 관리
+    - 주문 상태 추적
+    - 고객/가게별 주문 조회
+  version: 1.0.0
+  contact:
+    name: Delivery Service Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local Development Server
+  - url: https://api.delivery.com
+    description: Production Server
+
+tags:
+  - name: Orders
+    description: 주문 관리 API
+
+paths:
+  /api/v1/orders:
+    post:
+      tags:
+        - Orders
+      summary: 주문 생성
+      description: 새로운 주문을 생성합니다.
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              customerId: "customer-123"
+              shopId: "shop-456"
+              items:
+                - menuId: "menu-001"
+                  menuName: "치킨"
+                  quantity: 2
+                  unitPrice: 18000
+              deliveryAddress: "서울시 강남구 테헤란로 123"
+      responses:
+        '201':
+          description: 주문 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: 입력값 검증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /api/v1/orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: 주문 조회
+      description: 주문 ID로 주문 정보를 조회합니다.
+      operationId: getOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 주문 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: 주문을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+
+  /api/v1/orders/{orderId}/status:
+    patch:
+      tags:
+        - Orders
+      summary: 주문 상태 변경
+      description: 주문 상태를 변경합니다.
+      operationId: updateOrderStatus
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+            example:
+              status: "ACCEPTED"
+      responses:
+        '200':
+          description: 상태 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: 입력값 검증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: 주문을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+        '409':
+          description: 상태 전이 불가
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidStateErrorResponse'
+
+  /api/v1/orders/{orderId}/accept:
+    post:
+      tags:
+        - Orders
+      summary: 주문 수락
+      description: |
+        주문을 수락합니다.
+        - 현재 상태: PENDING
+        - 변경 상태: ACCEPTED
+      operationId: acceptOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 주문 수락 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: 주문을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+        '409':
+          description: 상태 전이 불가
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidStateErrorResponse'
+
+  /api/v1/orders/{orderId}/prepare:
+    post:
+      tags:
+        - Orders
+      summary: 조리 시작
+      description: |
+        주문 조리를 시작합니다.
+        - 현재 상태: ACCEPTED
+        - 변경 상태: PREPARING
+      operationId: startPreparing
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 조리 시작 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: 주문을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+        '409':
+          description: 상태 전이 불가
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidStateErrorResponse'
+
+  /api/v1/orders/{orderId}/ready:
+    post:
+      tags:
+        - Orders
+      summary: 배달 준비 완료
+      description: |
+        주문이 배달 준비 완료되었음을 표시합니다.
+        - 현재 상태: PREPARING
+        - 변경 상태: READY_FOR_DELIVERY
+      operationId: readyForDelivery
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 배달 준비 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: 주문을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+        '409':
+          description: 상태 전이 불가
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidStateErrorResponse'
+
+  /api/v1/orders/{orderId}/cancel:
+    post:
+      tags:
+        - Orders
+      summary: 주문 취소
+      description: |
+        주문을 취소합니다.
+        - 취소 가능 상태: PENDING, ACCEPTED, PREPARING, READY_FOR_DELIVERY
+        - 취소 불가 상태: PICKED_UP, DELIVERED, CANCELLED
+      operationId: cancelOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 주문 취소 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          description: 주문을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderNotFoundErrorResponse'
+        '409':
+          description: 취소 불가 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidStateErrorResponse'
+
+  /api/v1/orders/customer/{customerId}:
+    get:
+      tags:
+        - Orders
+      summary: 고객별 주문 조회
+      description: 특정 고객의 모든 주문을 조회합니다.
+      operationId: getOrdersByCustomer
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: 고객 ID
+          schema:
+            type: string
+          example: "customer-123"
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+
+  /api/v1/orders/shop/{shopId}:
+    get:
+      tags:
+        - Orders
+      summary: 가게별 주문 조회
+      description: 특정 가게의 모든 주문을 조회합니다.
+      operationId: getOrdersByShop
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          description: 가게 ID
+          schema:
+            type: string
+          example: "shop-456"
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+
+components:
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      description: 주문 ID
+      schema:
+        type: string
+      example: "order-789"
+
+  schemas:
+    # Request Schemas
+    CreateOrderRequest:
+      type: object
+      required:
+        - customerId
+        - shopId
+        - items
+        - deliveryAddress
+      properties:
+        customerId:
+          type: string
+          description: 고객 ID
+          example: "customer-123"
+        shopId:
+          type: string
+          description: 가게 ID
+          example: "shop-456"
+        items:
+          type: array
+          description: 주문 항목 목록
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+        deliveryAddress:
+          type: string
+          description: 배송 주소
+          maxLength: 500
+          example: "서울시 강남구 테헤란로 123"
+
+    OrderItemRequest:
+      type: object
+      required:
+        - menuId
+        - menuName
+        - quantity
+        - unitPrice
+      properties:
+        menuId:
+          type: string
+          description: 메뉴 ID
+          example: "menu-001"
+        menuName:
+          type: string
+          description: 메뉴명
+          example: "치킨"
+        quantity:
+          type: integer
+          description: 수량
+          minimum: 1
+          example: 2
+        unitPrice:
+          type: number
+          format: decimal
+          description: 단가
+          minimum: 0
+          exclusiveMinimum: true
+          example: 18000
+
+    UpdateOrderStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+
+    # Response Schemas
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 주문 ID
+          example: "order-789"
+        customerId:
+          type: string
+          description: 고객 ID
+          example: "customer-123"
+        shopId:
+          type: string
+          description: 가게 ID
+          example: "shop-456"
+        items:
+          type: array
+          description: 주문 항목 목록
+          items:
+            $ref: '#/components/schemas/OrderItemResponse'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalAmount:
+          type: number
+          format: decimal
+          description: 총 금액
+          example: 36000
+        deliveryAddress:
+          type: string
+          description: 배송 주소
+          example: "서울시 강남구 테헤란로 123"
+        createdAt:
+          type: string
+          format: date-time
+          description: 생성 일시
+          example: "2025-01-01T10:00:00"
+        updatedAt:
+          type: string
+          format: date-time
+          description: 수정 일시
+          example: "2025-01-01T10:00:00"
+
+    OrderItemResponse:
+      type: object
+      properties:
+        menuId:
+          type: string
+          description: 메뉴 ID
+          example: "menu-001"
+        menuName:
+          type: string
+          description: 메뉴명
+          example: "치킨"
+        quantity:
+          type: integer
+          description: 수량
+          example: 2
+        unitPrice:
+          type: number
+          format: decimal
+          description: 단가
+          example: 18000
+        subtotal:
+          type: number
+          format: decimal
+          description: 소계
+          example: 36000
+
+    # Enum Schemas
+    OrderStatus:
+      type: string
+      description: |
+        주문 상태
+
+        **상태 전이 규칙:**
+        - PENDING → ACCEPTED, CANCELLED
+        - ACCEPTED → PREPARING, CANCELLED
+        - PREPARING → READY_FOR_DELIVERY, CANCELLED
+        - READY_FOR_DELIVERY → PICKED_UP, CANCELLED
+        - PICKED_UP → DELIVERED
+        - DELIVERED → (종료)
+        - CANCELLED → (종료)
+      enum:
+        - PENDING
+        - ACCEPTED
+        - PREPARING
+        - READY_FOR_DELIVERY
+        - PICKED_UP
+        - DELIVERED
+        - CANCELLED
+      example: "PENDING"
+
+    # Error Schemas
+    ValidationErrorResponse:
+      type: object
+      description: 입력값 검증 실패 응답 (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "https://api.delivery.com/errors/validation"
+        title:
+          type: string
+          example: "Validation Failed"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: "입력값 검증에 실패했습니다"
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            customerId: "고객 ID는 필수입니다"
+            items: "주문 항목은 최소 1개 이상이어야 합니다"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-01T10:00:00Z"
+
+    OrderNotFoundErrorResponse:
+      type: object
+      description: 주문을 찾을 수 없음 응답 (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "https://api.delivery.com/errors/order-not-found"
+        title:
+          type: string
+          example: "Order Not Found"
+        status:
+          type: integer
+          example: 404
+        detail:
+          type: string
+          example: "Order not found: order-789"
+        orderId:
+          type: string
+          example: "order-789"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-01T10:00:00Z"
+
+    InvalidStateErrorResponse:
+      type: object
+      description: 상태 전이 불가 응답 (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "https://api.delivery.com/errors/invalid-state"
+        title:
+          type: string
+          example: "Invalid State Transition"
+        status:
+          type: integer
+          example: 409
+        detail:
+          type: string
+          example: "Cannot transition from DELIVERED to CANCELLED"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-01T10:00:00Z"
