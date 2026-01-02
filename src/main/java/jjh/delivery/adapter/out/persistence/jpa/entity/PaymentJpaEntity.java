@@ -3,6 +3,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 import jakarta.persistence.*;
 import jjh.delivery.domain.payment.PaymentMethodType;
 import jjh.delivery.domain.payment.PaymentStatus;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,6 +20,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_payments_transaction_id", columnList = "transaction_id"),
         @Index(name = "idx_payments_status", columnList = "status")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentJpaEntity {
 
     @Id
@@ -60,9 +66,7 @@ public class PaymentJpaEntity {
     @Version
     private Long version;
 
-    protected PaymentJpaEntity() {
-    }
-
+    @Builder
     public PaymentJpaEntity(
             String id,
             String orderId,
@@ -89,59 +93,6 @@ public class PaymentJpaEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.paidAt = paidAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public PaymentMethodType getPaymentMethodType() {
-        return paymentMethodType;
-    }
-
-    public String getPaymentGateway() {
-        return paymentGateway;
-    }
-
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public BigDecimal getRefundedAmount() {
-        return refundedAmount;
-    }
-
-    public PaymentStatus getStatus() {
-        return status;
-    }
-
-    public String getFailureReason() {
-        return failureReason;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getPaidAt() {
-        return paidAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

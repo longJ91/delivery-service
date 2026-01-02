@@ -3,6 +3,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 import jakarta.persistence.*;
 import jjh.delivery.domain.seller.SellerStatus;
 import jjh.delivery.domain.seller.SellerType;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +20,8 @@ import java.util.List;
         @Index(name = "idx_sellers_business_number", columnList = "business_number"),
         @Index(name = "idx_sellers_status", columnList = "status")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SellerJpaEntity {
 
     @Id
@@ -71,9 +77,7 @@ public class SellerJpaEntity {
     @Version
     private Long version;
 
-    protected SellerJpaEntity() {
-    }
-
+    @Builder
     public SellerJpaEntity(
             String id,
             String businessName,
@@ -102,67 +106,6 @@ public class SellerJpaEntity {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.approvedAt = approvedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getBusinessName() {
-        return businessName;
-    }
-
-    public String getBusinessNumber() {
-        return businessNumber;
-    }
-
-    public String getRepresentativeName() {
-        return representativeName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public SellerType getSellerType() {
-        return sellerType;
-    }
-
-    public SellerStatus getStatus() {
-        return status;
-    }
-
-    public WarehouseAddressEmbeddable getWarehouseAddress() {
-        return warehouseAddress;
-    }
-
-    public List<String> getCategoryIds() {
-        return categoryIds;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getApprovedAt() {
-        return approvedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

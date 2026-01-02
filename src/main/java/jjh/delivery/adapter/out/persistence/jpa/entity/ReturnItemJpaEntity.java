@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
@@ -12,6 +16,8 @@ import java.math.BigDecimal;
         @Index(name = "idx_return_items_return_id", columnList = "return_id"),
         @Index(name = "idx_return_items_order_item_id", columnList = "order_item_id")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReturnItemJpaEntity {
 
     @Id
@@ -43,9 +49,7 @@ public class ReturnItemJpaEntity {
     @Column(name = "refund_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal refundAmount;
 
-    protected ReturnItemJpaEntity() {
-    }
-
+    @Builder
     public ReturnItemJpaEntity(
             String id,
             String orderItemId,
@@ -68,43 +72,6 @@ public class ReturnItemJpaEntity {
 
     void setProductReturn(ReturnJpaEntity productReturn) {
         this.productReturn = productReturn;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public ReturnJpaEntity getProductReturn() {
-        return productReturn;
-    }
-
-    public String getOrderItemId() {
-        return orderItemId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public String getVariantId() {
-        return variantId;
-    }
-
-    public String getVariantName() {
-        return variantName;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getRefundAmount() {
-        return refundAmount;
     }
 
     public boolean hasVariant() {

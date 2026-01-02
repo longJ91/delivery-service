@@ -2,6 +2,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
 import jjh.delivery.domain.shipment.ShipmentStatus;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +17,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_shipment_tracking_shipment_id", columnList = "shipment_id"),
         @Index(name = "idx_shipment_tracking_occurred_at", columnList = "occurred_at")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShipmentTrackingJpaEntity {
 
     @Id
@@ -39,9 +45,7 @@ public class ShipmentTrackingJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected ShipmentTrackingJpaEntity() {
-    }
-
+    @Builder
     public ShipmentTrackingJpaEntity(
             String id,
             ShipmentStatus status,
@@ -60,34 +64,5 @@ public class ShipmentTrackingJpaEntity {
 
     void setShipment(ShipmentJpaEntity shipment) {
         this.shipment = shipment;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public ShipmentJpaEntity getShipment() {
-        return shipment;
-    }
-
-    public ShipmentStatus getStatus() {
-        return status;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public LocalDateTime getOccurredAt() {
-        return occurredAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 }

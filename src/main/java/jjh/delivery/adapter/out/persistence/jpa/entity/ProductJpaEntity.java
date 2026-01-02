@@ -2,6 +2,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
 import jjh.delivery.domain.product.ProductStatus;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +21,8 @@ import java.util.List;
         @Index(name = "idx_products_status", columnList = "status"),
         @Index(name = "idx_products_name", columnList = "name")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductJpaEntity {
 
     @Id
@@ -74,9 +80,7 @@ public class ProductJpaEntity {
     @Version
     private Long version;
 
-    protected ProductJpaEntity() {
-    }
-
+    @Builder
     public ProductJpaEntity(
             String id,
             String sellerId,
@@ -111,63 +115,6 @@ public class ProductJpaEntity {
 
     public void clearVariants() {
         variants.clear();
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getSellerId() {
-        return sellerId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public BigDecimal getBasePrice() {
-        return basePrice;
-    }
-
-    public ProductStatus getStatus() {
-        return status;
-    }
-
-    public List<ProductVariantJpaEntity> getVariants() {
-        return variants;
-    }
-
-    public List<String> getCategoryIds() {
-        return categoryIds;
-    }
-
-    public List<String> getImageUrls() {
-        return imageUrls;
-    }
-
-    public int getTotalStockQuantity() {
-        return totalStockQuantity;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

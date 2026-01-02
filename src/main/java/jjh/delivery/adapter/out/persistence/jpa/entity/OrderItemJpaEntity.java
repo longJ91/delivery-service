@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -15,6 +19,8 @@ import java.util.Map;
         @Index(name = "idx_order_items_product_id", columnList = "product_id"),
         @Index(name = "idx_order_items_variant_id", columnList = "variant_id")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItemJpaEntity {
 
     @Id
@@ -50,9 +56,7 @@ public class OrderItemJpaEntity {
     @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
 
-    protected OrderItemJpaEntity() {
-    }
-
+    @Builder
     public OrderItemJpaEntity(
             String productId,
             String productName,
@@ -103,47 +107,6 @@ public class OrderItemJpaEntity {
 
     void setOrder(OrderJpaEntity order) {
         this.order = order;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public OrderJpaEntity getOrder() {
-        return order;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public String getVariantId() {
-        return variantId;
-    }
-
-    public String getVariantName() {
-        return variantName;
-    }
-
-    public String getSku() {
-        return sku;
-    }
-
-    public Map<String, String> getOptionValues() {
-        return optionValues;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
     }
 
     /**

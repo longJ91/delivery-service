@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import jjh.delivery.domain.returns.ReturnReason;
 import jjh.delivery.domain.returns.ReturnStatus;
 import jjh.delivery.domain.returns.ReturnType;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,6 +23,8 @@ import java.util.List;
         @Index(name = "idx_returns_customer_id", columnList = "customer_id"),
         @Index(name = "idx_returns_status", columnList = "status")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReturnJpaEntity {
 
     @Id
@@ -67,9 +73,7 @@ public class ReturnJpaEntity {
     @Version
     private Long version;
 
-    protected ReturnJpaEntity() {
-    }
-
+    @Builder
     public ReturnJpaEntity(
             String id,
             String orderId,
@@ -105,63 +109,6 @@ public class ReturnJpaEntity {
 
     public void clearItems() {
         items.clear();
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public ReturnType getReturnType() {
-        return returnType;
-    }
-
-    public ReturnReason getReason() {
-        return reason;
-    }
-
-    public String getReasonDetail() {
-        return reasonDetail;
-    }
-
-    public ReturnStatus getStatus() {
-        return status;
-    }
-
-    public List<ReturnItemJpaEntity> getItems() {
-        return items;
-    }
-
-    public BigDecimal getTotalRefundAmount() {
-        return totalRefundAmount;
-    }
-
-    public String getRejectReason() {
-        return rejectReason;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getCompletedAt() {
-        return completedAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

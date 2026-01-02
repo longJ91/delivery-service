@@ -4,6 +4,7 @@ import jjh.delivery.application.port.in.ManageReviewUseCase.CreateReviewCommand;
 import jjh.delivery.application.port.in.ManageReviewUseCase.ReviewRatingInfo;
 import jjh.delivery.application.port.in.ManageReviewUseCase.UpdateReviewCommand;
 import jjh.delivery.application.port.out.LoadReviewPort;
+import jjh.delivery.application.port.out.LoadReviewStatsPort;
 import jjh.delivery.application.port.out.SaveReviewPort;
 import jjh.delivery.domain.review.Review;
 import jjh.delivery.domain.review.ReviewReply;
@@ -38,6 +39,9 @@ class ReviewServiceTest {
 
     @Mock
     private LoadReviewPort loadReviewPort;
+
+    @Mock
+    private LoadReviewStatsPort loadReviewStatsPort;
 
     @Mock
     private SaveReviewPort saveReviewPort;
@@ -319,11 +323,11 @@ class ReviewServiceTest {
         @DisplayName("상품 평점 정보 조회")
         void getProductRatingInfoSuccess() {
             // given
-            given(loadReviewPort.getAverageRatingByProductId(PRODUCT_ID))
+            given(loadReviewStatsPort.getAverageRatingByProductId(PRODUCT_ID))
                     .willReturn(4.5);
             given(loadReviewPort.countByProductId(PRODUCT_ID))
                     .willReturn(100L);
-            given(loadReviewPort.getRatingDistributionByProductId(PRODUCT_ID))
+            given(loadReviewStatsPort.getRatingDistributionByProductId(PRODUCT_ID))
                     .willReturn(Map.of(5, 60L, 4, 30L, 3, 10L));
 
             // when

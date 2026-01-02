@@ -3,6 +3,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 import jakarta.persistence.*;
 import jjh.delivery.domain.webhook.WebhookDeliveryStatus;
 import jjh.delivery.domain.webhook.WebhookEventType;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +19,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_webhook_deliveries_status", columnList = "status"),
         @Index(name = "idx_webhook_deliveries_created_at", columnList = "created_at")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WebhookDeliveryJpaEntity {
 
     @Id
@@ -56,9 +62,7 @@ public class WebhookDeliveryJpaEntity {
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;
 
-    protected WebhookDeliveryJpaEntity() {
-    }
-
+    @Builder
     public WebhookDeliveryJpaEntity(
             String id,
             String subscriptionId,
@@ -85,54 +89,5 @@ public class WebhookDeliveryJpaEntity {
         this.nextRetryAt = nextRetryAt;
         this.createdAt = createdAt;
         this.deliveredAt = deliveredAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    public WebhookEventType getEventType() {
-        return eventType;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public String getEndpointUrl() {
-        return endpointUrl;
-    }
-
-    public WebhookDeliveryStatus getStatus() {
-        return status;
-    }
-
-    public int getHttpStatusCode() {
-        return httpStatusCode;
-    }
-
-    public String getResponseBody() {
-        return responseBody;
-    }
-
-    public int getAttemptCount() {
-        return attemptCount;
-    }
-
-    public LocalDateTime getNextRetryAt() {
-        return nextRetryAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getDeliveredAt() {
-        return deliveredAt;
     }
 }

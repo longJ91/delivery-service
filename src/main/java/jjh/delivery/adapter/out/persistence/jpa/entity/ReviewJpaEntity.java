@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +20,8 @@ import java.util.List;
         @Index(name = "idx_reviews_product", columnList = "product_id"),
         @Index(name = "idx_reviews_rating", columnList = "rating")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewJpaEntity {
 
     @Id
@@ -59,9 +65,7 @@ public class ReviewJpaEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    protected ReviewJpaEntity() {
-    }
-
+    @Builder
     public ReviewJpaEntity(
             String id,
             String orderId,
@@ -84,59 +88,6 @@ public class ReviewJpaEntity {
         this.isVisible = isVisible;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public String getSellerId() {
-        return sellerId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public int getRating() {
-        return rating;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public boolean isVisible() {
-        return isVisible;
-    }
-
-    public List<ReviewImageJpaEntity> getImages() {
-        return images;
-    }
-
-    public ReviewReplyJpaEntity getReply() {
-        return reply;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
     }
 
     // Setters for update

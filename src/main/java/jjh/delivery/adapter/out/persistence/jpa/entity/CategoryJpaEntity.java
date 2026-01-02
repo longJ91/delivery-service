@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +17,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_categories_depth", columnList = "depth"),
         @Index(name = "idx_categories_display_order", columnList = "display_order")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CategoryJpaEntity {
 
     @Id
@@ -46,9 +52,7 @@ public class CategoryJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected CategoryJpaEntity() {
-    }
-
+    @Builder
     public CategoryJpaEntity(
             String id,
             String parentId,
@@ -71,47 +75,6 @@ public class CategoryJpaEntity {
         this.isActive = isActive;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getParentId() {
-        return parentId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public int getDisplayOrder() {
-        return displayOrder;
-    }
-
-    public int getDepth() {
-        return depth;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     // Setters for update

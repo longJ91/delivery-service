@@ -2,6 +2,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
 import jjh.delivery.domain.order.OrderStatus;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +22,8 @@ import java.util.List;
         @Index(name = "idx_orders_status", columnList = "status"),
         @Index(name = "idx_orders_created_at", columnList = "created_at")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderJpaEntity {
 
     @Id
@@ -100,9 +106,7 @@ public class OrderJpaEntity {
     @Version
     private Long version;
 
-    protected OrderJpaEntity() {
-    }
-
+    @Builder
     public OrderJpaEntity(
             String id,
             String orderNumber,
@@ -154,95 +158,6 @@ public class OrderJpaEntity {
 
     public void clearItems() {
         items.clear();
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public String getSellerId() {
-        return sellerId;
-    }
-
-    public List<OrderItemJpaEntity> getItems() {
-        return items;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public ShippingAddressEmbeddable getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public BigDecimal getSubtotalAmount() {
-        return subtotalAmount;
-    }
-
-    public BigDecimal getShippingFee() {
-        return shippingFee;
-    }
-
-    public BigDecimal getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public String getOrderMemo() {
-        return orderMemo;
-    }
-
-    public String getShippingMemo() {
-        return shippingMemo;
-    }
-
-    public String getCouponId() {
-        return couponId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getPaidAt() {
-        return paidAt;
-    }
-
-    public LocalDateTime getConfirmedAt() {
-        return confirmedAt;
-    }
-
-    public LocalDateTime getShippedAt() {
-        return shippedAt;
-    }
-
-    public LocalDateTime getDeliveredAt() {
-        return deliveredAt;
-    }
-
-    public LocalDateTime getCancelledAt() {
-        return cancelledAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

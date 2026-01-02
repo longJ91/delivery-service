@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +15,8 @@ import java.time.LocalDateTime;
 @Table(name = "customer_addresses", indexes = {
         @Index(name = "idx_customer_addresses_customer_id", columnList = "customer_id")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CustomerAddressJpaEntity {
 
     @Id
@@ -45,9 +51,7 @@ public class CustomerAddressJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected CustomerAddressJpaEntity() {
-    }
-
+    @Builder
     public CustomerAddressJpaEntity(
             String id,
             String name,
@@ -72,47 +76,6 @@ public class CustomerAddressJpaEntity {
 
     void setCustomer(CustomerJpaEntity customer) {
         this.customer = customer;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public CustomerJpaEntity getCustomer() {
-        return customer;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getRecipientName() {
-        return recipientName;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public String getPostalCode() {
-        return postalCode;
-    }
-
-    public String getAddress1() {
-        return address1;
-    }
-
-    public String getAddress2() {
-        return address2;
-    }
-
-    public boolean isDefault() {
-        return isDefault;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 
     // Setters for update

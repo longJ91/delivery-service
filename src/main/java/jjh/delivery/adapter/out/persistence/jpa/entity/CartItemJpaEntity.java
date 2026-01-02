@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +17,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_cart_items_cart_id", columnList = "cart_id"),
         @Index(name = "idx_cart_items_product_id", columnList = "product_id")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartItemJpaEntity {
 
     @Id
@@ -50,9 +56,7 @@ public class CartItemJpaEntity {
     @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt;
 
-    protected CartItemJpaEntity() {
-    }
-
+    @Builder
     public CartItemJpaEntity(
             String id,
             String productId,
@@ -75,51 +79,6 @@ public class CartItemJpaEntity {
         this.unitPrice = unitPrice;
         this.thumbnailUrl = thumbnailUrl;
         this.addedAt = addedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public CartJpaEntity getCart() {
-        return cart;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public String getVariantId() {
-        return variantId;
-    }
-
-    public String getVariantName() {
-        return variantName;
-    }
-
-    public String getSellerId() {
-        return sellerId;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
-
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
-    }
-
-    public LocalDateTime getAddedAt() {
-        return addedAt;
     }
 
     // Setters

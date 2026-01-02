@@ -3,6 +3,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 import jakarta.persistence.*;
 import jjh.delivery.domain.shipment.ShipmentStatus;
 import jjh.delivery.domain.shipment.ShippingCarrier;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,6 +21,8 @@ import java.util.List;
         @Index(name = "idx_shipments_tracking_number", columnList = "tracking_number"),
         @Index(name = "idx_shipments_status", columnList = "status")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShipmentJpaEntity {
 
     @Id
@@ -59,9 +65,7 @@ public class ShipmentJpaEntity {
     @Version
     private Long version;
 
-    protected ShipmentJpaEntity() {
-    }
-
+    @Builder
     public ShipmentJpaEntity(
             String id,
             String orderId,
@@ -93,55 +97,6 @@ public class ShipmentJpaEntity {
 
     public void clearTrackingEvents() {
         trackingEvents.clear();
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public ShippingCarrier getCarrier() {
-        return carrier;
-    }
-
-    public String getTrackingNumber() {
-        return trackingNumber;
-    }
-
-    public ShipmentStatus getStatus() {
-        return status;
-    }
-
-    public List<ShipmentTrackingJpaEntity> getTrackingEvents() {
-        return trackingEvents;
-    }
-
-    public LocalDateTime getEstimatedDeliveryDate() {
-        return estimatedDeliveryDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getShippedAt() {
-        return shippedAt;
-    }
-
-    public LocalDateTime getDeliveredAt() {
-        return deliveredAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

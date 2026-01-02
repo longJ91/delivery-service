@@ -2,6 +2,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
 import jjh.delivery.domain.customer.CustomerStatus;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +19,8 @@ import java.util.List;
         @Index(name = "idx_customers_email", columnList = "email"),
         @Index(name = "idx_customers_status", columnList = "status")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CustomerJpaEntity {
 
     @Id
@@ -56,9 +62,7 @@ public class CustomerJpaEntity {
     @Version
     private Long version;
 
-    protected CustomerJpaEntity() {
-    }
-
+    @Builder
     public CustomerJpaEntity(
             String id,
             String email,
@@ -93,55 +97,6 @@ public class CustomerJpaEntity {
 
     public void clearAddresses() {
         addresses.clear();
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public CustomerStatus getStatus() {
-        return status;
-    }
-
-    public List<CustomerAddressJpaEntity> getAddresses() {
-        return addresses;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getLastLoginAt() {
-        return lastLoginAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update

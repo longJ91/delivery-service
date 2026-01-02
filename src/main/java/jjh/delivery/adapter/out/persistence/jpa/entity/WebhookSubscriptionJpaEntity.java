@@ -2,6 +2,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
 import jjh.delivery.domain.webhook.WebhookEventType;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -15,6 +19,8 @@ import java.util.Set;
         @Index(name = "idx_webhook_subscriptions_seller_id", columnList = "seller_id"),
         @Index(name = "idx_webhook_subscriptions_is_active", columnList = "is_active")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WebhookSubscriptionJpaEntity {
 
     @Id
@@ -60,9 +66,7 @@ public class WebhookSubscriptionJpaEntity {
     @Version
     private Long version;
 
-    protected WebhookSubscriptionJpaEntity() {
-    }
-
+    @Builder
     public WebhookSubscriptionJpaEntity(
             String id,
             String sellerId,
@@ -87,54 +91,5 @@ public class WebhookSubscriptionJpaEntity {
         this.lastDeliveryAt = lastDeliveryAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getSellerId() {
-        return sellerId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getEndpointUrl() {
-        return endpointUrl;
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public Set<WebhookEventType> getSubscribedEvents() {
-        return subscribedEvents;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public int getFailureCount() {
-        return failureCount;
-    }
-
-    public LocalDateTime getLastDeliveryAt() {
-        return lastDeliveryAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 }

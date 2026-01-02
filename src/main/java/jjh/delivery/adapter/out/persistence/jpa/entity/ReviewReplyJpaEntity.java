@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +16,8 @@ import java.time.LocalDateTime;
 @Table(name = "review_replies", indexes = {
         @Index(name = "idx_review_replies_seller", columnList = "seller_id")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewReplyJpaEntity {
 
     @Id
@@ -34,9 +40,7 @@ public class ReviewReplyJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected ReviewReplyJpaEntity() {
-    }
-
+    @Builder
     public ReviewReplyJpaEntity(
             String id,
             String sellerId,
@@ -49,31 +53,6 @@ public class ReviewReplyJpaEntity {
         this.content = content;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public ReviewJpaEntity getReview() {
-        return review;
-    }
-
-    public String getSellerId() {
-        return sellerId;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     // Setters

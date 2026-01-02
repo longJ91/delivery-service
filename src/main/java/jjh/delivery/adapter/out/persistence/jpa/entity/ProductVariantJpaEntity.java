@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -15,6 +19,8 @@ import java.util.Map;
         @Index(name = "idx_product_variants_product_id", columnList = "product_id"),
         @Index(name = "idx_product_variants_sku", columnList = "sku")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductVariantJpaEntity {
 
     @Id
@@ -44,9 +50,7 @@ public class ProductVariantJpaEntity {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
-    protected ProductVariantJpaEntity() {
-    }
-
+    @Builder
     public ProductVariantJpaEntity(
             String id,
             String name,
@@ -67,39 +71,6 @@ public class ProductVariantJpaEntity {
 
     void setProduct(ProductJpaEntity product) {
         this.product = product;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public ProductJpaEntity getProduct() {
-        return product;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getSku() {
-        return sku;
-    }
-
-    public Map<String, String> getOptionValues() {
-        return optionValues;
-    }
-
-    public BigDecimal getAdditionalPrice() {
-        return additionalPrice;
-    }
-
-    public int getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public boolean isActive() {
-        return isActive;
     }
 
     // Setters for update

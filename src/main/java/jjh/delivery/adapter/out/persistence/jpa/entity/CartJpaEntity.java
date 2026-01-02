@@ -1,6 +1,10 @@
 package jjh.delivery.adapter.out.persistence.jpa.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +17,8 @@ import java.util.List;
 @Table(name = "carts", indexes = {
         @Index(name = "idx_carts_customer_id", columnList = "customer_id", unique = true)
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartJpaEntity {
 
     @Id
@@ -32,35 +38,12 @@ public class CartJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected CartJpaEntity() {
-    }
-
+    @Builder
     public CartJpaEntity(String id, String customerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.customerId = customerId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public List<CartItemJpaEntity> getItems() {
-        return items;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     // Setters

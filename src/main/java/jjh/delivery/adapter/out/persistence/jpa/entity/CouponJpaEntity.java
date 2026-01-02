@@ -3,6 +3,10 @@ package jjh.delivery.adapter.out.persistence.jpa.entity;
 import jakarta.persistence.*;
 import jjh.delivery.domain.promotion.CouponScope;
 import jjh.delivery.domain.promotion.DiscountType;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +19,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_coupons_code", columnList = "code"),
         @Index(name = "idx_coupons_valid_until", columnList = "valid_until")
 })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CouponJpaEntity {
 
     @Id
@@ -74,9 +80,7 @@ public class CouponJpaEntity {
     @Version
     private Long version;
 
-    protected CouponJpaEntity() {
-    }
-
+    @Builder
     public CouponJpaEntity(
             String id,
             String code,
@@ -113,79 +117,6 @@ public class CouponJpaEntity {
         this.isActive = isActive;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public DiscountType getDiscountType() {
-        return discountType;
-    }
-
-    public BigDecimal getDiscountValue() {
-        return discountValue;
-    }
-
-    public BigDecimal getMinimumOrderAmount() {
-        return minimumOrderAmount;
-    }
-
-    public BigDecimal getMaximumDiscountAmount() {
-        return maximumDiscountAmount;
-    }
-
-    public CouponScope getScope() {
-        return scope;
-    }
-
-    public String getScopeTargetId() {
-        return scopeTargetId;
-    }
-
-    public int getTotalQuantity() {
-        return totalQuantity;
-    }
-
-    public int getUsedQuantity() {
-        return usedQuantity;
-    }
-
-    public LocalDateTime getValidFrom() {
-        return validFrom;
-    }
-
-    public LocalDateTime getValidUntil() {
-        return validUntil;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Long getVersion() {
-        return version;
     }
 
     // Setters for update
