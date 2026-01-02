@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageWebhookUseCase;
 import jjh.delivery.application.port.out.LoadWebhookPort;
 import jjh.delivery.application.port.out.SaveWebhookPort;
@@ -23,15 +25,11 @@ import java.util.stream.Stream;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class WebhookService implements ManageWebhookUseCase {
 
     private final LoadWebhookPort loadWebhookPort;
     private final SaveWebhookPort saveWebhookPort;
-
-    public WebhookService(LoadWebhookPort loadWebhookPort, SaveWebhookPort saveWebhookPort) {
-        this.loadWebhookPort = loadWebhookPort;
-        this.saveWebhookPort = saveWebhookPort;
-    }
 
     // ==================== Subscription 관리 ====================
 

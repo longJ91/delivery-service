@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ProcessPaymentUseCase;
 import jjh.delivery.application.port.out.LoadPaymentPort;
 import jjh.delivery.application.port.out.SavePaymentPort;
@@ -13,18 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PaymentService implements ProcessPaymentUseCase {
 
     private final LoadPaymentPort loadPaymentPort;
     private final SavePaymentPort savePaymentPort;
-
-    public PaymentService(
-            LoadPaymentPort loadPaymentPort,
-            SavePaymentPort savePaymentPort
-    ) {
-        this.loadPaymentPort = loadPaymentPort;
-        this.savePaymentPort = savePaymentPort;
-    }
 
     @Override
     public Payment requestPayment(RequestPaymentCommand command) {

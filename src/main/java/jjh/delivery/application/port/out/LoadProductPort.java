@@ -11,6 +11,7 @@ import java.util.Optional;
 
 /**
  * Product 조회 Port - Driven Port (Outbound)
+ * Note: countByCategoryId는 LoadProductStatsPort로 분리됨
  */
 public interface LoadProductPort {
 
@@ -28,11 +29,6 @@ public interface LoadProductPort {
      * 판매자별 상품 목록 조회
      */
     Page<Product> findBySellerId(String sellerId, ProductStatus status, Pageable pageable);
-
-    /**
-     * 카테고리별 상품 수 조회
-     */
-    long countByCategoryId(String categoryId);
 
     /**
      * 상품 존재 여부 확인

@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.review;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.review.dto.*;
 import jjh.delivery.application.port.in.ManageReviewUseCase;
 import jjh.delivery.application.port.in.ManageReviewUseCase.*;
@@ -21,13 +23,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v2/reviews")
+@RequiredArgsConstructor
 public class ReviewController {
 
     private final ManageReviewUseCase manageReviewUseCase;
-
-    public ReviewController(ManageReviewUseCase manageReviewUseCase) {
-        this.manageReviewUseCase = manageReviewUseCase;
-    }
 
     /**
      * 리뷰 작성

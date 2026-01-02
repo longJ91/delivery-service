@@ -1,10 +1,11 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.CustomerAddressJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.entity.CustomerJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.CustomerPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.CustomerJpaRepository;
-import jjh.delivery.application.port.out.LoadCustomerCredentialsPort;
 import jjh.delivery.application.port.out.LoadCustomerPort;
 import jjh.delivery.application.port.out.SaveCustomerPort;
 import jjh.delivery.domain.customer.Customer;
@@ -19,17 +20,14 @@ import java.util.stream.Collectors;
 /**
  * Customer JPA Adapter - Driven Adapter (Outbound)
  * JPA를 사용한 고객 저장/조회 구현
+ * Note: 인증 정보 관련 기능은 CustomerJooqAdapter로 분리됨
  */
 @Component
-public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, LoadCustomerCredentialsPort {
+@RequiredArgsConstructor
+public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort {
 
     private final CustomerJpaRepository repository;
     private final CustomerPersistenceMapper mapper;
-
-    public CustomerJpaAdapter(CustomerJpaRepository repository, CustomerPersistenceMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
 
     // ==================== LoadCustomerPort ====================
 
@@ -62,8 +60,7 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
     @Override
     @Transactional
     public Customer save(Customer customer) {
-        // Optional 체이닝으로 조회 및 업데이트 (함수형)
-        return repository.findByIdWithAddresses(customer.getId())
+        return repository.findById(customer.getId())
                 .map(existing -> updateExisting(existing, customer))
                 .orElseThrow(() -> new IllegalStateException("Customer not found for update: " + customer.getId()));
     }
@@ -78,18 +75,11 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
 
     @Override
     @Transactional
-    public void updatePassword(String customerId, String encodedPassword) {
-        repository.updatePassword(customerId, encodedPassword);
-    }
-
-    @Override
-    @Transactional
     public void delete(String customerId) {
         repository.deleteById(customerId);
     }
 
     private Customer updateExisting(CustomerJpaEntity existing, Customer customer) {
-        // 기본 정보 업데이트
         existing.setEmail(customer.getEmail());
         existing.setName(customer.getName());
         existing.setPhoneNumber(customer.getPhoneNumber());
@@ -97,7 +87,6 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
         existing.setUpdatedAt(customer.getUpdatedAt());
         existing.setLastLoginAt(customer.getLastLoginAt());
 
-        // 주소 동기화
         syncAddresses(existing, customer);
 
         CustomerJpaEntity saved = repository.save(existing);
@@ -105,15 +94,12 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
     }
 
     private void syncAddresses(CustomerJpaEntity existing, Customer customer) {
-        // Stream으로 ID 집합 수집 (함수형)
         Set<String> domainAddressIds = customer.getAddresses().stream()
                 .map(CustomerAddress::id)
                 .collect(Collectors.toSet());
 
-        // 삭제할 주소 필터링 (기존에 있지만 도메인에 없는 것)
         existing.getAddresses().removeIf(addr -> !domainAddressIds.contains(addr.getId()));
 
-        // ifPresentOrElse로 추가/업데이트 처리 (함수형)
         customer.getAddresses().forEach(domainAddr ->
                 existing.getAddresses().stream()
                         .filter(addr -> addr.getId().equals(domainAddr.id()))
@@ -147,19 +133,5 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort, L
                 domain.isDefault(),
                 domain.createdAt()
         );
-    }
-
-    // ==================== LoadCustomerCredentialsPort ====================
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<String> findPasswordByEmail(String email) {
-        return repository.findPasswordByEmail(email);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<String> findPasswordByCustomerId(String customerId) {
-        return repository.findPasswordById(customerId);
     }
 }

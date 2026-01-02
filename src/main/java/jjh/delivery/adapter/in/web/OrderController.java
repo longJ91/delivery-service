@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.dto.CreateOrderRequest;
 import jjh.delivery.adapter.in.web.dto.OrderResponse;
 import jjh.delivery.adapter.in.web.dto.UpdateOrderStatusRequest;
@@ -22,6 +24,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v2/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
@@ -29,20 +32,6 @@ public class OrderController {
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
     private final SearchOrderUseCase searchOrderUseCase;
     private final OrderWebMapper mapper;
-
-    public OrderController(
-            CreateOrderUseCase createOrderUseCase,
-            GetOrderUseCase getOrderUseCase,
-            UpdateOrderStatusUseCase updateOrderStatusUseCase,
-            SearchOrderUseCase searchOrderUseCase,
-            OrderWebMapper mapper
-    ) {
-        this.createOrderUseCase = createOrderUseCase;
-        this.getOrderUseCase = getOrderUseCase;
-        this.updateOrderStatusUseCase = updateOrderStatusUseCase;
-        this.searchOrderUseCase = searchOrderUseCase;
-        this.mapper = mapper;
-    }
 
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {

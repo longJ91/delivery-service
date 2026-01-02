@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.payment;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.payment.dto.ConfirmPaymentRequest;
 import jjh.delivery.adapter.in.web.payment.dto.PaymentResponse;
 import jjh.delivery.adapter.in.web.payment.dto.RequestPaymentRequest;
@@ -18,13 +20,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v2/payments")
+@RequiredArgsConstructor
 public class PaymentController {
 
     private final ProcessPaymentUseCase processPaymentUseCase;
-
-    public PaymentController(ProcessPaymentUseCase processPaymentUseCase) {
-        this.processPaymentUseCase = processPaymentUseCase;
-    }
 
     /**
      * 결제 요청

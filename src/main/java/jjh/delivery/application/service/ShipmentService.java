@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageShipmentUseCase;
 import jjh.delivery.application.port.out.LoadShipmentPort;
 import jjh.delivery.application.port.out.SaveShipmentPort;
@@ -18,6 +20,7 @@ import java.util.function.BiConsumer;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ShipmentService implements ManageShipmentUseCase {
 
     private final LoadShipmentPort loadShipmentPort;
@@ -33,14 +36,6 @@ public class ShipmentService implements ManageShipmentUseCase {
             ShipmentStatus.CANCELLED, (s, cmd) -> s.cancel(cmd.description()),
             ShipmentStatus.RETURNED, (s, cmd) -> s.returnToSender(cmd.location(), cmd.description())
     );
-
-    public ShipmentService(
-            LoadShipmentPort loadShipmentPort,
-            SaveShipmentPort saveShipmentPort
-    ) {
-        this.loadShipmentPort = loadShipmentPort;
-        this.saveShipmentPort = saveShipmentPort;
-    }
 
     @Override
     public Shipment createShipment(CreateShipmentCommand command) {

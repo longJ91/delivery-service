@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.seller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.seller.dto.*;
 import jjh.delivery.application.port.in.ManageSellerUseCase;
 import jjh.delivery.application.port.in.ManageSellerUseCase.*;
@@ -22,13 +24,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v2/sellers")
+@RequiredArgsConstructor
 public class SellerAdminController {
 
     private final ManageSellerUseCase manageSellerUseCase;
-
-    public SellerAdminController(ManageSellerUseCase manageSellerUseCase) {
-        this.manageSellerUseCase = manageSellerUseCase;
-    }
 
     // ==================== 판매자 등록 ====================
 

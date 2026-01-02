@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.auth;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.auth.dto.*;
 import jjh.delivery.application.port.in.GetMyProfileUseCase;
 import jjh.delivery.application.port.in.LoginUseCase;
@@ -19,24 +21,13 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v2/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final RegisterUseCase registerUseCase;
     private final LoginUseCase loginUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final GetMyProfileUseCase getMyProfileUseCase;
-
-    public AuthController(
-            RegisterUseCase registerUseCase,
-            LoginUseCase loginUseCase,
-            RefreshTokenUseCase refreshTokenUseCase,
-            GetMyProfileUseCase getMyProfileUseCase
-    ) {
-        this.registerUseCase = registerUseCase;
-        this.loginUseCase = loginUseCase;
-        this.refreshTokenUseCase = refreshTokenUseCase;
-        this.getMyProfileUseCase = getMyProfileUseCase;
-    }
 
     /**
      * 회원가입

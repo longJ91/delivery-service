@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.CouponJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.CouponPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.CouponJpaRepository;
@@ -16,18 +18,14 @@ import java.util.Optional;
 
 /**
  * Coupon JPA Adapter - Driven Adapter (Outbound)
- * 쿠폰 영속성 어댑터
+ * JPA를 사용한 쿠폰 저장/조회 구현
  */
 @Repository
+@RequiredArgsConstructor
 public class CouponJpaAdapter implements LoadCouponPort, SaveCouponPort {
 
     private final CouponJpaRepository couponJpaRepository;
     private final CouponPersistenceMapper couponMapper;
-
-    public CouponJpaAdapter(CouponJpaRepository couponJpaRepository, CouponPersistenceMapper couponMapper) {
-        this.couponJpaRepository = couponJpaRepository;
-        this.couponMapper = couponMapper;
-    }
 
     // ==================== LoadCouponPort ====================
 
@@ -57,6 +55,7 @@ public class CouponJpaAdapter implements LoadCouponPort, SaveCouponPort {
 
     @Override
     public List<Coupon> findUsableCoupons() {
+        // JPA 사용 (@Query with entity mapping)
         return couponJpaRepository.findUsableCoupons(LocalDateTime.now()).stream()
                 .map(couponMapper::toDomain)
                 .toList();

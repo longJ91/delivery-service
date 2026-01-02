@@ -9,13 +9,9 @@ import java.util.Optional;
 
 /**
  * Seller 조회 Port - Driven Port (Outbound)
+ * Note: findBusinessNameById는 LoadSellerInfoPort로 분리됨
  */
 public interface LoadSellerPort {
-
-    /**
-     * ID로 판매자 이름 조회
-     */
-    Optional<String> findBusinessNameById(String sellerId);
 
     /**
      * 판매자 존재 여부 확인

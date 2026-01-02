@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.coupon;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.coupon.dto.*;
 import jjh.delivery.application.port.in.ManageCouponUseCase;
 import jjh.delivery.application.port.in.ManageCouponUseCase.*;
@@ -21,13 +23,10 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v2/coupons")
+@RequiredArgsConstructor
 public class CouponController {
 
     private final ManageCouponUseCase manageCouponUseCase;
-
-    public CouponController(ManageCouponUseCase manageCouponUseCase) {
-        this.manageCouponUseCase = manageCouponUseCase;
-    }
 
     // ==================== Admin Endpoints ====================
 

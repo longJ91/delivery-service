@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa.adapter;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.ReturnJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.ReturnPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.ReturnJpaRepository;
@@ -16,18 +18,11 @@ import java.util.Optional;
  * Return JPA Adapter - Driven Adapter (Outbound)
  */
 @Component
+@RequiredArgsConstructor
 public class ReturnJpaAdapter implements LoadReturnPort, SaveReturnPort {
 
     private final ReturnJpaRepository returnJpaRepository;
     private final ReturnPersistenceMapper mapper;
-
-    public ReturnJpaAdapter(
-            ReturnJpaRepository returnJpaRepository,
-            ReturnPersistenceMapper mapper
-    ) {
-        this.returnJpaRepository = returnJpaRepository;
-        this.mapper = mapper;
-    }
 
     @Override
     public Optional<ProductReturn> findById(String returnId) {

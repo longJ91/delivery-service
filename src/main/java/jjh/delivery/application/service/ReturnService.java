@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageReturnUseCase;
 import jjh.delivery.application.port.out.LoadReturnPort;
 import jjh.delivery.application.port.out.SaveReturnPort;
@@ -16,18 +18,11 @@ import java.util.List;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ReturnService implements ManageReturnUseCase {
 
     private final LoadReturnPort loadReturnPort;
     private final SaveReturnPort saveReturnPort;
-
-    public ReturnService(
-            LoadReturnPort loadReturnPort,
-            SaveReturnPort saveReturnPort
-    ) {
-        this.loadReturnPort = loadReturnPort;
-        this.saveReturnPort = saveReturnPort;
-    }
 
     @Override
     public ProductReturn requestReturn(RequestReturnCommand command) {

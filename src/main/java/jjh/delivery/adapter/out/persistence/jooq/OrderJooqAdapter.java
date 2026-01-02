@@ -9,6 +9,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -29,13 +30,10 @@ import static org.jooq.impl.DSL.table;
  * v2 - Product Delivery
  */
 @Component
+@RequiredArgsConstructor
 public class OrderJooqAdapter implements OrderQueryPort {
 
     private final DSLContext dsl;
-
-    public OrderJooqAdapter(DSLContext dsl) {
-        this.dsl = dsl;
-    }
 
     @Override
     public List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria) {

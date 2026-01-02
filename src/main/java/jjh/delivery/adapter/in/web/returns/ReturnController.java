@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.returns;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.returns.dto.*;
 import jjh.delivery.application.port.in.ManageReturnUseCase;
 import jjh.delivery.application.port.in.ManageReturnUseCase.*;
@@ -19,13 +21,10 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v2/returns")
+@RequiredArgsConstructor
 public class ReturnController {
 
     private final ManageReturnUseCase manageReturnUseCase;
-
-    public ReturnController(ManageReturnUseCase manageReturnUseCase) {
-        this.manageReturnUseCase = manageReturnUseCase;
-    }
 
     /**
      * 반품 요청

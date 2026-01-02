@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.webhook;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.webhook.dto.*;
 import jjh.delivery.application.port.in.ManageWebhookUseCase;
 import jjh.delivery.application.port.in.ManageWebhookUseCase.*;
@@ -27,13 +29,10 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/v2/webhooks")
+@RequiredArgsConstructor
 public class WebhookController {
 
     private final ManageWebhookUseCase manageWebhookUseCase;
-
-    public WebhookController(ManageWebhookUseCase manageWebhookUseCase) {
-        this.manageWebhookUseCase = manageWebhookUseCase;
-    }
 
     // ==================== 웹훅 구독 관리 ====================
 

@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.GetMyProfileUseCase;
 import jjh.delivery.application.port.in.LoginUseCase;
 import jjh.delivery.application.port.in.RefreshTokenUseCase;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AuthService implements RegisterUseCase, LoginUseCase, RefreshTokenUseCase, GetMyProfileUseCase {
 
     private final LoadCustomerPort loadCustomerPort;
@@ -28,20 +31,6 @@ public class AuthService implements RegisterUseCase, LoginUseCase, RefreshTokenU
     private final LoadCustomerCredentialsPort loadCustomerCredentialsPort;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-
-    public AuthService(
-            LoadCustomerPort loadCustomerPort,
-            SaveCustomerPort saveCustomerPort,
-            LoadCustomerCredentialsPort loadCustomerCredentialsPort,
-            PasswordEncoder passwordEncoder,
-            JwtTokenProvider jwtTokenProvider
-    ) {
-        this.loadCustomerPort = loadCustomerPort;
-        this.saveCustomerPort = saveCustomerPort;
-        this.loadCustomerCredentialsPort = loadCustomerCredentialsPort;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
 
     @Override
     public Customer register(RegisterCommand command) {

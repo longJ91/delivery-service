@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageSellerUseCase;
 import jjh.delivery.application.port.out.LoadSellerPort;
 import jjh.delivery.application.port.out.SaveSellerPort;
@@ -21,15 +23,11 @@ import java.util.function.Supplier;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class SellerService implements ManageSellerUseCase {
 
     private final LoadSellerPort loadSellerPort;
     private final SaveSellerPort saveSellerPort;
-
-    public SellerService(LoadSellerPort loadSellerPort, SaveSellerPort saveSellerPort) {
-        this.loadSellerPort = loadSellerPort;
-        this.saveSellerPort = saveSellerPort;
-    }
 
     // ==================== 판매자 등록/수정 ====================
 

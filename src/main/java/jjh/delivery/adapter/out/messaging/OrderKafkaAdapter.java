@@ -6,6 +6,7 @@ import jjh.delivery.domain.order.event.OrderEvent;
 import jjh.delivery.domain.order.event.OrderStatusChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  * Kafka를 사용한 이벤트 발행 구현
  */
 @Component
+@RequiredArgsConstructor
 public class OrderKafkaAdapter implements OrderEventPort {
 
     private static final Logger log = LoggerFactory.getLogger(OrderKafkaAdapter.class);
@@ -25,10 +27,6 @@ public class OrderKafkaAdapter implements OrderEventPort {
     private static final String TOPIC_ORDER_STATUS_CHANGED = "order.status-changed";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-
-    public OrderKafkaAdapter(KafkaTemplate<String, Object> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
-    }
 
     @Override
     public void publish(OrderEvent event) {

@@ -4,11 +4,11 @@ import jjh.delivery.domain.review.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
  * Review 조회 Port - Driven Port (Outbound)
+ * Note: getAverageRatingByProductId, getRatingDistributionByProductId는 LoadReviewStatsPort로 분리됨
  */
 public interface LoadReviewPort {
 
@@ -23,19 +23,9 @@ public interface LoadReviewPort {
     Page<Review> findByProductId(String productId, Pageable pageable);
 
     /**
-     * 상품별 평균 평점 조회
-     */
-    double getAverageRatingByProductId(String productId);
-
-    /**
      * 상품별 리뷰 수 조회
      */
     long countByProductId(String productId);
-
-    /**
-     * 상품별 평점 분포 조회
-     */
-    Map<Integer, Long> getRatingDistributionByProductId(String productId);
 
     /**
      * 고객별 리뷰 목록 조회

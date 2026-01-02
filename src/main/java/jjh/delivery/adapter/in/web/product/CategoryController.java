@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.in.web.product;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.product.dto.CategoryListResponse;
 import jjh.delivery.application.port.out.LoadCategoryPort;
 import jjh.delivery.domain.category.Category;
@@ -16,13 +18,10 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v2/categories")
+@RequiredArgsConstructor
 public class CategoryController {
 
     private final LoadCategoryPort loadCategoryPort;
-
-    public CategoryController(LoadCategoryPort loadCategoryPort) {
-        this.loadCategoryPort = loadCategoryPort;
-    }
 
     /**
      * 카테고리 목록 조회 (트리 구조)

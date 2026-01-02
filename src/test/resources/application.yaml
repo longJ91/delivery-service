@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: delivery-test
+
+  # H2 In-Memory Database
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    open-in-view: false
+
+  # Disable Kafka
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: test-group
+      auto-offset-reset: earliest
+
+  # Disable Elasticsearch
+  elasticsearch:
+    uris: localhost:9200
+
+  # Disable auto-configurations for external services
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+
+# Server
+server:
+  port: 0
+
+# JWT
+jwt:
+  secret: test-jwt-secret-key-for-testing-only-minimum-256-bits-required-here
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
+
+# Logging
+logging:
+  level:
+    jjh.delivery: DEBUG
+    org.springframework: INFO

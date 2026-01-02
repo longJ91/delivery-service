@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.customer;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.auth.dto.CustomerResponse;
 import jjh.delivery.adapter.in.web.customer.dto.AddAddressRequest;
 import jjh.delivery.adapter.in.web.customer.dto.AddressListResponse;
@@ -28,21 +30,12 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v2/customers")
+@RequiredArgsConstructor
 public class CustomerController {
 
     private final LoadCustomerPort loadCustomerPort;
     private final UpdateCustomerProfileUseCase updateCustomerProfileUseCase;
     private final ManageAddressUseCase manageAddressUseCase;
-
-    public CustomerController(
-            LoadCustomerPort loadCustomerPort,
-            UpdateCustomerProfileUseCase updateCustomerProfileUseCase,
-            ManageAddressUseCase manageAddressUseCase
-    ) {
-        this.loadCustomerPort = loadCustomerPort;
-        this.updateCustomerProfileUseCase = updateCustomerProfileUseCase;
-        this.manageAddressUseCase = manageAddressUseCase;
-    }
 
     /**
      * 내 정보 조회

@@ -8,6 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
+import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
@@ -16,15 +17,12 @@ import org.springframework.stereotype.Component;
  * 외부 시스템으로부터의 이벤트 수신 (v2 - Product Delivery)
  */
 @Component
+@RequiredArgsConstructor
 public class OrderKafkaListener {
 
     private static final Logger log = LoggerFactory.getLogger(OrderKafkaListener.class);
 
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
-
-    public OrderKafkaListener(UpdateOrderStatusUseCase updateOrderStatusUseCase) {
-        this.updateOrderStatusUseCase = updateOrderStatusUseCase;
-    }
 
     /**
      * 배송 출발 이벤트 수신

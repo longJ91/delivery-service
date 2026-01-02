@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.WebhookDeliveryJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.entity.WebhookSubscriptionJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.WebhookPersistenceMapper;
@@ -21,24 +23,15 @@ import java.util.Optional;
 
 /**
  * Webhook JPA Adapter - Driven Adapter (Outbound)
- * 웹훅 영속성 어댑터
+ * JPA를 사용한 웹훅 저장/조회 구현
  */
 @Repository
+@RequiredArgsConstructor
 public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
 
     private final WebhookSubscriptionJpaRepository subscriptionRepository;
     private final WebhookDeliveryJpaRepository deliveryRepository;
     private final WebhookPersistenceMapper mapper;
-
-    public WebhookJpaAdapter(
-            WebhookSubscriptionJpaRepository subscriptionRepository,
-            WebhookDeliveryJpaRepository deliveryRepository,
-            WebhookPersistenceMapper mapper
-    ) {
-        this.subscriptionRepository = subscriptionRepository;
-        this.deliveryRepository = deliveryRepository;
-        this.mapper = mapper;
-    }
 
     // ==================== LoadWebhookPort - Subscription ====================
 
@@ -57,6 +50,7 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
 
     @Override
     public List<WebhookSubscription> findActiveSubscriptionsByEventType(WebhookEventType eventType) {
+        // JPA 사용 (@Query with entity mapping)
         return subscriptionRepository.findActiveByEventType(eventType).stream()
                 .map(mapper::toSubscriptionDomain)
                 .toList();
@@ -84,6 +78,7 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
 
     @Override
     public List<WebhookDelivery> findPendingRetries() {
+        // JPA 사용 (@Query with entity mapping)
         return deliveryRepository.findPendingRetries(WebhookDeliveryStatus.RETRYING, LocalDateTime.now()).stream()
                 .map(mapper::toDeliveryDomain)
                 .toList();

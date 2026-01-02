@@ -1,11 +1,13 @@
 package jjh.delivery.adapter.in.web.cart;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.cart.dto.*;
 import jjh.delivery.application.port.in.ManageCartUseCase;
 import jjh.delivery.application.port.in.ManageCartUseCase.AddCartItemCommand;
 import jjh.delivery.application.port.out.LoadProductPort;
-import jjh.delivery.application.port.out.LoadSellerPort;
+import jjh.delivery.application.port.out.LoadSellerInfoPort;
 import jjh.delivery.domain.cart.Cart;
 import jjh.delivery.domain.cart.CartItem;
 import jjh.delivery.domain.product.Product;
@@ -23,21 +25,12 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v2/cart")
+@RequiredArgsConstructor
 public class CartController {
 
     private final ManageCartUseCase manageCartUseCase;
     private final LoadProductPort loadProductPort;
-    private final LoadSellerPort loadSellerPort;
-
-    public CartController(
-            ManageCartUseCase manageCartUseCase,
-            LoadProductPort loadProductPort,
-            LoadSellerPort loadSellerPort
-    ) {
-        this.manageCartUseCase = manageCartUseCase;
-        this.loadProductPort = loadProductPort;
-        this.loadSellerPort = loadSellerPort;
-    }
+    private final LoadSellerInfoPort loadSellerInfoPort;
 
     /**
      * 장바구니 조회
@@ -107,7 +100,7 @@ public class CartController {
     // ==================== Private Methods ====================
 
     private CartItemResponse toItemResponse(CartItem item) {
-        String sellerName = loadSellerPort.findBusinessNameById(item.sellerId()).orElse("Unknown");
+        String sellerName = loadSellerInfoPort.findBusinessNameById(item.sellerId()).orElse("Unknown");
 
         // 재고 및 가용성 확인
         int stock = 0;

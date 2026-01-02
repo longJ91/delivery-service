@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.CreateOrderUseCase;
 import jjh.delivery.application.port.in.GetOrderUseCase;
 import jjh.delivery.application.port.in.SearchOrderUseCase;
@@ -26,6 +28,7 @@ import java.util.Optional;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
         UpdateOrderStatusUseCase, SearchOrderUseCase {
 
@@ -33,18 +36,6 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     private final SaveOrderPort saveOrderPort;
     private final OrderEventPort orderEventPort;
     private final OrderSearchPort orderSearchPort;
-
-    public OrderService(
-            LoadOrderPort loadOrderPort,
-            SaveOrderPort saveOrderPort,
-            OrderEventPort orderEventPort,
-            OrderSearchPort orderSearchPort
-    ) {
-        this.loadOrderPort = loadOrderPort;
-        this.saveOrderPort = saveOrderPort;
-        this.orderEventPort = orderEventPort;
-        this.orderSearchPort = orderSearchPort;
-    }
 
     // ==================== CreateOrderUseCase ====================
 

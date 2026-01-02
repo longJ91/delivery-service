@@ -1,6 +1,8 @@
 package jjh.delivery.adapter.in.web.shipment;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.shipment.dto.*;
 import jjh.delivery.application.port.in.ManageShipmentUseCase;
 import jjh.delivery.application.port.in.ManageShipmentUseCase.*;
@@ -15,13 +17,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v2/shipments")
+@RequiredArgsConstructor
 public class ShipmentController {
 
     private final ManageShipmentUseCase manageShipmentUseCase;
-
-    public ShipmentController(ManageShipmentUseCase manageShipmentUseCase) {
-        this.manageShipmentUseCase = manageShipmentUseCase;
-    }
 
     /**
      * 배송 생성

@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
 import jakarta.persistence.criteria.Predicate;
 import jjh.delivery.adapter.out.persistence.jpa.entity.ProductJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.ProductPersistenceMapper;
@@ -19,17 +21,15 @@ import java.util.Optional;
 
 /**
  * Product JPA Adapter - Driven Adapter (Outbound)
+ * JPA를 사용한 상품 조회 구현
+ * Note: 통계 쿼리(countByCategoryId)는 ProductJooqAdapter로 분리됨
  */
 @Component
+@RequiredArgsConstructor
 public class ProductJpaAdapter implements LoadProductPort {
 
     private final ProductJpaRepository repository;
     private final ProductPersistenceMapper mapper;
-
-    public ProductJpaAdapter(ProductJpaRepository repository, ProductPersistenceMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -58,12 +58,6 @@ public class ProductJpaAdapter implements LoadProductPort {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public long countByCategoryId(String categoryId) {
-        return repository.countByCategoryIdAndActive(categoryId);
-    }
-
-    @Override
     public boolean existsById(String productId) {
         return repository.existsById(productId);
     }
@@ -72,22 +66,18 @@ public class ProductJpaAdapter implements LoadProductPort {
         return (root, criteriaQuery, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 상태 필터
             if (query.statuses() != null && !query.statuses().isEmpty()) {
                 predicates.add(root.get("status").in(query.statuses()));
             }
 
-            // 판매자 필터
             if (query.sellerId() != null && !query.sellerId().isBlank()) {
                 predicates.add(cb.equal(root.get("sellerId"), query.sellerId()));
             }
 
-            // 카테고리 필터
             if (query.categoryId() != null && !query.categoryId().isBlank()) {
                 predicates.add(cb.isMember(query.categoryId(), root.get("categoryIds")));
             }
 
-            // 키워드 검색 (이름, 설명)
             if (query.keyword() != null && !query.keyword().isBlank()) {
                 String pattern = "%" + query.keyword().toLowerCase() + "%";
                 predicates.add(cb.or(
@@ -96,7 +86,6 @@ public class ProductJpaAdapter implements LoadProductPort {
                 ));
             }
 
-            // 가격 범위
             if (query.minPrice() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("basePrice"), query.minPrice()));
             }

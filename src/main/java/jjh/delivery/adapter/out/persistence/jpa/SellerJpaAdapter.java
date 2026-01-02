@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.SellerJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.SellerPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.SellerJpaRepository;
@@ -16,25 +18,17 @@ import java.util.Optional;
 
 /**
  * Seller JPA Adapter - Driven Adapter (Outbound)
+ * JPA를 사용한 판매자 저장/조회 구현
+ * Note: 단순 조회(findBusinessNameById)는 SellerJooqAdapter로 분리됨
  */
 @Repository
+@RequiredArgsConstructor
 public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     private final SellerJpaRepository repository;
     private final SellerPersistenceMapper mapper;
 
-    public SellerJpaAdapter(SellerJpaRepository repository, SellerPersistenceMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
-
     // ==================== LoadSellerPort ====================
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<String> findBusinessNameById(String sellerId) {
-        return repository.findBusinessNameById(sellerId);
-    }
 
     @Override
     @Transactional(readOnly = true)

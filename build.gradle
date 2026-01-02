@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'nu.studer.jooq' version '9.0'
 }
 
 group = 'jjh'
@@ -48,13 +49,87 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-jooq-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webclient-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+	// jOOQ Code Generation
+	jooqGenerator 'org.jooq:jooq-meta-extensions:3.19.29'
+	jooqGenerator 'com.h2database:h2'
+
+	// Test Dependencies
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// jOOQ Code Generation Configuration
+jooq {
+	version = '3.19.29'
+
+	configurations {
+		main {
+			generateSchemaSourceOnCompilation = true
+
+			generationTool {
+				logging = org.jooq.meta.jaxb.Logging.WARN
+
+				generator {
+					name = 'org.jooq.codegen.JavaGenerator'
+
+					database {
+						name = 'org.jooq.meta.extensions.ddl.DDLDatabase'
+
+						properties {
+							property {
+								key = 'scripts'
+								value = 'src/main/resources/db/schema.sql'
+							}
+							property {
+								key = 'sort'
+								value = 'semantic'
+							}
+							property {
+								key = 'defaultNameCase'
+								value = 'lower'
+							}
+						}
+
+						forcedTypes {
+							// Map JSONB to String
+							forcedType {
+								name = 'VARCHAR'
+								includeTypes = 'JSONB'
+							}
+						}
+					}
+
+					generate {
+						deprecated = false
+						records = true
+						immutablePojos = false
+						fluentSetters = true
+						javaTimeTypes = true
+						springAnnotations = true
+						springDao = false
+					}
+
+					target {
+						packageName = 'jjh.delivery.adapter.out.persistence.jooq.generated'
+						directory = 'build/generated-src/jooq/main'
+					}
+				}
+			}
+		}
+	}
+}
+
+// Add generated jOOQ sources to main source set
+sourceSets {
+	main {
+		java {
+			srcDir 'build/generated-src/jooq/main'
+		}
+	}
 }
 
 tasks.named('bootBuildImage') {

@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa.adapter;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.ShipmentJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.ShipmentPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.ShipmentJpaRepository;
@@ -16,18 +18,11 @@ import java.util.Optional;
  * Shipment JPA Adapter - Driven Adapter (Outbound)
  */
 @Component
+@RequiredArgsConstructor
 public class ShipmentJpaAdapter implements LoadShipmentPort, SaveShipmentPort {
 
     private final ShipmentJpaRepository shipmentJpaRepository;
     private final ShipmentPersistenceMapper mapper;
-
-    public ShipmentJpaAdapter(
-            ShipmentJpaRepository shipmentJpaRepository,
-            ShipmentPersistenceMapper mapper
-    ) {
-        this.shipmentJpaRepository = shipmentJpaRepository;
-        this.mapper = mapper;
-    }
 
     @Override
     public Optional<Shipment> findById(String shipmentId) {

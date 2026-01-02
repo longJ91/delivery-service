@@ -1,10 +1,13 @@
 package jjh.delivery.adapter.in.web.product;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.in.web.product.dto.*;
 import jjh.delivery.application.port.out.LoadProductPort;
 import jjh.delivery.application.port.out.LoadProductPort.SearchProductQuery;
 import jjh.delivery.application.port.out.LoadReviewPort;
-import jjh.delivery.application.port.out.LoadSellerPort;
+import jjh.delivery.application.port.out.LoadReviewStatsPort;
+import jjh.delivery.application.port.out.LoadSellerInfoPort;
 import jjh.delivery.application.port.out.LoadCustomerPort;
 import jjh.delivery.domain.product.Product;
 import jjh.delivery.domain.product.ProductStatus;
@@ -27,24 +30,14 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v2/products")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final LoadProductPort loadProductPort;
     private final LoadReviewPort loadReviewPort;
-    private final LoadSellerPort loadSellerPort;
+    private final LoadReviewStatsPort loadReviewStatsPort;
+    private final LoadSellerInfoPort loadSellerInfoPort;
     private final LoadCustomerPort loadCustomerPort;
-
-    public ProductController(
-            LoadProductPort loadProductPort,
-            LoadReviewPort loadReviewPort,
-            LoadSellerPort loadSellerPort,
-            LoadCustomerPort loadCustomerPort
-    ) {
-        this.loadProductPort = loadProductPort;
-        this.loadReviewPort = loadReviewPort;
-        this.loadSellerPort = loadSellerPort;
-        this.loadCustomerPort = loadCustomerPort;
-    }
 
     /**
      * 상품 목록 조회
@@ -73,9 +66,9 @@ public class ProductController {
         Page<Product> products = loadProductPort.searchProducts(query, pageable);
 
         Page<ProductListItemResponse> responsePage = products.map(product -> {
-            double ratingAvg = loadReviewPort.getAverageRatingByProductId(product.getId());
+            double ratingAvg = loadReviewStatsPort.getAverageRatingByProductId(product.getId());
             long reviewCount = loadReviewPort.countByProductId(product.getId());
-            String sellerName = loadSellerPort.findBusinessNameById(product.getSellerId()).orElse("Unknown");
+            String sellerName = loadSellerInfoPort.findBusinessNameById(product.getSellerId()).orElse("Unknown");
             return ProductListItemResponse.from(product, ratingAvg, reviewCount, sellerName);
         });
 
@@ -90,8 +83,8 @@ public class ProductController {
         Product product = loadProductPort.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
 
-        String sellerName = loadSellerPort.findBusinessNameById(product.getSellerId()).orElse("Unknown");
-        double ratingAvg = loadReviewPort.getAverageRatingByProductId(productId);
+        String sellerName = loadSellerInfoPort.findBusinessNameById(product.getSellerId()).orElse("Unknown");
+        double ratingAvg = loadReviewStatsPort.getAverageRatingByProductId(productId);
         long reviewCount = loadReviewPort.countByProductId(productId);
 
         return ResponseEntity.ok(ProductDetailResponse.from(product, sellerName, ratingAvg, reviewCount));
@@ -122,7 +115,7 @@ public class ProductController {
             return ReviewResponse.from(review, customerName);
         });
 
-        Map<Integer, Long> ratingDistribution = loadReviewPort.getRatingDistributionByProductId(productId);
+        Map<Integer, Long> ratingDistribution = loadReviewStatsPort.getRatingDistributionByProductId(productId);
 
         return ResponseEntity.ok(ReviewListResponse.from(responsePage, ratingDistribution));
     }

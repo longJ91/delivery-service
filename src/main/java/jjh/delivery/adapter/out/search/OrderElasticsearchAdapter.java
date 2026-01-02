@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ import java.util.List;
  * Elasticsearch를 사용한 검색 구현 (v2 - Product Delivery)
  */
 @Component
+@RequiredArgsConstructor
 public class OrderElasticsearchAdapter implements OrderSearchPort {
 
     private static final Logger log = LoggerFactory.getLogger(OrderElasticsearchAdapter.class);
@@ -32,16 +34,6 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
     private final OrderElasticsearchRepository repository;
     private final ElasticsearchOperations elasticsearchOperations;
     private final LoadOrderPort loadOrderPort;
-
-    public OrderElasticsearchAdapter(
-            OrderElasticsearchRepository repository,
-            ElasticsearchOperations elasticsearchOperations,
-            LoadOrderPort loadOrderPort
-    ) {
-        this.repository = repository;
-        this.elasticsearchOperations = elasticsearchOperations;
-        this.loadOrderPort = loadOrderPort;
-    }
 
     @Override
     public void index(Order order) {

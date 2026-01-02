@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageCouponUseCase;
 import jjh.delivery.application.port.out.LoadCouponPort;
 import jjh.delivery.application.port.out.SaveCouponPort;
@@ -21,15 +23,11 @@ import java.util.function.Supplier;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CouponService implements ManageCouponUseCase {
 
     private final LoadCouponPort loadCouponPort;
     private final SaveCouponPort saveCouponPort;
-
-    public CouponService(LoadCouponPort loadCouponPort, SaveCouponPort saveCouponPort) {
-        this.loadCouponPort = loadCouponPort;
-        this.saveCouponPort = saveCouponPort;
-    }
 
     // ==================== 쿠폰 생성/수정/삭제 ====================
 

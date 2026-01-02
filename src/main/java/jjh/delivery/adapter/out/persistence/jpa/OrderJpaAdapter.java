@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.OrderJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.OrderPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.OrderJpaRepository;
@@ -15,17 +17,14 @@ import java.util.Optional;
 /**
  * Order JPA Adapter - Driven Adapter (Outbound)
  * JPA를 사용한 주문 저장/조회 구현
+ * Note: 조인 쿼리는 JPA @Query 사용 (OrderJooqAdapter에서 복잡한 쿼리 처리)
  */
 @Component
+@RequiredArgsConstructor
 public class OrderJpaAdapter implements LoadOrderPort, SaveOrderPort {
 
     private final OrderJpaRepository repository;
     private final OrderPersistenceMapper mapper;
-
-    public OrderJpaAdapter(OrderJpaRepository repository, OrderPersistenceMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
 
     // ==================== LoadOrderPort ====================
 

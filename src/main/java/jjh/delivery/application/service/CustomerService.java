@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageAddressUseCase;
 import jjh.delivery.application.port.in.UpdateCustomerProfileUseCase;
 import jjh.delivery.application.port.out.LoadCustomerPort;
@@ -18,15 +20,11 @@ import java.util.List;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddressUseCase {
 
     private final LoadCustomerPort loadCustomerPort;
     private final SaveCustomerPort saveCustomerPort;
-
-    public CustomerService(LoadCustomerPort loadCustomerPort, SaveCustomerPort saveCustomerPort) {
-        this.loadCustomerPort = loadCustomerPort;
-        this.saveCustomerPort = saveCustomerPort;
-    }
 
     // ==================== UpdateCustomerProfileUseCase ====================
 

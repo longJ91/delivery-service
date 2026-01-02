@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa.adapter;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.adapter.out.persistence.jpa.entity.PaymentJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.PaymentPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.PaymentJpaRepository;
@@ -16,18 +18,11 @@ import java.util.Optional;
  * Payment JPA Adapter - Driven Adapter (Outbound)
  */
 @Component
+@RequiredArgsConstructor
 public class PaymentJpaAdapter implements LoadPaymentPort, SavePaymentPort {
 
     private final PaymentJpaRepository paymentJpaRepository;
     private final PaymentPersistenceMapper mapper;
-
-    public PaymentJpaAdapter(
-            PaymentJpaRepository paymentJpaRepository,
-            PaymentPersistenceMapper mapper
-    ) {
-        this.paymentJpaRepository = paymentJpaRepository;
-        this.mapper = mapper;
-    }
 
     @Override
     public Optional<Payment> findById(String paymentId) {

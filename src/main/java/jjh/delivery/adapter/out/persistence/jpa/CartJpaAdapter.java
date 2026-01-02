@@ -1,5 +1,8 @@
 package jjh.delivery.adapter.out.persistence.jpa;
 
+import lombok.RequiredArgsConstructor;
+
+import jjh.delivery.adapter.out.persistence.jpa.entity.CartItemJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.entity.CartJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.CartPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.CartJpaRepository;
@@ -14,21 +17,19 @@ import java.util.Optional;
 
 /**
  * Cart JPA Adapter - Driven Adapter (Outbound)
+ * JPA를 사용한 장바구니 저장/조회 구현
  */
 @Component
+@RequiredArgsConstructor
 public class CartJpaAdapter implements LoadCartPort, SaveCartPort {
 
     private final CartJpaRepository repository;
     private final CartPersistenceMapper mapper;
 
-    public CartJpaAdapter(CartJpaRepository repository, CartPersistenceMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Optional<Cart> findByCustomerId(String customerId) {
+        // JPA 사용 (조인 쿼리는 JPA가 관계 매핑 처리)
         return repository.findByCustomerIdWithItems(customerId)
                 .map(mapper::toDomain);
     }
@@ -68,7 +69,7 @@ public class CartJpaAdapter implements LoadCartPort, SaveCartPort {
 
         // 새 아이템 추가
         for (CartItem item : cart.getItems()) {
-            entity.addItem(new jjh.delivery.adapter.out.persistence.jpa.entity.CartItemJpaEntity(
+            entity.addItem(new CartItemJpaEntity(
                     item.id(),
                     item.productId(),
                     item.productName(),

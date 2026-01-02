@@ -1,7 +1,10 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageReviewUseCase;
 import jjh.delivery.application.port.out.LoadReviewPort;
+import jjh.delivery.application.port.out.LoadReviewStatsPort;
 import jjh.delivery.application.port.out.SaveReviewPort;
 import jjh.delivery.domain.review.Review;
 import jjh.delivery.domain.review.ReviewImage;
@@ -21,18 +24,12 @@ import java.util.stream.IntStream;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ReviewService implements ManageReviewUseCase {
 
     private final LoadReviewPort loadReviewPort;
+    private final LoadReviewStatsPort loadReviewStatsPort;
     private final SaveReviewPort saveReviewPort;
-
-    public ReviewService(
-            LoadReviewPort loadReviewPort,
-            SaveReviewPort saveReviewPort
-    ) {
-        this.loadReviewPort = loadReviewPort;
-        this.saveReviewPort = saveReviewPort;
-    }
 
     @Override
     public Review createReview(CreateReviewCommand command) {
@@ -118,9 +115,9 @@ public class ReviewService implements ManageReviewUseCase {
     @Override
     @Transactional(readOnly = true)
     public ReviewRatingInfo getProductRatingInfo(String productId) {
-        double averageRating = loadReviewPort.getAverageRatingByProductId(productId);
+        double averageRating = loadReviewStatsPort.getAverageRatingByProductId(productId);
         long totalCount = loadReviewPort.countByProductId(productId);
-        Map<Integer, Long> ratingDistribution = loadReviewPort.getRatingDistributionByProductId(productId);
+        Map<Integer, Long> ratingDistribution = loadReviewStatsPort.getRatingDistributionByProductId(productId);
 
         return new ReviewRatingInfo(averageRating, totalCount, ratingDistribution);
     }

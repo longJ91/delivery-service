@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.in.ManageCartUseCase;
 import jjh.delivery.application.port.out.LoadCartPort;
 import jjh.delivery.application.port.out.LoadProductPort;
@@ -21,21 +23,12 @@ import java.util.Optional;
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CartService implements ManageCartUseCase {
 
     private final LoadCartPort loadCartPort;
     private final SaveCartPort saveCartPort;
     private final LoadProductPort loadProductPort;
-
-    public CartService(
-            LoadCartPort loadCartPort,
-            SaveCartPort saveCartPort,
-            LoadProductPort loadProductPort
-    ) {
-        this.loadCartPort = loadCartPort;
-        this.saveCartPort = saveCartPort;
-        this.loadProductPort = loadProductPort;
-    }
 
     @Override
     @Transactional(readOnly = true)

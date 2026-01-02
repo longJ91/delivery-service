@@ -1,5 +1,7 @@
 package jjh.delivery.application.service;
 
+import lombok.RequiredArgsConstructor;
+
 import jjh.delivery.application.port.out.OrderQueryPort;
 import jjh.delivery.application.port.out.OrderQueryPort.ComplexQueryCriteria;
 import jjh.delivery.application.port.out.OrderQueryPort.OrderStatistics;
@@ -17,13 +19,10 @@ import java.util.List;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class OrderQueryService {
 
     private final OrderQueryPort orderQueryPort;
-
-    public OrderQueryService(OrderQueryPort orderQueryPort) {
-        this.orderQueryPort = orderQueryPort;
-    }
 
     public List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria) {
         return orderQueryPort.findOrdersWithComplexCriteria(criteria);
