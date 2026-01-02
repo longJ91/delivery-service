@@ -5,23 +5,16 @@ import jjh.delivery.domain.seller.SellerStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 /**
  * Seller JPA Repository
+ * Note: findBusinessNameById는 SellerJooqRepository로 마이그레이션됨 (컴파일 타임 타입 안전성)
  */
 @Repository
 public interface SellerJpaRepository extends JpaRepository<SellerJpaEntity, String> {
-
-    /**
-     * ID로 판매자 이름 조회
-     */
-    @Query("SELECT s.businessName FROM SellerJpaEntity s WHERE s.id = :id")
-    Optional<String> findBusinessNameById(@Param("id") String id);
 
     Optional<SellerJpaEntity> findByBusinessNumber(String businessNumber);
 

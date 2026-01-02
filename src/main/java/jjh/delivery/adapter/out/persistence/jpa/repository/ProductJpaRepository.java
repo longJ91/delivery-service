@@ -32,9 +32,5 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, St
      */
     Page<ProductJpaEntity> findBySellerId(String sellerId, Pageable pageable);
 
-    /**
-     * 카테고리별 상품 수 조회
-     */
-    @Query("SELECT COUNT(p) FROM ProductJpaEntity p WHERE :categoryId MEMBER OF p.categoryIds AND p.status = 'ACTIVE'")
-    long countByCategoryIdAndActive(@Param("categoryId") String categoryId);
+    // Note: countByCategoryIdAndActive는 ProductJooqRepository로 마이그레이션됨 (컴파일 타임 타입 안전성)
 }

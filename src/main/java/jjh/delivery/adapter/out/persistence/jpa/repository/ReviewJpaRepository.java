@@ -40,24 +40,15 @@ public interface ReviewJpaRepository extends JpaRepository<ReviewJpaEntity, Stri
     Page<ReviewJpaEntity> findBySellerId(String sellerId, Pageable pageable);
 
     /**
-     * 상품별 평균 평점
-     */
-    @Query("SELECT COALESCE(AVG(r.rating), 0.0) FROM ReviewJpaEntity r WHERE r.productId = :productId AND r.isVisible = true")
-    double getAverageRatingByProductId(@Param("productId") String productId);
-
-    /**
      * 상품별 리뷰 수
      */
     long countByProductIdAndIsVisibleTrue(String productId);
 
     /**
-     * 상품별 평점 분포
-     */
-    @Query("SELECT r.rating, COUNT(r) FROM ReviewJpaEntity r WHERE r.productId = :productId AND r.isVisible = true GROUP BY r.rating")
-    List<Object[]> getRatingDistributionByProductId(@Param("productId") String productId);
-
-    /**
      * 주문에 대한 리뷰 존재 여부
      */
     boolean existsByOrderId(String orderId);
+
+    // Note: getAverageRatingByProductId, getRatingDistributionByProductId는
+    //       ReviewJooqRepository로 마이그레이션됨 (컴파일 타임 타입 안전성)
 }

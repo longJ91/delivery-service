@@ -2,7 +2,6 @@ package jjh.delivery.adapter.out.persistence.jpa.repository;
 
 import jjh.delivery.adapter.out.persistence.jpa.entity.CustomerJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,6 +9,8 @@ import java.util.Optional;
 
 /**
  * Customer JPA Repository
+ * Note: 인증 관련 쿼리(findPasswordByEmail, findPasswordById, updatePassword)는
+ *       CustomerJooqRepository로 마이그레이션됨 (컴파일 타임 타입 안전성)
  */
 public interface CustomerJpaRepository extends JpaRepository<CustomerJpaEntity, String> {
 
@@ -22,14 +23,4 @@ public interface CustomerJpaRepository extends JpaRepository<CustomerJpaEntity, 
     Optional<CustomerJpaEntity> findByEmail(String email);
 
     boolean existsByEmail(String email);
-
-    @Query("SELECT c.password FROM CustomerJpaEntity c WHERE c.email = :email")
-    Optional<String> findPasswordByEmail(@Param("email") String email);
-
-    @Query("SELECT c.password FROM CustomerJpaEntity c WHERE c.id = :customerId")
-    Optional<String> findPasswordById(@Param("customerId") String customerId);
-
-    @Modifying
-    @Query("UPDATE CustomerJpaEntity c SET c.password = :password WHERE c.id = :customerId")
-    void updatePassword(@Param("customerId") String customerId, @Param("password") String password);
 }

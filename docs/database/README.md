@@ -10,6 +10,7 @@
 | [schema_v2.sql](./schema_v2.sql) | PostgreSQL DDL (물품 배송) | 2.0.0 |
 | [schema.sql](./schema.sql) | PostgreSQL DDL (음식 배달) | 1.0.0 |
 | [MIGRATION.md](./MIGRATION.md) | 마이그레이션 계획 | - |
+| [ENTITY_MIGRATION_PLAN.md](./ENTITY_MIGRATION_PLAN.md) | Entity 마이그레이션 계획 | - |
 
 ## Current Schema (v2.0.0)
 
@@ -29,14 +30,81 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    9 Domains                        │
+│                   12 Domains                        │
 ├─────────────────────────────────────────────────────┤
-│  User (2)     │ Seller (3)    │ Product (5)        │
-│  Order (4)    │ Shipment (3)  │ Payment (3)        │
-│  Promotion (3)│ Return (2)    │ Review (3)         │
+│  Customer     │ Seller        │ Product            │
+│  Category     │ Cart          │ Order              │
+│  Payment      │ Shipment      │ Returns            │
+│  Review       │ Promotion     │ Webhook            │
 ├─────────────────────────────────────────────────────┤
 │                  Total: 28 Tables                   │
 └─────────────────────────────────────────────────────┘
+```
+
+## Persistence Strategy
+
+### JPA + jOOQ 하이브리드 아키텍처
+
+| 기술 | 역할 | Repository 패턴 |
+|------|------|----------------|
+| **JPA** | CRUD, Fetch Join, Entity 관계 로딩 | `{Entity}JpaRepository` |
+| **jOOQ** | 통계, Projection, 컴파일 타임 타입 안전성 | `{Entity}JooqRepository` |
+
+### JPA Entity Lombok 패턴
+
+```java
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@Entity
+@Table(name = "orders")
+public class OrderJpaEntity {
+    @Id
+    private String id;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItemJpaEntity> items = new ArrayList<>();
+}
+```
+
+### Fetch Join 쿼리 (JPA)
+
+Entity와 연관관계를 함께 로딩해야 할 때 사용:
+
+```java
+@Query("SELECT c FROM CustomerJpaEntity c LEFT JOIN FETCH c.addresses WHERE c.id = :id")
+Optional<CustomerJpaEntity> findByIdWithAddresses(@Param("id") String id);
+
+@Query("SELECT p FROM ProductJpaEntity p LEFT JOIN FETCH p.variants WHERE p.id = :id")
+Optional<ProductJpaEntity> findByIdWithVariants(@Param("id") String id);
+
+@Query("SELECT r FROM ReviewJpaEntity r LEFT JOIN FETCH r.images LEFT JOIN FETCH r.reply WHERE r.id = :id")
+Optional<ReviewJpaEntity> findByIdWithDetails(@Param("id") String id);
+```
+
+### 통계/Projection 쿼리 (jOOQ)
+
+컴파일 타임 타입 안전성이 필요한 경우 사용:
+
+```java
+// 평균 평점 조회
+public Double getAverageRatingByProductId(String productId) {
+    return dsl.select(DSL.avg(REVIEWS.RATING))
+            .from(REVIEWS)
+            .where(REVIEWS.PRODUCT_ID.eq(productId))
+            .fetchOneInto(Double.class);
+}
+
+// 특정 필드만 조회 (Projection)
+public Optional<String> findBusinessNameById(String sellerId) {
+    return Optional.ofNullable(
+        dsl.select(SELLERS.BUSINESS_NAME)
+           .from(SELLERS)
+           .where(SELLERS.ID.eq(sellerId))
+           .fetchOneInto(String.class)
+    );
+}
 ```
 
 ### Quick Start

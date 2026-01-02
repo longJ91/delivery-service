@@ -7,19 +7,61 @@
 | Java | 21 | Programming Language (LTS) |
 | Spring Boot | 4.0.1 | Application Framework |
 | Gradle | - | Build Tool |
+| Lombok | - | Boilerplate Reduction |
 
 ## Spring Modules
 
 | Module | Purpose | Usage |
 |--------|---------|-------|
 | Spring MVC | REST API | Controller, Request/Response 처리 |
-| Spring Data JPA | ORM | CRUD, 단순 쿼리 |
-| Spring jOOQ | Type-safe SQL | 복잡한 쿼리, 통계, 리포팅 |
+| Spring Data JPA | ORM | CRUD, Fetch Join, Entity 관계 로딩 |
+| Spring jOOQ | Type-safe SQL | 통계 쿼리, 단순 Projection |
 | Spring Kafka | Messaging | 이벤트 발행/구독 |
 | Spring Data Elasticsearch | Search | 전문 검색, 로그 분석 |
 | Spring Validation | Validation | Bean Validation (JSR-380) |
 | Spring Actuator | Monitoring | Health Check, Metrics |
 | Spring WebClient | HTTP Client | 외부 API 호출 |
+
+## Lombok Usage Patterns
+
+### Entity Annotations
+
+모든 JPA Entity는 다음 Lombok 어노테이션 패턴을 사용:
+
+```java
+@Getter                                      // Getter 자동 생성
+@NoArgsConstructor(access = AccessLevel.PROTECTED)  // JPA 기본 생성자
+@Builder                                     // Builder 패턴
+@Entity
+public class OrderJpaEntity {
+    // 필드 정의
+}
+```
+
+| Annotation | Purpose | Notes |
+|------------|---------|-------|
+| `@Getter` | Getter 메서드 생성 | Setter는 의도적으로 제외 (불변성) |
+| `@NoArgsConstructor(access = PROTECTED)` | JPA 기본 생성자 | Protected로 외부 생성 제한 |
+| `@Builder` | Builder 패턴 | 복잡한 객체 생성 시 사용 |
+
+### Service/Controller Annotations
+
+서비스 레이어는 생성자 주입을 위해 다음 패턴 사용:
+
+```java
+@Service
+@RequiredArgsConstructor  // final 필드 생성자 자동 생성
+public class OrderService implements CreateOrderUseCase {
+    private final LoadOrderPort loadOrderPort;
+    private final SaveOrderPort saveOrderPort;
+}
+```
+
+### ⚠️ Lombok 사용 시 주의사항
+
+- **@Setter 미사용**: Entity의 불변성 보장을 위해 Setter 생성 금지
+- **@Data 미사용**: equals/hashCode 자동 생성 시 JPA 프록시 문제 발생 가능
+- **@AllArgsConstructor 미사용**: Builder 패턴과 충돌, 필드 순서 의존성 문제
 
 ## Infrastructure
 
@@ -32,7 +74,7 @@
 
 ## Technology Roles
 
-### Data Access Strategy
+### Data Access Strategy (JPA + jOOQ 하이브리드)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -43,10 +85,10 @@
 │   │  Spring     │  │    jOOQ     │  │   Elasticsearch     │ │
 │   │  Data JPA   │  │             │  │                     │ │
 │   ├─────────────┤  ├─────────────┤  ├─────────────────────┤ │
-│   │ • CRUD      │  │ • 복잡 쿼리  │  │ • 전문 검색          │ │
-│   │ • 단순 조회  │  │ • 동적 쿼리  │  │ • 자동완성           │ │
-│   │ • 연관관계   │  │ • 통계/집계  │  │ • 필터링             │ │
-│   │ • 트랜잭션   │  │ • 리포팅    │  │ • 로그 분석          │ │
+│   │ • CRUD      │  │ • 통계/집계  │  │ • 전문 검색          │ │
+│   │ • Fetch Join│  │ • Projection│  │ • 자동완성           │ │
+│   │ • Entity    │  │ • 단순 조회  │  │ • 필터링             │ │
+│   │   관계 로딩  │  │   (DTO)     │  │ • 로그 분석          │ │
 │   └─────────────┘  └─────────────┘  └─────────────────────┘ │
 │          │                │                   │              │
 │          └────────────────┼───────────────────┘              │
@@ -54,6 +96,77 @@
 │                    ┌─────────────┐                           │
 │                    │ PostgreSQL  │                           │
 │                    └─────────────┘                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### JPA vs jOOQ 역할 분담
+
+| 영역 | JPA | jOOQ |
+|------|-----|------|
+| **CRUD** | ✅ 담당 | ❌ |
+| **Fetch Join** | ✅ 담당 | ❌ |
+| **Entity 관계 로딩** | ✅ 담당 | ❌ |
+| **통계/집계** | ❌ | ✅ 담당 |
+| **단순 Projection** | ❌ | ✅ 담당 |
+| **컴파일 타임 타입 안전성** | ❌ (런타임) | ✅ |
+
+### Fetch Join을 JPA에 유지하는 이유
+
+JPA의 `LEFT JOIN FETCH`는 다음과 같은 이점으로 인해 JPA에서 유지:
+
+```java
+// JPA: 1줄 - 자동 Entity 그래프 구성
+@Query("SELECT c FROM CustomerJpaEntity c LEFT JOIN FETCH c.addresses WHERE c.id = :id")
+Optional<CustomerJpaEntity> findByIdWithAddresses(@Param("id") String id);
+```
+
+1. **자동 Entity 그래프 구성**: JPA가 연관 엔티티를 자동으로 채움
+2. **영속성 컨텍스트 통합**: 1차 캐시, 변경 감지 자동 적용
+3. **코드 복잡도 최소화**: jOOQ로 구현 시 20-30줄의 변환 코드 필요
+4. **N+1 최적화**: Fetch Join은 JPA의 핵심 최적화 기능
+
+### jOOQ 사용 사례
+
+jOOQ는 컴파일 타임 타입 안전성이 중요한 영역에 사용:
+
+```java
+// jOOQ: 평균 평점 계산 (통계)
+public Double getAverageRatingByProductId(String productId) {
+    return dsl.select(DSL.avg(REVIEWS.RATING))
+            .from(REVIEWS)
+            .where(REVIEWS.PRODUCT_ID.eq(productId))
+            .and(REVIEWS.IS_VISIBLE.isTrue())
+            .fetchOneInto(Double.class);
+}
+
+// jOOQ: 단순 Projection (특정 필드만 조회)
+public Optional<String> findBusinessNameById(String sellerId) {
+    return Optional.ofNullable(
+        dsl.select(SELLERS.BUSINESS_NAME)
+           .from(SELLERS)
+           .where(SELLERS.ID.eq(sellerId))
+           .fetchOneInto(String.class)
+    );
+}
+```
+
+### 아키텍처 결정 원칙
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Query Type Decision Tree                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   쿼리 타입?                                                  │
+│       │                                                      │
+│       ├── Entity + 연관관계 필요 ──────▶ JPA (Fetch Join)     │
+│       │                                                      │
+│       ├── 통계/집계/리포팅 ─────────────▶ jOOQ                │
+│       │                                                      │
+│       ├── 단순 필드 조회 (Projection) ──▶ jOOQ                │
+│       │                                                      │
+│       └── 전문 검색/필터링 ─────────────▶ Elasticsearch       │
+│                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
