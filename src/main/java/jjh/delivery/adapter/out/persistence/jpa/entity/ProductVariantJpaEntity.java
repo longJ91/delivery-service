@@ -10,6 +10,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Product Variant JPA Entity
@@ -24,8 +25,7 @@ import java.util.Map;
 public class ProductVariantJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
@@ -52,7 +52,7 @@ public class ProductVariantJpaEntity {
 
     @Builder
     public ProductVariantJpaEntity(
-            String id,
+            UUID id,
             String name,
             String sku,
             Map<String, String> optionValues,

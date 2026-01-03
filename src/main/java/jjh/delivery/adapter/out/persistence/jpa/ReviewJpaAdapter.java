@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Review JPA Adapter - Driven Adapter (Outbound)
@@ -29,40 +30,40 @@ public class ReviewJpaAdapter implements LoadReviewPort, SaveReviewPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Review> findById(String reviewId) {
+    public Optional<Review> findById(UUID reviewId) {
         return repository.findByIdWithDetails(reviewId)
                 .map(mapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> findByProductId(String productId, Pageable pageable) {
+    public Page<Review> findByProductId(UUID productId, Pageable pageable) {
         return repository.findByProductIdAndIsVisibleTrue(productId, pageable)
                 .map(mapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countByProductId(String productId) {
+    public long countByProductId(UUID productId) {
         return repository.countByProductIdAndIsVisibleTrue(productId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> findByCustomerId(String customerId, Pageable pageable) {
+    public Page<Review> findByCustomerId(UUID customerId, Pageable pageable) {
         return repository.findByCustomerId(customerId, pageable)
                 .map(mapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> findBySellerId(String sellerId, Pageable pageable) {
+    public Page<Review> findBySellerId(UUID sellerId, Pageable pageable) {
         return repository.findBySellerId(sellerId, pageable)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public boolean existsByOrderId(String orderId) {
+    public boolean existsByOrderId(UUID orderId) {
         return repository.existsByOrderId(orderId);
     }
 
@@ -74,7 +75,7 @@ public class ReviewJpaAdapter implements LoadReviewPort, SaveReviewPort {
     }
 
     @Override
-    public void delete(String reviewId) {
+    public void delete(UUID reviewId) {
         repository.deleteById(reviewId);
     }
 }

@@ -4,6 +4,7 @@ import jjh.delivery.domain.payment.Payment;
 import jjh.delivery.domain.payment.PaymentMethodType;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * Payment Use Case - Driving Port (Inbound)
@@ -23,17 +24,17 @@ public interface ProcessPaymentUseCase {
     /**
      * 결제 실패 처리
      */
-    Payment failPayment(String paymentId, String reason);
+    Payment failPayment(UUID paymentId, String reason);
 
     /**
      * 결제 조회
      */
-    Payment getPayment(String paymentId);
+    Payment getPayment(UUID paymentId);
 
     /**
      * 주문별 결제 조회
      */
-    Payment getPaymentByOrderId(String orderId);
+    Payment getPaymentByOrderId(UUID orderId);
 
     // ==================== Commands ====================
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.WebhookDeliveries.WEBHOOK_DELIVERIES;
@@ -70,7 +71,7 @@ public class WebhookJooqRepository {
         }
 
         // Group by subscription ID
-        Map<String, List<Record>> groupedBySubscriptionId = result.stream()
+        Map<UUID, List<Record>> groupedBySubscriptionId = result.stream()
                 .collect(Collectors.groupingBy(r -> r.get(WEBHOOK_SUBSCRIPTIONS.ID)));
 
         return groupedBySubscriptionId.entrySet().stream()

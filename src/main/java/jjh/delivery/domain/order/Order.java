@@ -16,10 +16,10 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Order {
 
-    private final String id;
+    private final UUID id;
     private final String orderNumber;
-    private final String customerId;
-    private final String sellerId;
+    private final UUID customerId;
+    private final UUID sellerId;
     private final List<OrderItem> items;
     private OrderStatus status;
     private final ShippingAddress shippingAddress;
@@ -35,7 +35,7 @@ public class Order {
     private final String shippingMemo;
 
     // 쿠폰 (nullable)
-    private final String couponId;
+    private final UUID couponId;
 
     // 타임스탬프
     private final LocalDateTime createdAt;
@@ -47,7 +47,7 @@ public class Order {
     private LocalDateTime cancelledAt;
 
     private Order(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.orderNumber = builder.orderNumber != null ? builder.orderNumber : generateOrderNumber();
         this.customerId = builder.customerId;
         this.sellerId = builder.sellerId;
@@ -245,7 +245,7 @@ public class Order {
     /**
      * 특정 상품 포함 여부 확인
      */
-    public boolean containsProduct(String productId) {
+    public boolean containsProduct(UUID productId) {
         return items.stream()
                 .anyMatch(item -> item.productId().equals(productId));
     }
@@ -265,7 +265,7 @@ public class Order {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -273,11 +273,11 @@ public class Order {
         return orderNumber;
     }
 
-    public String getCustomerId() {
+    public UUID getCustomerId() {
         return customerId;
     }
 
-    public String getSellerId() {
+    public UUID getSellerId() {
         return sellerId;
     }
 
@@ -313,7 +313,7 @@ public class Order {
         return shippingMemo;
     }
 
-    public String getCouponId() {
+    public UUID getCouponId() {
         return couponId;
     }
 
@@ -350,10 +350,10 @@ public class Order {
     // =====================================================
 
     public static class Builder {
-        private String id;
+        private UUID id;
         private String orderNumber;
-        private String customerId;
-        private String sellerId;
+        private UUID customerId;
+        private UUID sellerId;
         private List<OrderItem> items = new ArrayList<>();
         private OrderStatus status;
         private ShippingAddress shippingAddress;
@@ -365,7 +365,7 @@ public class Order {
 
         private String orderMemo;
         private String shippingMemo;
-        private String couponId;
+        private UUID couponId;
 
         private LocalDateTime createdAt;
         private LocalDateTime paidAt;
@@ -374,7 +374,7 @@ public class Order {
         private LocalDateTime deliveredAt;
         private LocalDateTime cancelledAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -384,12 +384,12 @@ public class Order {
             return this;
         }
 
-        public Builder customerId(String customerId) {
+        public Builder customerId(UUID customerId) {
             this.customerId = customerId;
             return this;
         }
 
-        public Builder sellerId(String sellerId) {
+        public Builder sellerId(UUID sellerId) {
             this.sellerId = sellerId;
             return this;
         }
@@ -444,7 +444,7 @@ public class Order {
             return this;
         }
 
-        public Builder couponId(String couponId) {
+        public Builder couponId(UUID couponId) {
             this.couponId = couponId;
             return this;
         }
@@ -485,10 +485,10 @@ public class Order {
         }
 
         private void validateRequired() {
-            if (customerId == null || customerId.isBlank()) {
+            if (customerId == null) {
                 throw new IllegalArgumentException("customerId is required");
             }
-            if (sellerId == null || sellerId.isBlank()) {
+            if (sellerId == null) {
                 throw new IllegalArgumentException("sellerId is required");
             }
             if (shippingAddress == null) {

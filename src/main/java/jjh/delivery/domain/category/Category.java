@@ -12,8 +12,8 @@ import java.util.UUID;
  */
 public class Category {
 
-    private final String id;
-    private final String parentId;
+    private final UUID id;
+    private final UUID parentId;
     private String name;
     private String description;
     private String imageUrl;
@@ -25,7 +25,7 @@ public class Category {
     private LocalDateTime updatedAt;
 
     private Category(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.parentId = builder.parentId;
         this.name = builder.name;
         this.description = builder.description;
@@ -109,11 +109,11 @@ public class Category {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getParentId() {
+    public UUID getParentId() {
         return parentId;
     }
 
@@ -158,8 +158,8 @@ public class Category {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String parentId;
+        private UUID id;
+        private UUID parentId;
         private String name;
         private String description;
         private String imageUrl;
@@ -169,12 +169,12 @@ public class Category {
         private List<Category> children = new ArrayList<>();
         private LocalDateTime createdAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder parentId(String parentId) {
+        public Builder parentId(UUID parentId) {
             this.parentId = parentId;
             return this;
         }

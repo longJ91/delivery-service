@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -16,13 +17,18 @@ import static org.assertj.core.api.Assertions.*;
 @DisplayName("Product 도메인 테스트")
 class ProductTest {
 
+    // Deterministic UUIDs for testing
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID CATEGORY_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID CATEGORY_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
     // =====================================================
     // Test Fixtures
     // =====================================================
 
     private Product.Builder createValidProductBuilder() {
         return Product.builder()
-                .sellerId("seller-123")
+                .sellerId(SELLER_ID)
                 .name("테스트 상품")
                 .description("테스트 상품 설명")
                 .basePrice(new BigDecimal("50000"));
@@ -54,7 +60,7 @@ class ProductTest {
 
             // then
             assertThat(product.getId()).isNotNull();
-            assertThat(product.getSellerId()).isEqualTo("seller-123");
+            assertThat(product.getSellerId()).isEqualTo(SELLER_ID);
             assertThat(product.getName()).isEqualTo("테스트 상품");
             assertThat(product.getBasePrice()).isEqualByComparingTo(new BigDecimal("50000"));
             assertThat(product.getStatus()).isEqualTo(ProductStatus.DRAFT);
@@ -78,7 +84,7 @@ class ProductTest {
         void createWithoutNameThrowsException() {
             assertThatThrownBy(() ->
                     Product.builder()
-                            .sellerId("seller-123")
+                            .sellerId(SELLER_ID)
                             .basePrice(new BigDecimal("10000"))
                             .build()
             ).isInstanceOf(IllegalArgumentException.class)
@@ -90,7 +96,7 @@ class ProductTest {
         void createWithoutBasePriceThrowsException() {
             assertThatThrownBy(() ->
                     Product.builder()
-                            .sellerId("seller-123")
+                            .sellerId(SELLER_ID)
                             .name("상품")
                             .build()
             ).isInstanceOf(IllegalArgumentException.class)
@@ -102,7 +108,7 @@ class ProductTest {
         void createWithNegativeBasePriceThrowsException() {
             assertThatThrownBy(() ->
                     Product.builder()
-                            .sellerId("seller-123")
+                            .sellerId(SELLER_ID)
                             .name("상품")
                             .basePrice(new BigDecimal("-100"))
                             .build()
@@ -276,7 +282,7 @@ class ProductTest {
             Product product = createValidProductBuilder()
                     .addVariant(variant)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             product.removeVariant(variantId);
@@ -294,7 +300,7 @@ class ProductTest {
             Product product = createValidProductBuilder()
                     .addVariant(variant)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             var foundVariant = product.findVariant(variantId);
@@ -309,9 +315,10 @@ class ProductTest {
         void findNonExistentVariant() {
             // given
             Product product = createValidProductBuilder().build();
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // when
-            var foundVariant = product.findVariant("non-existent");
+            var foundVariant = product.findVariant(nonExistentId);
 
             // then
             assertThat(foundVariant).isEmpty();
@@ -334,7 +341,7 @@ class ProductTest {
             Product product = createValidProductBuilder()
                     .addVariant(variant)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             product.decreaseStock(variantId, 3);
@@ -351,7 +358,7 @@ class ProductTest {
             Product product = createValidProductBuilder()
                     .addVariant(variant)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             product.increaseStock(variantId, 5);
@@ -369,7 +376,7 @@ class ProductTest {
                     .addVariant(variant)
                     .status(ProductStatus.ACTIVE)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             product.decreaseStock(variantId, 5);
@@ -387,7 +394,7 @@ class ProductTest {
                     .addVariant(variant)
                     .status(ProductStatus.OUT_OF_STOCK)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             product.increaseStock(variantId, 10);
@@ -404,7 +411,7 @@ class ProductTest {
             Product product = createValidProductBuilder()
                     .addVariant(variant)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when & then
             assertThatThrownBy(() -> product.decreaseStock(variantId, 10))
@@ -428,11 +435,11 @@ class ProductTest {
             Product product = createValidProductBuilder().build();
 
             // when
-            product.addCategory("category-1");
-            product.addCategory("category-2");
+            product.addCategory(CATEGORY_ID_1);
+            product.addCategory(CATEGORY_ID_2);
 
             // then
-            assertThat(product.getCategoryIds()).containsExactly("category-1", "category-2");
+            assertThat(product.getCategoryIds()).containsExactly(CATEGORY_ID_1, CATEGORY_ID_2);
         }
 
         @Test
@@ -442,8 +449,8 @@ class ProductTest {
             Product product = createValidProductBuilder().build();
 
             // when
-            product.addCategory("category-1");
-            product.addCategory("category-1");
+            product.addCategory(CATEGORY_ID_1);
+            product.addCategory(CATEGORY_ID_1);
 
             // then
             assertThat(product.getCategoryIds()).hasSize(1);
@@ -454,14 +461,14 @@ class ProductTest {
         void removeCategory() {
             // given
             Product product = createValidProductBuilder()
-                    .categoryIds(List.of("category-1", "category-2"))
+                    .categoryIds(List.of(CATEGORY_ID_1, CATEGORY_ID_2))
                     .build();
 
             // when
-            product.removeCategory("category-1");
+            product.removeCategory(CATEGORY_ID_1);
 
             // then
-            assertThat(product.getCategoryIds()).containsExactly("category-2");
+            assertThat(product.getCategoryIds()).containsExactly(CATEGORY_ID_2);
         }
     }
 
@@ -604,7 +611,7 @@ class ProductTest {
             Product product = createValidProductBuilder()
                     .addVariant(variant)
                     .build();
-            String variantId = product.getVariants().get(0).id();
+            UUID variantId = product.getVariants().get(0).id();
 
             // when
             BigDecimal price = product.calculatePrice(variantId);
@@ -632,7 +639,7 @@ class ProductTest {
             // given
             Product product = createValidProductBuilder()
                     .addVariant(createVariant("빨강", 10))
-                    .categoryIds(List.of("cat-1"))
+                    .categoryIds(List.of(CATEGORY_ID_1))
                     .imageUrls(List.of("img-1"))
                     .specifications(Map.of("key", "value"))
                     .build();

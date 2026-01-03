@@ -1,26 +1,36 @@
 -- =============================================================================
--- Delivery Service Database Schema
--- Version: 1.0.0
+-- Delivery Service Database Schema v2.0
+-- Type: Product Delivery Service (물품 배송 서비스)
+-- Version: 2.0.0
 -- Database: PostgreSQL 15+
 -- Created: 2025-01-01
 -- =============================================================================
 --
--- Bounded Contexts:
---   1. User Domain (customers, customer_addresses, riders)
---   2. Shop Domain (shops, shop_categories, shop_addresses, shop_business_hours)
---   3. Menu Domain (menu_categories, menus, menu_option_groups, menu_options)
---   4. Order Domain (orders, order_items, order_item_options, order_status_histories)
---   5. Delivery Domain (deliveries, delivery_tracking, rider_assignments)
---   6. Payment Domain (payments, refunds, payment_methods)
---   7. Promotion Domain (coupons, customer_coupons, promotions)
---   8. Review Domain (reviews, review_images, review_replies)
+-- Changes from v1.0 (Food Delivery):
+--   - Menu Domain → Product Domain (전면 재설계)
+--   - Shop Domain → Seller Domain (명칭 변경)
+--   - Delivery Domain → Shipment Domain (택배 모델)
+--   - Added Return/Exchange Domain (반품/교환)
+--   - Removed: riders, rider_assignments, shop_business_hours
 --
--- Design Principles:
---   - UUID for distributed ID generation
---   - Soft delete with deleted_at column
---   - Snapshot pattern for order-time data preservation
---   - Optimistic locking with version column
---   - Audit logging with history tables
+-- Bounded Contexts:
+--   1. User Domain (customers, customer_addresses)
+--   2. Seller Domain (sellers, seller_categories, seller_addresses)
+--   3. Category Domain (categories)
+--   4. Product Domain (product_categories, products, product_variants, product_images, product_specifications)
+--   5. Cart Domain (carts, cart_items)
+--   6. Promotion Domain (coupons, customer_coupons, promotions)
+--   7. Order Domain (orders, order_items, order_status_histories)
+--   8. Shipment Domain (shipments, shipment_tracking, shipping_carriers)
+--   9. Payment Domain (payments, refunds, payment_methods)
+--  10. Return Domain (returns, return_items)
+--  11. Review Domain (reviews, review_images, review_replies)
+--
+-- Design Constraints:
+--   - Courier-only delivery (택배사 연동만 지원)
+--   - Single warehouse per seller (판매자당 단일 창고)
+--   - Domestic shipping only (국내 배송만)
+--   - Return/Exchange supported (반품/교환 지원)
 -- =============================================================================
 
 -- =============================================================================
@@ -36,35 +46,54 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Customer status
 CREATE TYPE customer_status AS ENUM ('ACTIVE', 'SUSPENDED', 'WITHDRAWN');
 
--- Rider status
-CREATE TYPE rider_status AS ENUM ('PENDING', 'ACTIVE', 'SUSPENDED', 'INACTIVE');
+-- Seller type
+CREATE TYPE seller_type AS ENUM ('INDIVIDUAL', 'BUSINESS');
 
--- Shop status
-CREATE TYPE shop_status AS ENUM ('PENDING', 'ACTIVE', 'SUSPENDED', 'CLOSED');
+-- Seller status
+CREATE TYPE seller_status AS ENUM ('PENDING', 'ACTIVE', 'SUSPENDED', 'CLOSED');
 
--- Order status
+-- Product status
+CREATE TYPE product_status AS ENUM ('DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED');
+
+-- Order status (물품 배송용)
 CREATE TYPE order_status AS ENUM (
-    'PENDING',
-    'ACCEPTED',
-    'PREPARING',
-    'READY_FOR_DELIVERY',
-    'PICKED_UP',
-    'DELIVERED',
-    'CANCELLED'
+    'PENDING',              -- 주문 대기 (결제 전)
+    'PAID',                 -- 결제 완료
+    'CONFIRMED',            -- 주문 확정 (판매자 확인)
+    'PREPARING',            -- 상품 준비중
+    'SHIPPED',              -- 출고 완료
+    'IN_TRANSIT',           -- 배송중
+    'OUT_FOR_DELIVERY',     -- 배달중
+    'DELIVERED',            -- 배송 완료
+    'CANCELLED',            -- 취소
+    'RETURN_REQUESTED',     -- 반품 요청
+    'RETURNED'              -- 반품 완료
 );
 
--- Delivery status
-CREATE TYPE delivery_status AS ENUM (
-    'PENDING',
-    'ASSIGNED',
-    'PICKED_UP',
-    'DELIVERING',
-    'DELIVERED',
-    'FAILED'
+-- Shipment status
+CREATE TYPE shipment_status AS ENUM (
+    'PENDING',              -- 배송 준비 대기
+    'READY_TO_SHIP',        -- 출고 준비 완료
+    'PICKED_UP',            -- 택배사 수거 완료
+    'IN_TRANSIT',           -- 배송중 (허브 이동)
+    'OUT_FOR_DELIVERY',     -- 배달중 (최종 배송)
+    'DELIVERED',            -- 배송 완료
+    'FAILED',               -- 배송 실패
+    'RETURNED'              -- 반송
 );
 
--- Rider assignment status
-CREATE TYPE assignment_status AS ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'CANCELLED');
+-- Shipping carrier (택배사)
+CREATE TYPE shipping_carrier AS ENUM (
+    'CJ_LOGISTICS',         -- CJ대한통운
+    'HANJIN',               -- 한진택배
+    'LOTTE',                -- 롯데택배
+    'LOGEN',                -- 로젠택배
+    'POST_OFFICE',          -- 우체국택배
+    'EPOST',                -- 우편등기
+    'GS_POSTBOX',           -- GS편의점택배
+    'CU_POST',              -- CU편의점택배
+    'OTHER'                 -- 기타
+);
 
 -- Payment method type
 CREATE TYPE payment_method_type AS ENUM (
@@ -72,7 +101,8 @@ CREATE TYPE payment_method_type AS ENUM (
     'KAKAO_PAY',
     'NAVER_PAY',
     'TOSS',
-    'CASH_ON_DELIVERY'
+    'BANK_TRANSFER',
+    'VIRTUAL_ACCOUNT'
 );
 
 -- Payment status
@@ -92,22 +122,47 @@ CREATE TYPE refund_type AS ENUM ('FULL', 'PARTIAL');
 CREATE TYPE refund_status AS ENUM ('REQUESTED', 'PROCESSING', 'COMPLETED', 'FAILED');
 
 -- Refund requester
-CREATE TYPE refund_requester AS ENUM ('CUSTOMER', 'SHOP', 'SYSTEM');
+CREATE TYPE refund_requester AS ENUM ('CUSTOMER', 'SELLER', 'SYSTEM');
 
 -- Discount type
 CREATE TYPE discount_type AS ENUM ('FIXED', 'PERCENTAGE');
 
 -- Coupon scope
-CREATE TYPE coupon_scope AS ENUM ('ALL', 'SHOP_SPECIFIC', 'CATEGORY_SPECIFIC');
+CREATE TYPE coupon_scope AS ENUM ('ALL', 'SELLER_SPECIFIC', 'CATEGORY_SPECIFIC');
 
 -- Customer coupon status
 CREATE TYPE customer_coupon_status AS ENUM ('AVAILABLE', 'USED', 'EXPIRED');
 
 -- Promotion type
-CREATE TYPE promotion_type AS ENUM ('DISCOUNT', 'FREE_DELIVERY', 'BUNDLE', 'POINT_BOOST');
+CREATE TYPE promotion_type AS ENUM ('DISCOUNT', 'FREE_SHIPPING', 'BUNDLE', 'POINT_BOOST');
 
 -- Saved payment method type
 CREATE TYPE saved_payment_type AS ENUM ('CARD', 'EASY_PAY');
+
+-- Return reason
+CREATE TYPE return_reason AS ENUM (
+    'CHANGE_OF_MIND',       -- 단순 변심
+    'WRONG_ITEM',           -- 오배송
+    'DEFECTIVE',            -- 불량/파손
+    'DIFFERENT_FROM_DESC',  -- 상품 설명과 다름
+    'DELAYED_DELIVERY',     -- 배송 지연
+    'OTHER'                 -- 기타
+);
+
+-- Return status
+CREATE TYPE return_status AS ENUM (
+    'REQUESTED',            -- 반품 요청
+    'APPROVED',             -- 반품 승인
+    'REJECTED',             -- 반품 거절
+    'COLLECTING',           -- 수거중
+    'COLLECTED',            -- 수거 완료
+    'INSPECTING',           -- 검수중
+    'COMPLETED',            -- 반품 완료 (환불 처리)
+    'CANCELLED'             -- 반품 취소
+);
+
+-- Return type
+CREATE TYPE return_type AS ENUM ('RETURN', 'EXCHANGE');
 
 -- =============================================================================
 -- 1. USER DOMAIN
@@ -135,44 +190,21 @@ CREATE TABLE customer_addresses (
     name VARCHAR(50) NOT NULL,
     recipient_name VARCHAR(50) NOT NULL,
     recipient_phone VARCHAR(20) NOT NULL,
+    postal_code VARCHAR(10) NOT NULL,
     road_address VARCHAR(200) NOT NULL,
     detail_address VARCHAR(100),
-    postal_code VARCHAR(10),
-    latitude DECIMAL(10, 7),
-    longitude DECIMAL(10, 7),
     is_default BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
--- Riders (라이더)
-CREATE TABLE riders (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(50) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    profile_image_url VARCHAR(255),
-    vehicle_type VARCHAR(20) NOT NULL,
-    vehicle_number VARCHAR(20),
-    status rider_status NOT NULL DEFAULT 'PENDING',
-    rating_avg DECIMAL(2, 1) DEFAULT 0.0,
-    delivery_count INT NOT NULL DEFAULT 0,
-    is_available BOOLEAN NOT NULL DEFAULT FALSE,
-    current_latitude DECIMAL(10, 7),
-    current_longitude DECIMAL(10, 7),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
-);
-
 -- =============================================================================
--- 2. SHOP DOMAIN
+-- 2. SELLER DOMAIN
 -- =============================================================================
 
--- Shop Categories (가게 카테고리)
-CREATE TABLE shop_categories (
+-- Seller Categories (판매자 분류)
+CREATE TABLE seller_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(50) NOT NULL,
     display_order INT NOT NULL DEFAULT 0,
@@ -181,112 +213,236 @@ CREATE TABLE shop_categories (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Shops (가게)
-CREATE TABLE shops (
+-- Sellers (판매자)
+CREATE TABLE sellers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     owner_id UUID NOT NULL REFERENCES customers(id),
+    category_id UUID REFERENCES seller_categories(id),
+
+    -- 기본 정보
+    seller_type seller_type NOT NULL DEFAULT 'BUSINESS',
     name VARCHAR(100) NOT NULL,
+    company_name VARCHAR(100),
+    representative_name VARCHAR(50),
     description TEXT,
-    phone VARCHAR(20) NOT NULL,
+
+    -- 사업자 정보
     business_number VARCHAR(12) UNIQUE,
-    category_id UUID REFERENCES shop_categories(id),
-    min_order_amount DECIMAL(10, 0) NOT NULL DEFAULT 0,
-    delivery_fee DECIMAL(10, 0) NOT NULL DEFAULT 0,
-    estimated_delivery_time INT NOT NULL DEFAULT 30,
+    mail_order_number VARCHAR(50),
+
+    -- 연락처
+    phone VARCHAR(20) NOT NULL,
+    cs_phone VARCHAR(20),
+    cs_email VARCHAR(255),
+
+    -- 평점
     rating_avg DECIMAL(2, 1) NOT NULL DEFAULT 0.0,
     review_count INT NOT NULL DEFAULT 0,
-    status shop_status NOT NULL DEFAULT 'PENDING',
+
+    -- 상태
+    status seller_status NOT NULL DEFAULT 'PENDING',
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
--- Shop Addresses (가게 주소)
-CREATE TABLE shop_addresses (
+-- Seller Addresses (판매자 주소 - 단일 창고)
+CREATE TABLE seller_addresses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    shop_id UUID NOT NULL UNIQUE REFERENCES shops(id),
-    road_address VARCHAR(200) NOT NULL,
-    detail_address VARCHAR(100),
-    postal_code VARCHAR(10),
-    latitude DECIMAL(10, 7) NOT NULL,
-    longitude DECIMAL(10, 7) NOT NULL,
+    seller_id UUID NOT NULL UNIQUE REFERENCES sellers(id),
+
+    -- 사업장 주소
+    business_postal_code VARCHAR(10) NOT NULL,
+    business_road_address VARCHAR(200) NOT NULL,
+    business_detail_address VARCHAR(100),
+
+    -- 출고지 주소 (창고)
+    shipping_postal_code VARCHAR(10) NOT NULL,
+    shipping_road_address VARCHAR(200) NOT NULL,
+    shipping_detail_address VARCHAR(100),
+
+    -- 반품지 주소
+    return_postal_code VARCHAR(10) NOT NULL,
+    return_road_address VARCHAR(200) NOT NULL,
+    return_detail_address VARCHAR(100),
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Shop Business Hours (영업시간)
-CREATE TABLE shop_business_hours (
+-- =============================================================================
+-- 3. CATEGORY DOMAIN
+-- =============================================================================
+
+-- Categories (카테고리 - 범용)
+CREATE TABLE categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    shop_id UUID NOT NULL REFERENCES shops(id),
-    day_of_week SMALLINT NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
-    open_time TIME,
-    close_time TIME,
-    is_closed BOOLEAN NOT NULL DEFAULT FALSE,
+    parent_id UUID REFERENCES categories(id),
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
+    image_url VARCHAR(500),
+    display_order INT NOT NULL DEFAULT 0,
+    depth INT NOT NULL DEFAULT 1,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (shop_id, day_of_week)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =============================================================================
--- 3. MENU DOMAIN
+-- 4. PRODUCT DOMAIN (uses product_categories for legacy compatibility)
 -- =============================================================================
 
--- Menu Categories (메뉴 카테고리)
-CREATE TABLE menu_categories (
+-- Product Categories (상품 카테고리 - 계층형)
+CREATE TABLE product_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    shop_id UUID NOT NULL REFERENCES shops(id),
+    parent_id UUID REFERENCES product_categories(id),
     name VARCHAR(50) NOT NULL,
+    depth SMALLINT NOT NULL DEFAULT 1,
+    path VARCHAR(255),
     display_order INT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Menus (메뉴)
-CREATE TABLE menus (
+-- Products (상품)
+CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    shop_id UUID NOT NULL REFERENCES shops(id),
-    category_id UUID REFERENCES menu_categories(id),
-    name VARCHAR(100) NOT NULL,
+    seller_id UUID NOT NULL REFERENCES sellers(id),
+    category_id UUID REFERENCES product_categories(id),
+
+    -- 기본 정보
+    name VARCHAR(200) NOT NULL,
     description TEXT,
-    price DECIMAL(10, 0) NOT NULL,
-    image_url VARCHAR(255),
-    is_popular BOOLEAN NOT NULL DEFAULT FALSE,
-    is_recommended BOOLEAN NOT NULL DEFAULT FALSE,
-    is_sold_out BOOLEAN NOT NULL DEFAULT FALSE,
-    display_order INT NOT NULL DEFAULT 0,
+
+    -- 가격 (변형이 없는 단일 상품용)
+    price DECIMAL(12, 0) NOT NULL,
+    compare_at_price DECIMAL(12, 0),
+
+    -- 상품 식별
+    sku VARCHAR(50),
+    barcode VARCHAR(50),
+
+    -- 재고 (변형이 없는 단일 상품용)
+    stock_quantity INT NOT NULL DEFAULT 0,
+    safety_stock INT NOT NULL DEFAULT 0,
+    is_track_inventory BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- 배송 정보
+    weight_g INT,
+    width_mm INT,
+    height_mm INT,
+    depth_mm INT,
+
+    -- 배송비 정책
+    shipping_fee DECIMAL(10, 0) NOT NULL DEFAULT 0,
+    free_shipping_threshold DECIMAL(12, 0),
+    additional_shipping_fee DECIMAL(10, 0) DEFAULT 0,
+
+    -- 상품 정보
+    brand VARCHAR(100),
+    manufacturer VARCHAR(100),
+    origin_country VARCHAR(50) DEFAULT '대한민국',
+
+    -- 상태
+    status product_status NOT NULL DEFAULT 'DRAFT',
+    is_featured BOOLEAN NOT NULL DEFAULT FALSE,
+    has_variants BOOLEAN NOT NULL DEFAULT FALSE,
+
+    -- 판매 통계
+    sales_count INT NOT NULL DEFAULT 0,
+    view_count INT NOT NULL DEFAULT 0,
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
--- Menu Option Groups (옵션 그룹)
-CREATE TABLE menu_option_groups (
+-- Product Variants (상품 변형 - 색상/사이즈 등)
+CREATE TABLE product_variants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    menu_id UUID NOT NULL REFERENCES menus(id),
-    name VARCHAR(50) NOT NULL,
-    is_required BOOLEAN NOT NULL DEFAULT FALSE,
-    min_selections INT NOT NULL DEFAULT 0,
-    max_selections INT NOT NULL DEFAULT 1,
+    product_id UUID NOT NULL REFERENCES products(id),
+
+    -- 변형 정보
+    name VARCHAR(100) NOT NULL,
+    sku VARCHAR(50),
+    barcode VARCHAR(50),
+
+    -- 가격 (변형별)
+    price DECIMAL(12, 0) NOT NULL,
+    compare_at_price DECIMAL(12, 0),
+
+    -- 재고 (변형별)
+    stock_quantity INT NOT NULL DEFAULT 0,
+
+    -- 배송 정보 (변형별 다를 경우)
+    weight_g INT,
+
+    -- 옵션 값 (JSON)
+    option_values JSONB NOT NULL DEFAULT '{}',
+
     display_order INT NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Menu Options (개별 옵션)
-CREATE TABLE menu_options (
+-- Product Images (상품 이미지)
+CREATE TABLE product_images (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    option_group_id UUID NOT NULL REFERENCES menu_option_groups(id),
-    name VARCHAR(50) NOT NULL,
-    additional_price DECIMAL(10, 0) NOT NULL DEFAULT 0,
-    is_sold_out BOOLEAN NOT NULL DEFAULT FALSE,
-    display_order INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    product_id UUID NOT NULL REFERENCES products(id),
+    variant_id UUID REFERENCES product_variants(id),
+
+    image_url VARCHAR(500) NOT NULL,
+    alt_text VARCHAR(200),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Product Specifications (상품 스펙)
+CREATE TABLE product_specifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID NOT NULL REFERENCES products(id),
+
+    spec_name VARCHAR(50) NOT NULL,
+    spec_value VARCHAR(200) NOT NULL,
+    display_order SMALLINT NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =============================================================================
--- 4. PROMOTION DOMAIN (Orders depend on coupons, so define first)
+-- 4. CART DOMAIN
+-- =============================================================================
+
+-- Carts (장바구니)
+CREATE TABLE carts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    customer_id UUID NOT NULL UNIQUE REFERENCES customers(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Cart Items (장바구니 항목)
+CREATE TABLE cart_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES products(id),
+    product_name VARCHAR(200) NOT NULL,
+    variant_id UUID REFERENCES product_variants(id),
+    variant_name VARCHAR(200),
+    seller_id UUID NOT NULL REFERENCES sellers(id),
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price DECIMAL(12, 2) NOT NULL,
+    thumbnail_url VARCHAR(500),
+    added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================================================
+-- 5. PROMOTION DOMAIN (Order depends on coupons)
 -- =============================================================================
 
 -- Coupons (쿠폰)
@@ -303,7 +459,7 @@ CREATE TABLE coupons (
     max_uses_per_user INT NOT NULL DEFAULT 1,
     current_uses INT NOT NULL DEFAULT 0,
     scope coupon_scope NOT NULL DEFAULT 'ALL',
-    shop_id UUID REFERENCES shops(id),
+    seller_id UUID REFERENCES sellers(id),
     valid_from TIMESTAMP NOT NULL,
     valid_until TIMESTAMP NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -328,7 +484,7 @@ CREATE TABLE promotions (
 );
 
 -- =============================================================================
--- 4. ORDER DOMAIN
+-- 6. ORDER DOMAIN
 -- =============================================================================
 
 -- Orders (주문)
@@ -336,25 +492,37 @@ CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_number VARCHAR(20) NOT NULL UNIQUE,
     customer_id UUID NOT NULL REFERENCES customers(id),
-    shop_id UUID NOT NULL REFERENCES shops(id),
-    delivery_address_id UUID REFERENCES customer_addresses(id),
-    delivery_address_snapshot JSONB NOT NULL,
+    seller_id UUID NOT NULL REFERENCES sellers(id),
+
+    -- 배송지 정보
+    shipping_address_id UUID REFERENCES customer_addresses(id),
+    shipping_address_snapshot JSONB NOT NULL,
+
+    -- 상태
     status order_status NOT NULL DEFAULT 'PENDING',
-    total_amount DECIMAL(12, 0) NOT NULL,
-    delivery_fee DECIMAL(10, 0) NOT NULL DEFAULT 0,
+
+    -- 금액
+    subtotal_amount DECIMAL(12, 0) NOT NULL,
+    shipping_fee DECIMAL(10, 0) NOT NULL DEFAULT 0,
     discount_amount DECIMAL(10, 0) NOT NULL DEFAULT 0,
-    final_amount DECIMAL(12, 0) NOT NULL,
+    total_amount DECIMAL(12, 0) NOT NULL,
+
+    -- 쿠폰
     coupon_id UUID REFERENCES coupons(id),
-    order_request TEXT,
-    delivery_request TEXT,
-    estimated_delivery_at TIMESTAMP,
+
+    -- 메모
+    order_memo TEXT,
+    shipping_memo TEXT,
+
+    -- 타임스탬프
     ordered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    accepted_at TIMESTAMP,
-    prepared_at TIMESTAMP,
-    picked_up_at TIMESTAMP,
+    paid_at TIMESTAMP,
+    confirmed_at TIMESTAMP,
+    shipped_at TIMESTAMP,
     delivered_at TIMESTAMP,
     cancelled_at TIMESTAMP,
     cancel_reason VARCHAR(200),
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version BIGINT NOT NULL DEFAULT 0
@@ -364,26 +532,24 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID NOT NULL REFERENCES orders(id),
-    menu_id UUID NOT NULL REFERENCES menus(id),
-    menu_name_snapshot VARCHAR(100) NOT NULL,
+    product_id UUID NOT NULL REFERENCES products(id),
+    variant_id UUID REFERENCES product_variants(id),
+
+    -- 스냅샷
+    product_name_snapshot VARCHAR(200) NOT NULL,
+    variant_name_snapshot VARCHAR(100),
+    sku_snapshot VARCHAR(50),
+    option_values_snapshot JSONB,
+
+    -- 수량 및 가격
     quantity INT NOT NULL CHECK (quantity > 0),
     unit_price DECIMAL(10, 0) NOT NULL,
-    total_price DECIMAL(10, 0) NOT NULL,
-    item_request TEXT,
+    total_price DECIMAL(12, 0) NOT NULL,
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Order Item Options (주문 항목 옵션)
-CREATE TABLE order_item_options (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_item_id UUID NOT NULL REFERENCES order_items(id),
-    option_id UUID NOT NULL REFERENCES menu_options(id),
-    option_name_snapshot VARCHAR(50) NOT NULL,
-    additional_price DECIMAL(10, 0) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Order Status Histories (주문 상태 변경 이력)
+-- Order Status Histories (주문 상태 이력)
 CREATE TABLE order_status_histories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID NOT NULL REFERENCES orders(id),
@@ -410,50 +576,75 @@ CREATE TABLE customer_coupons (
 );
 
 -- =============================================================================
--- 5. DELIVERY DOMAIN
+-- 7. SHIPMENT DOMAIN
 -- =============================================================================
 
--- Deliveries (배달)
-CREATE TABLE deliveries (
+-- Shipping Carriers (배송업체 마스터)
+CREATE TABLE shipping_carriers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_id UUID NOT NULL UNIQUE REFERENCES orders(id),
-    rider_id UUID REFERENCES riders(id),
-    status delivery_status NOT NULL DEFAULT 'PENDING',
-    pickup_address_snapshot JSONB NOT NULL,
-    delivery_address_snapshot JSONB NOT NULL,
-    distance_meters INT,
-    assigned_at TIMESTAMP,
-    picked_up_at TIMESTAMP,
-    delivered_at TIMESTAMP,
-    delivery_photo_url VARCHAR(255),
-    failure_reason TEXT,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL,
+    tracking_url_template VARCHAR(255),
+    api_endpoint VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    display_order INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Delivery Tracking (실시간 배달 추적)
-CREATE TABLE delivery_tracking (
+-- Shipments (배송)
+CREATE TABLE shipments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    delivery_id UUID NOT NULL REFERENCES deliveries(id),
-    latitude DECIMAL(10, 7) NOT NULL,
-    longitude DECIMAL(10, 7) NOT NULL,
-    recorded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    order_id UUID NOT NULL REFERENCES orders(id),
+
+    -- 배송업체
+    carrier shipping_carrier NOT NULL,
+    carrier_id UUID REFERENCES shipping_carriers(id),
+    tracking_number VARCHAR(50),
+
+    -- 상태
+    status shipment_status NOT NULL DEFAULT 'PENDING',
+
+    -- 주소 스냅샷
+    origin_address_snapshot JSONB NOT NULL,
+    destination_address_snapshot JSONB NOT NULL,
+
+    -- 배송 정보
+    total_weight_g INT,
+    package_count SMALLINT NOT NULL DEFAULT 1,
+
+    -- 타임스탬프
+    ready_at TIMESTAMP,
+    picked_up_at TIMESTAMP,
+    delivered_at TIMESTAMP,
+    delivery_photo_url VARCHAR(255),
+
+    -- 배송 실패
+    failure_reason TEXT,
+    failed_at TIMESTAMP,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Rider Assignments (라이더 배정 이력)
-CREATE TABLE rider_assignments (
+-- Shipment Tracking (배송 추적)
+CREATE TABLE shipment_tracking (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    delivery_id UUID NOT NULL REFERENCES deliveries(id),
-    rider_id UUID NOT NULL REFERENCES riders(id),
-    status assignment_status NOT NULL DEFAULT 'REQUESTED',
-    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    responded_at TIMESTAMP,
-    reject_reason TEXT,
+    shipment_id UUID NOT NULL REFERENCES shipments(id),
+
+    -- 추적 정보
+    status VARCHAR(50) NOT NULL,
+    location VARCHAR(100),
+    description TEXT,
+
+    -- 택배사 제공 시간
+    occurred_at TIMESTAMP NOT NULL,
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =============================================================================
--- 6. PAYMENT DOMAIN
+-- 8. PAYMENT DOMAIN
 -- =============================================================================
 
 -- Payments (결제)
@@ -468,6 +659,13 @@ CREATE TABLE payments (
     card_company VARCHAR(50),
     card_number_masked VARCHAR(20),
     installment_months SMALLINT NOT NULL DEFAULT 0,
+
+    -- 가상계좌
+    virtual_account_bank VARCHAR(50),
+    virtual_account_number VARCHAR(50),
+    virtual_account_holder VARCHAR(50),
+    virtual_account_expires_at TIMESTAMP,
+
     paid_at TIMESTAMP,
     failed_at TIMESTAMP,
     failure_reason TEXT,
@@ -480,6 +678,7 @@ CREATE TABLE refunds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     payment_id UUID NOT NULL REFERENCES payments(id),
     order_id UUID NOT NULL REFERENCES orders(id),
+    return_id UUID,
     refund_type refund_type NOT NULL,
     amount DECIMAL(12, 0) NOT NULL,
     reason TEXT,
@@ -506,7 +705,80 @@ CREATE TABLE payment_methods (
 );
 
 -- =============================================================================
--- 7. REVIEW DOMAIN
+-- 9. RETURN DOMAIN
+-- =============================================================================
+
+-- Returns (반품/교환)
+CREATE TABLE returns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    return_number VARCHAR(20) NOT NULL UNIQUE,
+    order_id UUID NOT NULL REFERENCES orders(id),
+    customer_id UUID NOT NULL REFERENCES customers(id),
+    seller_id UUID NOT NULL REFERENCES sellers(id),
+
+    -- 반품 유형
+    return_type return_type NOT NULL,
+    reason return_reason NOT NULL,
+    reason_detail TEXT,
+
+    -- 상태
+    status return_status NOT NULL DEFAULT 'REQUESTED',
+
+    -- 수거 정보
+    pickup_address_snapshot JSONB NOT NULL,
+    pickup_carrier shipping_carrier,
+    pickup_tracking_number VARCHAR(50),
+
+    -- 교환 배송 정보 (교환인 경우)
+    exchange_shipping_address_snapshot JSONB,
+    exchange_carrier shipping_carrier,
+    exchange_tracking_number VARCHAR(50),
+
+    -- 환불 금액
+    refund_amount DECIMAL(12, 0),
+    refund_shipping_fee DECIMAL(10, 0) DEFAULT 0,
+
+    -- 타임스탬프
+    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    approved_at TIMESTAMP,
+    rejected_at TIMESTAMP,
+    reject_reason TEXT,
+    collected_at TIMESTAMP,
+    inspected_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    cancelled_at TIMESTAMP,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Return Items (반품 항목)
+CREATE TABLE return_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    return_id UUID NOT NULL REFERENCES returns(id),
+    order_item_id UUID NOT NULL REFERENCES order_items(id),
+
+    quantity INT NOT NULL CHECK (quantity > 0),
+    reason return_reason NOT NULL,
+    reason_detail TEXT,
+
+    -- 검수 결과
+    inspection_result VARCHAR(50),
+    inspection_note TEXT,
+
+    -- 교환 상품 (교환인 경우)
+    exchange_product_id UUID REFERENCES products(id),
+    exchange_variant_id UUID REFERENCES product_variants(id),
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add FK from refunds to returns
+ALTER TABLE refunds ADD CONSTRAINT refunds_return_id_fkey
+    FOREIGN KEY (return_id) REFERENCES returns(id);
+
+-- =============================================================================
+-- 10. REVIEW DOMAIN
 -- =============================================================================
 
 -- Reviews (리뷰)
@@ -514,7 +786,8 @@ CREATE TABLE reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID NOT NULL UNIQUE REFERENCES orders(id),
     customer_id UUID NOT NULL REFERENCES customers(id),
-    shop_id UUID NOT NULL REFERENCES shops(id),
+    seller_id UUID NOT NULL REFERENCES sellers(id),
+    product_id UUID NOT NULL REFERENCES products(id),
     rating SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
     content TEXT,
     is_visible BOOLEAN NOT NULL DEFAULT TRUE,
@@ -532,11 +805,11 @@ CREATE TABLE review_images (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Review Replies (사장님 답글)
+-- Review Replies (판매자 답글)
 CREATE TABLE review_replies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     review_id UUID NOT NULL UNIQUE REFERENCES reviews(id),
-    shop_id UUID NOT NULL REFERENCES shops(id),
+    seller_id UUID NOT NULL REFERENCES sellers(id),
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -551,42 +824,56 @@ CREATE INDEX idx_customers_email ON customers(email) WHERE deleted_at IS NULL;
 CREATE INDEX idx_customers_phone ON customers(phone) WHERE deleted_at IS NULL;
 CREATE INDEX idx_customer_addresses_customer ON customer_addresses(customer_id) WHERE deleted_at IS NULL;
 
--- Rider indexes
-CREATE INDEX idx_riders_status_available ON riders(status, is_available) WHERE deleted_at IS NULL;
-CREATE INDEX idx_riders_location ON riders(current_latitude, current_longitude)
-    WHERE is_available = TRUE AND deleted_at IS NULL;
+-- Seller indexes
+CREATE INDEX idx_sellers_category ON sellers(category_id, status) WHERE deleted_at IS NULL;
+CREATE INDEX idx_sellers_owner ON sellers(owner_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_sellers_rating ON sellers(rating_avg DESC) WHERE status = 'ACTIVE' AND deleted_at IS NULL;
+CREATE INDEX idx_sellers_business_number ON sellers(business_number) WHERE business_number IS NOT NULL;
 
--- Shop indexes
-CREATE INDEX idx_shops_category_status ON shops(category_id, status) WHERE deleted_at IS NULL;
-CREATE INDEX idx_shops_owner ON shops(owner_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_shops_rating ON shops(rating_avg DESC) WHERE status = 'ACTIVE' AND deleted_at IS NULL;
+-- Category indexes
+CREATE INDEX idx_categories_parent ON categories(parent_id);
+CREATE INDEX idx_categories_depth ON categories(depth);
+CREATE INDEX idx_categories_display_order ON categories(display_order);
 
--- Menu indexes
-CREATE INDEX idx_menus_shop ON menus(shop_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_menus_category ON menus(category_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_menu_categories_shop ON menu_categories(shop_id);
+-- Product indexes
+CREATE INDEX idx_products_seller ON products(seller_id, status) WHERE deleted_at IS NULL;
+CREATE INDEX idx_products_category ON products(category_id, status) WHERE deleted_at IS NULL;
+CREATE INDEX idx_products_status ON products(status, created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_products_sku ON products(sku) WHERE sku IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_products_featured ON products(is_featured, sales_count DESC)
+    WHERE status = 'ACTIVE' AND deleted_at IS NULL;
+CREATE INDEX idx_product_variants_product ON product_variants(product_id) WHERE is_active = TRUE;
+CREATE INDEX idx_product_images_product ON product_images(product_id, display_order);
+CREATE INDEX idx_product_categories_parent ON product_categories(parent_id);
+CREATE INDEX idx_product_categories_path ON product_categories(path);
+
+-- Cart indexes
+CREATE INDEX idx_carts_customer ON carts(customer_id);
+CREATE INDEX idx_cart_items_cart ON cart_items(cart_id);
+CREATE INDEX idx_cart_items_product ON cart_items(product_id);
 
 -- Order indexes
 CREATE INDEX idx_orders_customer ON orders(customer_id, created_at DESC);
-CREATE INDEX idx_orders_shop_status ON orders(shop_id, status, created_at DESC);
+CREATE INDEX idx_orders_seller_status ON orders(seller_id, status, created_at DESC);
 CREATE INDEX idx_orders_status ON orders(status, created_at DESC);
 CREATE INDEX idx_orders_number ON orders(order_number);
 CREATE INDEX idx_order_items_order ON order_items(order_id);
+CREATE INDEX idx_order_items_product ON order_items(product_id);
 CREATE INDEX idx_order_status_histories_order ON order_status_histories(order_id, created_at DESC);
 
--- Delivery indexes
-CREATE INDEX idx_deliveries_order ON deliveries(order_id);
-CREATE INDEX idx_deliveries_rider ON deliveries(rider_id, status) WHERE rider_id IS NOT NULL;
-CREATE INDEX idx_deliveries_status ON deliveries(status, created_at DESC);
-CREATE INDEX idx_delivery_tracking_delivery ON delivery_tracking(delivery_id, recorded_at DESC);
-CREATE INDEX idx_rider_assignments_delivery ON rider_assignments(delivery_id);
-CREATE INDEX idx_rider_assignments_rider ON rider_assignments(rider_id, status);
+-- Shipment indexes
+CREATE INDEX idx_shipments_order ON shipments(order_id);
+CREATE INDEX idx_shipments_status ON shipments(status, created_at DESC);
+CREATE INDEX idx_shipments_tracking ON shipments(carrier, tracking_number)
+    WHERE tracking_number IS NOT NULL;
+CREATE INDEX idx_shipment_tracking_shipment ON shipment_tracking(shipment_id, occurred_at DESC);
 
 -- Payment indexes
 CREATE INDEX idx_payments_order ON payments(order_id);
 CREATE INDEX idx_payments_status ON payments(status, created_at DESC);
 CREATE INDEX idx_refunds_payment ON refunds(payment_id);
 CREATE INDEX idx_refunds_order ON refunds(order_id);
+CREATE INDEX idx_refunds_return ON refunds(return_id) WHERE return_id IS NOT NULL;
 CREATE INDEX idx_payment_methods_customer ON payment_methods(customer_id) WHERE deleted_at IS NULL;
 
 -- Coupon indexes
@@ -595,8 +882,17 @@ CREATE INDEX idx_coupons_valid ON coupons(valid_until, is_active) WHERE is_activ
 CREATE INDEX idx_customer_coupons_customer ON customer_coupons(customer_id, status);
 CREATE INDEX idx_customer_coupons_expiry ON customer_coupons(expires_at) WHERE status = 'AVAILABLE';
 
+-- Return indexes
+CREATE INDEX idx_returns_order ON returns(order_id);
+CREATE INDEX idx_returns_customer ON returns(customer_id, created_at DESC);
+CREATE INDEX idx_returns_seller ON returns(seller_id, status, created_at DESC);
+CREATE INDEX idx_returns_status ON returns(status, created_at DESC);
+CREATE INDEX idx_returns_number ON returns(return_number);
+CREATE INDEX idx_return_items_return ON return_items(return_id);
+
 -- Review indexes
-CREATE INDEX idx_reviews_shop ON reviews(shop_id, is_visible, created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_reviews_seller ON reviews(seller_id, is_visible, created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_reviews_product ON reviews(product_id, is_visible, created_at DESC) WHERE deleted_at IS NULL;
 CREATE INDEX idx_reviews_customer ON reviews(customer_id, created_at DESC) WHERE deleted_at IS NULL;
 CREATE INDEX idx_review_images_review ON review_images(review_id);
 
@@ -625,11 +921,12 @@ BEGIN
         AND table_schema = 'public'
     LOOP
         EXECUTE format('
+            DROP TRIGGER IF EXISTS update_%I_updated_at ON %I;
             CREATE TRIGGER update_%I_updated_at
             BEFORE UPDATE ON %I
             FOR EACH ROW
             EXECUTE FUNCTION update_updated_at_column()
-        ', t, t);
+        ', t, t, t, t);
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
@@ -659,35 +956,78 @@ FOR EACH ROW
 WHEN (NEW.order_number IS NULL OR NEW.order_number = '')
 EXECUTE FUNCTION generate_order_number();
 
--- Function to update shop rating when review is added/updated
-CREATE OR REPLACE FUNCTION update_shop_rating()
+-- Function to generate return number
+CREATE OR REPLACE FUNCTION generate_return_number()
+RETURNS TRIGGER AS $$
+DECLARE
+    date_part VARCHAR(8);
+    seq_num INT;
+BEGIN
+    date_part := TO_CHAR(CURRENT_DATE, 'YYYYMMDD');
+
+    SELECT COALESCE(MAX(CAST(SUBSTRING(return_number FROM 13) AS INT)), 0) + 1
+    INTO seq_num
+    FROM returns
+    WHERE return_number LIKE 'RET-' || date_part || '-%';
+
+    NEW.return_number := 'RET-' || date_part || '-' || LPAD(seq_num::TEXT, 5, '0');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER generate_return_number_trigger
+BEFORE INSERT ON returns
+FOR EACH ROW
+WHEN (NEW.return_number IS NULL OR NEW.return_number = '')
+EXECUTE FUNCTION generate_return_number();
+
+-- Function to update seller rating
+CREATE OR REPLACE FUNCTION update_seller_rating()
 RETURNS TRIGGER AS $$
 BEGIN
-    UPDATE shops
+    UPDATE sellers
     SET rating_avg = (
         SELECT COALESCE(AVG(rating), 0)
         FROM reviews
-        WHERE shop_id = COALESCE(NEW.shop_id, OLD.shop_id)
+        WHERE seller_id = COALESCE(NEW.seller_id, OLD.seller_id)
         AND is_visible = TRUE
         AND deleted_at IS NULL
     ),
     review_count = (
         SELECT COUNT(*)
         FROM reviews
-        WHERE shop_id = COALESCE(NEW.shop_id, OLD.shop_id)
+        WHERE seller_id = COALESCE(NEW.seller_id, OLD.seller_id)
         AND is_visible = TRUE
         AND deleted_at IS NULL
     )
-    WHERE id = COALESCE(NEW.shop_id, OLD.shop_id);
+    WHERE id = COALESCE(NEW.seller_id, OLD.seller_id);
 
     RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_shop_rating_on_review
+CREATE TRIGGER update_seller_rating_on_review
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH ROW
-EXECUTE FUNCTION update_shop_rating();
+EXECUTE FUNCTION update_seller_rating();
+
+-- Function to update product sales count
+CREATE OR REPLACE FUNCTION update_product_sales_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE products
+        SET sales_count = sales_count + NEW.quantity
+        WHERE id = NEW.product_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_product_sales_on_order
+AFTER INSERT ON order_items
+FOR EACH ROW
+EXECUTE FUNCTION update_product_sales_count();
 
 -- =============================================================================
 -- COMMENTS
@@ -695,46 +1035,66 @@ EXECUTE FUNCTION update_shop_rating();
 
 COMMENT ON TABLE customers IS '고객 정보';
 COMMENT ON TABLE customer_addresses IS '고객 배송지 주소';
-COMMENT ON TABLE riders IS '배달 라이더 정보';
-COMMENT ON TABLE shops IS '가게 정보';
-COMMENT ON TABLE shop_categories IS '가게 카테고리';
-COMMENT ON TABLE shop_addresses IS '가게 주소';
-COMMENT ON TABLE shop_business_hours IS '가게 영업시간';
-COMMENT ON TABLE menu_categories IS '메뉴 카테고리 (가게별)';
-COMMENT ON TABLE menus IS '메뉴';
-COMMENT ON TABLE menu_option_groups IS '메뉴 옵션 그룹';
-COMMENT ON TABLE menu_options IS '메뉴 옵션';
+COMMENT ON TABLE seller_categories IS '판매자 분류';
+COMMENT ON TABLE sellers IS '판매자 정보';
+COMMENT ON TABLE seller_addresses IS '판매자 주소 (사업장/창고/반품지)';
+COMMENT ON TABLE categories IS '카테고리 (범용)';
+COMMENT ON TABLE product_categories IS '상품 카테고리 (계층형)';
+COMMENT ON TABLE products IS '상품';
+COMMENT ON TABLE product_variants IS '상품 변형 (색상/사이즈)';
+COMMENT ON TABLE product_images IS '상품 이미지';
+COMMENT ON TABLE product_specifications IS '상품 스펙';
+COMMENT ON TABLE carts IS '장바구니';
+COMMENT ON TABLE cart_items IS '장바구니 항목';
 COMMENT ON TABLE orders IS '주문';
 COMMENT ON TABLE order_items IS '주문 항목';
-COMMENT ON TABLE order_item_options IS '주문 항목별 선택 옵션';
 COMMENT ON TABLE order_status_histories IS '주문 상태 변경 이력';
-COMMENT ON TABLE deliveries IS '배달 정보';
-COMMENT ON TABLE delivery_tracking IS '실시간 배달 위치 추적';
-COMMENT ON TABLE rider_assignments IS '라이더 배정 이력';
+COMMENT ON TABLE shipments IS '배송 정보';
+COMMENT ON TABLE shipment_tracking IS '배송 추적';
+COMMENT ON TABLE shipping_carriers IS '배송업체 마스터';
 COMMENT ON TABLE payments IS '결제 정보';
 COMMENT ON TABLE refunds IS '환불 정보';
 COMMENT ON TABLE payment_methods IS '저장된 결제수단';
 COMMENT ON TABLE coupons IS '쿠폰';
 COMMENT ON TABLE customer_coupons IS '고객 보유 쿠폰';
 COMMENT ON TABLE promotions IS '프로모션/이벤트';
+COMMENT ON TABLE returns IS '반품/교환';
+COMMENT ON TABLE return_items IS '반품 항목';
 COMMENT ON TABLE reviews IS '리뷰';
 COMMENT ON TABLE review_images IS '리뷰 이미지';
-COMMENT ON TABLE review_replies IS '사장님 답글';
+COMMENT ON TABLE review_replies IS '판매자 답글';
 
 -- =============================================================================
--- SAMPLE DATA (Optional - for development)
+-- INITIAL DATA
 -- =============================================================================
 
--- Insert sample shop categories
-INSERT INTO shop_categories (id, name, display_order, icon_url) VALUES
-    (uuid_generate_v4(), '치킨', 1, '/icons/chicken.svg'),
-    (uuid_generate_v4(), '피자', 2, '/icons/pizza.svg'),
-    (uuid_generate_v4(), '한식', 3, '/icons/korean.svg'),
-    (uuid_generate_v4(), '중식', 4, '/icons/chinese.svg'),
-    (uuid_generate_v4(), '일식', 5, '/icons/japanese.svg'),
-    (uuid_generate_v4(), '분식', 6, '/icons/snack.svg'),
-    (uuid_generate_v4(), '카페/디저트', 7, '/icons/cafe.svg'),
-    (uuid_generate_v4(), '패스트푸드', 8, '/icons/fastfood.svg');
+-- Insert shipping carriers
+INSERT INTO shipping_carriers (id, code, name, tracking_url_template, display_order) VALUES
+    (uuid_generate_v4(), 'CJ', 'CJ대한통운', 'https://www.cjlogistics.com/ko/tool/parcel/tracking?gnbInvcNo={tracking_number}', 1),
+    (uuid_generate_v4(), 'HANJIN', '한진택배', 'https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillResult.do?mession-Y&wblnumText2={tracking_number}', 2),
+    (uuid_generate_v4(), 'LOTTE', '롯데택배', 'https://www.lotteglogis.com/home/reservation/tracking/index?InvNo={tracking_number}', 3),
+    (uuid_generate_v4(), 'LOGEN', '로젠택배', 'https://www.ilogen.com/web/personal/trace/{tracking_number}', 4),
+    (uuid_generate_v4(), 'POST', '우체국택배', 'https://service.epost.go.kr/trace.RetrieveDomRi498.postal?sid1={tracking_number}', 5),
+    (uuid_generate_v4(), 'EPOST', '우편등기', 'https://service.epost.go.kr/trace.RetrieveDomRi498.postal?sid1={tracking_number}', 6);
+
+-- Insert sample product categories
+INSERT INTO product_categories (id, parent_id, name, depth, path, display_order) VALUES
+    ('11111111-1111-1111-1111-111111111111', NULL, '패션의류', 1, '/1/', 1),
+    ('22222222-2222-2222-2222-222222222222', NULL, '디지털/가전', 1, '/2/', 2),
+    ('33333333-3333-3333-3333-333333333333', NULL, '생활/건강', 1, '/3/', 3),
+    ('44444444-4444-4444-4444-444444444444', NULL, '식품', 1, '/4/', 4),
+    ('11111111-1111-1111-1111-111111111112', '11111111-1111-1111-1111-111111111111', '남성의류', 2, '/1/1/', 1),
+    ('11111111-1111-1111-1111-111111111113', '11111111-1111-1111-1111-111111111111', '여성의류', 2, '/1/2/', 2),
+    ('22222222-2222-2222-2222-222222222223', '22222222-2222-2222-2222-222222222222', '컴퓨터', 2, '/2/1/', 1),
+    ('22222222-2222-2222-2222-222222222224', '22222222-2222-2222-2222-222222222222', '모바일', 2, '/2/2/', 2);
+
+-- Insert sample seller categories
+INSERT INTO seller_categories (id, name, display_order) VALUES
+    (uuid_generate_v4(), '패션/의류', 1),
+    (uuid_generate_v4(), '디지털/가전', 2),
+    (uuid_generate_v4(), '생활용품', 3),
+    (uuid_generate_v4(), '식품/건강', 4),
+    (uuid_generate_v4(), '뷰티/화장품', 5);
 
 -- =============================================================================
 -- END OF SCHEMA

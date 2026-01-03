@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 /**
  * Order Kafka Listener - Driving Adapter (Inbound)
  * 외부 시스템으로부터의 이벤트 수신 (v2 - Product Delivery)
@@ -44,7 +46,7 @@ public class OrderKafkaListener {
                 event.orderId(), partition, offset);
 
         try {
-            updateOrderStatusUseCase.updateStatus(event.orderId(), OrderStatus.OUT_FOR_DELIVERY);
+            updateOrderStatusUseCase.updateStatus(UUID.fromString(event.orderId()), OrderStatus.OUT_FOR_DELIVERY);
             acknowledgment.acknowledge();
             log.info("Successfully processed out for delivery event: orderId={}", event.orderId());
         } catch (Exception e) {
@@ -69,7 +71,7 @@ public class OrderKafkaListener {
         log.info("Received delivery completed event: orderId={}", event.orderId());
 
         try {
-            updateOrderStatusUseCase.updateStatus(event.orderId(), OrderStatus.DELIVERED);
+            updateOrderStatusUseCase.updateStatus(UUID.fromString(event.orderId()), OrderStatus.DELIVERED);
             acknowledgment.acknowledge();
             log.info("Successfully processed delivery completed event: orderId={}", event.orderId());
         } catch (Exception e) {
@@ -94,7 +96,7 @@ public class OrderKafkaListener {
         log.info("Received in transit event: orderId={}", event.orderId());
 
         try {
-            updateOrderStatusUseCase.updateStatus(event.orderId(), OrderStatus.IN_TRANSIT);
+            updateOrderStatusUseCase.updateStatus(UUID.fromString(event.orderId()), OrderStatus.IN_TRANSIT);
             acknowledgment.acknowledge();
             log.info("Successfully processed in transit event: orderId={}", event.orderId());
         } catch (Exception e) {

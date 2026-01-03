@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 /**
  * Product jOOQ Adapter - Driven Adapter (Outbound)
  * jOOQ를 사용한 상품 통계 조회 구현
@@ -19,7 +21,7 @@ public class ProductJooqAdapter implements LoadProductStatsPort {
 
     @Override
     @Transactional(readOnly = true)
-    public long countByCategoryId(String categoryId) {
+    public long countByCategoryId(UUID categoryId) {
         return repository.countByCategoryIdAndActive(categoryId);
     }
 }

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.Sellers.SELLERS;
 
@@ -23,7 +24,7 @@ public class SellerJooqRepository {
      * Compile-time type-safe version of:
      * SELECT s.businessName FROM SellerJpaEntity s WHERE s.id = :id
      */
-    public Optional<String> findBusinessNameById(String id) {
+    public Optional<String> findBusinessNameById(UUID id) {
         return dsl
                 .select(SELLERS.BUSINESS_NAME)
                 .from(SELLERS)

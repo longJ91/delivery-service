@@ -6,6 +6,7 @@ import jjh.delivery.domain.payment.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * 결제 응답
@@ -27,8 +28,8 @@ public record PaymentResponse(
 ) {
     public static PaymentResponse from(Payment payment) {
         return new PaymentResponse(
-                payment.getId(),
-                payment.getOrderId(),
+                payment.getId().toString(),
+                payment.getOrderId().toString(),
                 payment.getPaymentMethodType(),
                 payment.getPaymentGateway(),
                 payment.getTransactionId(),

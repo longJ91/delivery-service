@@ -5,6 +5,7 @@ import jjh.delivery.domain.shipment.ShipmentStatus;
 import jjh.delivery.domain.shipment.ShippingCarrier;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Shipment Use Case - Driving Port (Inbound)
@@ -29,12 +30,12 @@ public interface ManageShipmentUseCase {
     /**
      * 배송 조회
      */
-    Shipment getShipment(String shipmentId);
+    Shipment getShipment(UUID shipmentId);
 
     /**
      * 주문별 배송 조회
      */
-    Shipment getShipmentByOrderId(String orderId);
+    Shipment getShipmentByOrderId(UUID orderId);
 
     /**
      * 운송장 번호로 조회

@@ -9,8 +9,8 @@ import java.util.*;
  */
 public class WebhookSubscription {
 
-    private final String id;
-    private final String sellerId;
+    private final UUID id;
+    private final UUID sellerId;
     private String name;
     private String endpointUrl;
     private String secret;
@@ -22,7 +22,7 @@ public class WebhookSubscription {
     private LocalDateTime updatedAt;
 
     private WebhookSubscription(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.sellerId = builder.sellerId;
         this.name = builder.name;
         this.endpointUrl = builder.endpointUrl;
@@ -152,11 +152,11 @@ public class WebhookSubscription {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getSellerId() {
+    public UUID getSellerId() {
         return sellerId;
     }
 
@@ -201,8 +201,8 @@ public class WebhookSubscription {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String sellerId;
+        private UUID id;
+        private UUID sellerId;
         private String name;
         private String endpointUrl;
         private String secret;
@@ -212,12 +212,12 @@ public class WebhookSubscription {
         private LocalDateTime lastDeliveryAt;
         private LocalDateTime createdAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder sellerId(String sellerId) {
+        public Builder sellerId(UUID sellerId) {
             this.sellerId = sellerId;
             return this;
         }
@@ -273,7 +273,7 @@ public class WebhookSubscription {
         }
 
         private void validateRequired() {
-            if (sellerId == null || sellerId.isBlank()) {
+            if (sellerId == null) {
                 throw new IllegalArgumentException("sellerId is required");
             }
             if (name == null || name.isBlank()) {

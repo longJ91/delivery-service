@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Payment JPA Adapter - Driven Adapter (Outbound)
@@ -25,19 +26,19 @@ public class PaymentJpaAdapter implements LoadPaymentPort, SavePaymentPort {
     private final PaymentPersistenceMapper mapper;
 
     @Override
-    public Optional<Payment> findById(String paymentId) {
+    public Optional<Payment> findById(UUID paymentId) {
         return paymentJpaRepository.findById(paymentId)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public Optional<Payment> findByOrderId(String orderId) {
+    public Optional<Payment> findByOrderId(UUID orderId) {
         return paymentJpaRepository.findByOrderId(orderId)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public List<Payment> findByOrderIdIn(List<String> orderIds) {
+    public List<Payment> findByOrderIdIn(List<UUID> orderIds) {
         return paymentJpaRepository.findByOrderIdIn(orderIds).stream()
                 .map(mapper::toDomain)
                 .toList();
@@ -51,7 +52,7 @@ public class PaymentJpaAdapter implements LoadPaymentPort, SavePaymentPort {
     }
 
     @Override
-    public boolean existsByOrderId(String orderId) {
+    public boolean existsByOrderId(UUID orderId) {
         return paymentJpaRepository.existsByOrderId(orderId);
     }
 

@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,14 +65,14 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .limit(criteria.limit())
                 .fetch();
 
-        List<String> orderIds = records.stream()
-                .map(r -> r.get("id", String.class))
+        List<UUID> orderIds = records.stream()
+                .map(r -> r.get("id", UUID.class))
                 .toList();
 
-        Map<String, List<OrderItem>> itemsMap = fetchOrderItems(orderIds);
+        Map<UUID, List<OrderItem>> itemsMap = fetchOrderItems(orderIds);
 
         return records.stream()
-                .map(r -> mapToOrder(r, itemsMap.getOrDefault(r.get("id", String.class), List.of())))
+                .map(r -> mapToOrder(r, itemsMap.getOrDefault(r.get("id", UUID.class), List.of())))
                 .toList();
     }
 
@@ -93,7 +94,7 @@ public class OrderJooqAdapter implements OrderQueryPort {
 
     @Override
     public List<OrderStatistics> getOrderStatisticsBySeller(
-            String sellerId,
+            UUID sellerId,
             LocalDateTime from,
             LocalDateTime to
     ) {
@@ -116,7 +117,7 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .groupBy(field("seller_id"))
                 .fetch()
                 .map(r -> new OrderStatistics(
-                        r.get("seller_id", String.class),
+                        r.get("seller_id", UUID.class),
                         r.get("total_orders", Long.class),
                         r.get("completed_orders", Long.class),
                         r.get("cancelled_orders", Long.class),
@@ -144,8 +145,8 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .fetch();
 
         // 함수 합성: 아이템 포함 여부에 따라 다른 매핑 전략 (함수형)
-        Function<Record, String> extractId = r -> r.get("id", String.class);
-        Map<String, List<OrderItem>> itemsMap = criteria.includeItems()
+        Function<Record, UUID> extractId = r -> r.get("id", UUID.class);
+        Map<UUID, List<OrderItem>> itemsMap = criteria.includeItems()
                 ? fetchOrderItems(records.stream().map(extractId).toList())
                 : Map.of();
 
@@ -154,7 +155,7 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .toList();
     }
 
-    private Map<String, List<OrderItem>> fetchOrderItems(List<String> orderIds) {
+    private Map<UUID, List<OrderItem>> fetchOrderItems(List<UUID> orderIds) {
         if (orderIds.isEmpty()) {
             return Map.of();
         }
@@ -165,10 +166,10 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .fetch()
                 .stream()
                 .collect(Collectors.groupingBy(
-                        r -> r.get("order_id", String.class),
+                        r -> r.get("order_id", UUID.class),
                         Collectors.mapping(
                                 r -> OrderItem.of(
-                                        r.get("product_id", String.class),
+                                        r.get("product_id", UUID.class),
                                         r.get("product_name", String.class),
                                         r.get("quantity", Integer.class),
                                         r.get("unit_price", BigDecimal.class)
@@ -180,10 +181,10 @@ public class OrderJooqAdapter implements OrderQueryPort {
 
     private Order mapToOrder(Record record, List<OrderItem> items) {
         return Order.builder()
-                .id(record.get("id", String.class))
+                .id(record.get("id", UUID.class))
                 .orderNumber(record.get("order_number", String.class))
-                .customerId(record.get("customer_id", String.class))
-                .sellerId(record.get("seller_id", String.class))
+                .customerId(record.get("customer_id", UUID.class))
+                .sellerId(record.get("seller_id", UUID.class))
                 .items(items)
                 .status(OrderStatus.valueOf(record.get("status", String.class)))
                 .shippingAddress(ShippingAddress.of(

@@ -15,7 +15,7 @@ public class Customer {
 
     private static final int MAX_ADDRESSES = 10;
 
-    private final String id;
+    private final UUID id;
     private String email;
     private String name;
     private String phoneNumber;
@@ -26,7 +26,7 @@ public class Customer {
     private LocalDateTime lastLoginAt;
 
     private Customer(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.email = builder.email;
         this.name = builder.name;
         this.phoneNumber = builder.phoneNumber;
@@ -93,7 +93,7 @@ public class Customer {
     /**
      * 배송지 삭제
      */
-    public void removeAddress(String addressId) {
+    public void removeAddress(UUID addressId) {
         validateActiveStatus();
         CustomerAddress toRemove = findAddress(addressId)
                 .orElseThrow(() -> new IllegalArgumentException("Address not found: " + addressId));
@@ -111,7 +111,7 @@ public class Customer {
     /**
      * 기본 배송지 설정
      */
-    public void setDefaultAddress(String addressId) {
+    public void setDefaultAddress(UUID addressId) {
         validateActiveStatus();
         CustomerAddress address = findAddress(addressId)
                 .orElseThrow(() -> new IllegalArgumentException("Address not found: " + addressId));
@@ -199,7 +199,7 @@ public class Customer {
     /**
      * 배송지 조회
      */
-    public Optional<CustomerAddress> findAddress(String addressId) {
+    public Optional<CustomerAddress> findAddress(UUID addressId) {
         return addresses.stream()
                 .filter(addr -> addr.id().equals(addressId))
                 .findFirst();
@@ -218,7 +218,7 @@ public class Customer {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -259,7 +259,7 @@ public class Customer {
     // =====================================================
 
     public static class Builder {
-        private String id;
+        private UUID id;
         private String email;
         private String name;
         private String phoneNumber;
@@ -268,7 +268,7 @@ public class Customer {
         private LocalDateTime createdAt;
         private LocalDateTime lastLoginAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }

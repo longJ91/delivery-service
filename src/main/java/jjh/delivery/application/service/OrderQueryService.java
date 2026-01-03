@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order Query Service (v2 - Product Delivery)
@@ -29,7 +30,7 @@ public class OrderQueryService {
     }
 
     public List<OrderStatistics> getOrderStatistics(
-            String sellerId,
+            UUID sellerId,
             LocalDateTime from,
             LocalDateTime to
     ) {

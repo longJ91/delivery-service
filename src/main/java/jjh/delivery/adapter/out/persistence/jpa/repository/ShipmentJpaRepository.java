@@ -6,17 +6,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Shipment JPA Repository
  */
-public interface ShipmentJpaRepository extends JpaRepository<ShipmentJpaEntity, String> {
+public interface ShipmentJpaRepository extends JpaRepository<ShipmentJpaEntity, UUID> {
 
-    Optional<ShipmentJpaEntity> findByOrderId(String orderId);
+    Optional<ShipmentJpaEntity> findByOrderId(UUID orderId);
 
     Optional<ShipmentJpaEntity> findByTrackingNumber(String trackingNumber);
 
     List<ShipmentJpaEntity> findByStatus(ShipmentStatus status);
 
-    boolean existsByOrderId(String orderId);
+    boolean existsByOrderId(UUID orderId);
 }

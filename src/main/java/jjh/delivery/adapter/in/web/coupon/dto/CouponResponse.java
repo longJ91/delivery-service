@@ -6,6 +6,7 @@ import jjh.delivery.domain.promotion.DiscountType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * 쿠폰 응답
@@ -33,7 +34,7 @@ public record CouponResponse(
 ) {
     public static CouponResponse from(Coupon coupon) {
         return new CouponResponse(
-                coupon.getId(),
+                coupon.getId().toString(),
                 coupon.getCode(),
                 coupon.getName(),
                 coupon.getDescription(),
@@ -42,7 +43,7 @@ public record CouponResponse(
                 coupon.getMinimumOrderAmount(),
                 coupon.getMaximumDiscountAmount(),
                 coupon.getScope(),
-                coupon.getScopeTargetId(),
+                coupon.getScopeTargetId() != null ? coupon.getScopeTargetId().toString() : null,
                 coupon.getTotalQuantity(),
                 coupon.getUsedQuantity(),
                 coupon.getRemainingQuantity(),

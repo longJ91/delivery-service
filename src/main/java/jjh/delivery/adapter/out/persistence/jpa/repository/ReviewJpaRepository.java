@@ -9,11 +9,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Review JPA Repository
  */
-public interface ReviewJpaRepository extends JpaRepository<ReviewJpaEntity, String> {
+public interface ReviewJpaRepository extends JpaRepository<ReviewJpaEntity, UUID> {
 
     /**
      * ID로 리뷰 조회 (images, reply fetch join)
@@ -22,32 +23,32 @@ public interface ReviewJpaRepository extends JpaRepository<ReviewJpaEntity, Stri
             "LEFT JOIN FETCH r.images " +
             "LEFT JOIN FETCH r.reply " +
             "WHERE r.id = :id")
-    Optional<ReviewJpaEntity> findByIdWithDetails(@Param("id") String id);
+    Optional<ReviewJpaEntity> findByIdWithDetails(@Param("id") UUID id);
 
     /**
      * 상품별 리뷰 조회 (visible만)
      */
-    Page<ReviewJpaEntity> findByProductIdAndIsVisibleTrue(String productId, Pageable pageable);
+    Page<ReviewJpaEntity> findByProductIdAndIsVisibleTrue(UUID productId, Pageable pageable);
 
     /**
      * 고객별 리뷰 조회
      */
-    Page<ReviewJpaEntity> findByCustomerId(String customerId, Pageable pageable);
+    Page<ReviewJpaEntity> findByCustomerId(UUID customerId, Pageable pageable);
 
     /**
      * 판매자별 리뷰 조회
      */
-    Page<ReviewJpaEntity> findBySellerId(String sellerId, Pageable pageable);
+    Page<ReviewJpaEntity> findBySellerId(UUID sellerId, Pageable pageable);
 
     /**
      * 상품별 리뷰 수
      */
-    long countByProductIdAndIsVisibleTrue(String productId);
+    long countByProductIdAndIsVisibleTrue(UUID productId);
 
     /**
      * 주문에 대한 리뷰 존재 여부
      */
-    boolean existsByOrderId(String orderId);
+    boolean existsByOrderId(UUID orderId);
 
     // Note: getAverageRatingByProductId, getRatingDistributionByProductId는
     //       ReviewJooqRepository로 마이그레이션됨 (컴파일 타임 타입 안전성)

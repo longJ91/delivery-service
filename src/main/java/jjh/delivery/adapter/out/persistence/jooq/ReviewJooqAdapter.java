@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -24,13 +25,13 @@ public class ReviewJooqAdapter implements LoadReviewStatsPort {
 
     @Override
     @Transactional(readOnly = true)
-    public double getAverageRatingByProductId(String productId) {
+    public double getAverageRatingByProductId(UUID productId) {
         return repository.getAverageRatingByProductId(productId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Integer, Long> getRatingDistributionByProductId(String productId) {
+    public Map<Integer, Long> getRatingDistributionByProductId(UUID productId) {
         Map<Integer, Long> resultMap = repository.getRatingDistributionByProductId(productId);
 
         // 1~5 모든 평점에 대해 기본값 0 보장

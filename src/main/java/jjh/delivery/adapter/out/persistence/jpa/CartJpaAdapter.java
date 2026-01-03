@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Cart JPA Adapter - Driven Adapter (Outbound)
@@ -28,14 +29,14 @@ public class CartJpaAdapter implements LoadCartPort, SaveCartPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Cart> findByCustomerId(String customerId) {
+    public Optional<Cart> findByCustomerId(UUID customerId) {
         // JPA 사용 (조인 쿼리는 JPA가 관계 매핑 처리)
         return repository.findByCustomerIdWithItems(customerId)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public boolean existsByCustomerId(String customerId) {
+    public boolean existsByCustomerId(UUID customerId) {
         return repository.existsByCustomerId(customerId);
     }
 
@@ -59,7 +60,7 @@ public class CartJpaAdapter implements LoadCartPort, SaveCartPort {
 
     @Override
     @Transactional
-    public void deleteByCustomerId(String customerId) {
+    public void deleteByCustomerId(UUID customerId) {
         repository.deleteByCustomerId(customerId);
     }
 

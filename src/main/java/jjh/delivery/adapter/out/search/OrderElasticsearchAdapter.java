@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order Elasticsearch Adapter - Driven Adapter (Outbound)
@@ -47,7 +48,7 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
     }
 
     @Override
-    public void delete(String orderId) {
+    public void delete(UUID orderId) {
         try {
             repository.deleteById(orderId);
             log.debug("Deleted order from index: {}", orderId);
@@ -106,14 +107,14 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
     }
 
     @Override
-    public List<Order> findByCustomerId(String customerId) {
+    public List<Order> findByCustomerId(UUID customerId) {
         return repository.findByCustomerId(customerId).stream()
                 .map(OrderDocument::toDomain)
                 .toList();
     }
 
     @Override
-    public List<Order> findBySellerId(String sellerId) {
+    public List<Order> findBySellerId(UUID sellerId) {
         return repository.findBySellerId(sellerId).stream()
                 .map(OrderDocument::toDomain)
                 .toList();

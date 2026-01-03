@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Order JPA Adapter - Driven Adapter (Outbound)
@@ -29,18 +30,18 @@ public class OrderJpaAdapter implements LoadOrderPort, SaveOrderPort {
     // ==================== LoadOrderPort ====================
 
     @Override
-    public Optional<Order> findById(String orderId) {
+    public Optional<Order> findById(UUID orderId) {
         return repository.findByIdWithItems(orderId)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public List<Order> findByCustomerId(String customerId) {
+    public List<Order> findByCustomerId(UUID customerId) {
         return mapper.toDomainList(repository.findByCustomerIdWithItems(customerId));
     }
 
     @Override
-    public List<Order> findBySellerId(String sellerId) {
+    public List<Order> findBySellerId(UUID sellerId) {
         return mapper.toDomainList(repository.findBySellerIdWithItems(sellerId));
     }
 
@@ -50,7 +51,7 @@ public class OrderJpaAdapter implements LoadOrderPort, SaveOrderPort {
     }
 
     @Override
-    public boolean existsById(String orderId) {
+    public boolean existsById(UUID orderId) {
         return repository.existsById(orderId);
     }
 
@@ -68,7 +69,7 @@ public class OrderJpaAdapter implements LoadOrderPort, SaveOrderPort {
     }
 
     @Override
-    public void delete(String orderId) {
+    public void delete(UUID orderId) {
         repository.deleteById(orderId);
     }
 

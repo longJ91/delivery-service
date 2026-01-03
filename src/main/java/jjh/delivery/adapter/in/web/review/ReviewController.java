@@ -17,6 +17,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 /**
  * Review REST Controller - Driving Adapter (Inbound)
  * 리뷰 관리 API
@@ -58,7 +60,7 @@ public class ReviewController {
      */
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewDetailResponse> getReview(
-            @PathVariable String reviewId
+            @PathVariable UUID reviewId
     ) {
         Review review = manageReviewUseCase.getReview(reviewId);
 
@@ -71,13 +73,13 @@ public class ReviewController {
     @PutMapping("/{reviewId}")
     public ResponseEntity<ReviewDetailResponse> updateReview(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String reviewId,
+            @PathVariable UUID reviewId,
             @Valid @RequestBody UpdateReviewRequest request
     ) {
         String customerId = userDetails.getUsername();
 
         UpdateReviewCommand command = new UpdateReviewCommand(
-                reviewId,
+                reviewId.toString(),
                 customerId,
                 request.rating(),
                 request.content(),
@@ -95,9 +97,9 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String reviewId
+            @PathVariable UUID reviewId
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
         manageReviewUseCase.deleteReview(reviewId, customerId);
 
         return ResponseEntity.noContent().build();
@@ -111,7 +113,7 @@ public class ReviewController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
         Page<Review> reviews = manageReviewUseCase.getMyReviews(customerId, pageable);
 
         return ResponseEntity.ok(ReviewListResponse.from(reviews));
@@ -122,7 +124,7 @@ public class ReviewController {
      */
     @GetMapping("/product/{productId}")
     public ResponseEntity<ReviewListResponse> getReviewsByProductId(
-            @PathVariable String productId,
+            @PathVariable UUID productId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<Review> reviews = manageReviewUseCase.getReviewsByProductId(productId, pageable);
@@ -135,7 +137,7 @@ public class ReviewController {
      */
     @GetMapping("/product/{productId}/rating")
     public ResponseEntity<ReviewRatingInfoResponse> getProductRatingInfo(
-            @PathVariable String productId
+            @PathVariable UUID productId
     ) {
         ReviewRatingInfo ratingInfo = manageReviewUseCase.getProductRatingInfo(productId);
 
@@ -150,10 +152,10 @@ public class ReviewController {
     @PostMapping("/{reviewId}/reply")
     public ResponseEntity<ReviewDetailResponse> addReply(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String reviewId,
+            @PathVariable UUID reviewId,
             @Valid @RequestBody AddReplyRequest request
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         Review review = manageReviewUseCase.addReply(reviewId, sellerId, request.content());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ReviewDetailResponse.from(review));
@@ -165,10 +167,10 @@ public class ReviewController {
     @PutMapping("/{reviewId}/reply")
     public ResponseEntity<ReviewDetailResponse> updateReply(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String reviewId,
+            @PathVariable UUID reviewId,
             @Valid @RequestBody AddReplyRequest request
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         Review review = manageReviewUseCase.updateReply(reviewId, sellerId, request.content());
 
         return ResponseEntity.ok(ReviewDetailResponse.from(review));
@@ -180,9 +182,9 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}/reply")
     public ResponseEntity<ReviewDetailResponse> deleteReply(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String reviewId
+            @PathVariable UUID reviewId
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         Review review = manageReviewUseCase.deleteReply(reviewId, sellerId);
 
         return ResponseEntity.ok(ReviewDetailResponse.from(review));

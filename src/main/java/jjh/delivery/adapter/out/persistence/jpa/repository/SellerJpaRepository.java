@@ -8,13 +8,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Seller JPA Repository
  * Note: findBusinessNameById는 SellerJooqRepository로 마이그레이션됨 (컴파일 타임 타입 안전성)
  */
 @Repository
-public interface SellerJpaRepository extends JpaRepository<SellerJpaEntity, String> {
+public interface SellerJpaRepository extends JpaRepository<SellerJpaEntity, UUID> {
 
     Optional<SellerJpaEntity> findByBusinessNumber(String businessNumber);
 

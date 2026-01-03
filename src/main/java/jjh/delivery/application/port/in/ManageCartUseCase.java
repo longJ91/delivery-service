@@ -3,7 +3,7 @@ package jjh.delivery.application.port.in;
 import jjh.delivery.domain.cart.Cart;
 import jjh.delivery.domain.cart.CartItem;
 
-import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * 장바구니 관리 Use Case - Driving Port (Inbound)
@@ -13,27 +13,27 @@ public interface ManageCartUseCase {
     /**
      * 장바구니 조회
      */
-    Cart getCart(String customerId);
+    Cart getCart(UUID customerId);
 
     /**
      * 상품 추가
      */
-    CartItem addItem(String customerId, AddCartItemCommand command);
+    CartItem addItem(UUID customerId, AddCartItemCommand command);
 
     /**
      * 수량 변경
      */
-    CartItem updateItemQuantity(String customerId, String itemId, int quantity);
+    CartItem updateItemQuantity(UUID customerId, UUID itemId, int quantity);
 
     /**
      * 상품 제거
      */
-    void removeItem(String customerId, String itemId);
+    void removeItem(UUID customerId, UUID itemId);
 
     /**
      * 장바구니 비우기
      */
-    void clearCart(String customerId);
+    void clearCart(UUID customerId);
 
     /**
      * 상품 추가 커맨드

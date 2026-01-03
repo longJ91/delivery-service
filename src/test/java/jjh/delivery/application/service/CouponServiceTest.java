@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,7 +52,8 @@ class CouponServiceTest {
     // Test Fixtures
     // =====================================================
 
-    private static final String COUPON_ID = "coupon-123";
+    private static final UUID COUPON_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID NON_EXISTENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000099");
     private static final String COUPON_CODE = "SAVE1000";
 
     private Coupon createCoupon() {
@@ -166,7 +168,7 @@ class CouponServiceTest {
             // given
             Coupon coupon = createCoupon();
             UpdateCouponCommand command = new UpdateCouponCommand(
-                    COUPON_ID, "수정된 이름", "수정된 설명",
+                    COUPON_ID.toString(), "수정된 이름", "수정된 설명",
                     new BigDecimal("20000"), null, 200, null, null
             );
 
@@ -190,10 +192,10 @@ class CouponServiceTest {
         void updateCouponNotFoundThrowsException() {
             // given
             UpdateCouponCommand command = new UpdateCouponCommand(
-                    "non-existent", "이름", null, null, null, 0, null, null
+                    NON_EXISTENT_ID.toString(), "이름", null, null, null, 0, null, null
             );
 
-            given(loadCouponPort.findById("non-existent"))
+            given(loadCouponPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -228,11 +230,11 @@ class CouponServiceTest {
         @DisplayName("존재하지 않는 쿠폰 삭제 시 예외")
         void deleteCouponNotFoundThrowsException() {
             // given
-            given(loadCouponPort.findById("non-existent"))
+            given(loadCouponPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> couponService.deleteCoupon("non-existent"))
+            assertThatThrownBy(() -> couponService.deleteCoupon(NON_EXISTENT_ID))
                     .isInstanceOf(NoSuchElementException.class);
         }
     }

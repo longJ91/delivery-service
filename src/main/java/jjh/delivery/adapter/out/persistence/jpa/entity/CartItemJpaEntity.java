@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Cart Item JPA Entity
@@ -22,27 +23,26 @@ import java.time.LocalDateTime;
 public class CartItemJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private CartJpaEntity cart;
 
-    @Column(name = "product_id", nullable = false, length = 36)
-    private String productId;
+    @Column(name = "product_id", nullable = false)
+    private UUID productId;
 
     @Column(name = "product_name", nullable = false, length = 200)
     private String productName;
 
-    @Column(name = "variant_id", length = 36)
-    private String variantId;
+    @Column(name = "variant_id")
+    private UUID variantId;
 
     @Column(name = "variant_name", length = 200)
     private String variantName;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
-    private String sellerId;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
     @Column(nullable = false)
     private int quantity;
@@ -58,12 +58,12 @@ public class CartItemJpaEntity {
 
     @Builder
     public CartItemJpaEntity(
-            String id,
-            String productId,
+            UUID id,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
-            String sellerId,
+            UUID sellerId,
             int quantity,
             BigDecimal unitPrice,
             String thumbnailUrl,

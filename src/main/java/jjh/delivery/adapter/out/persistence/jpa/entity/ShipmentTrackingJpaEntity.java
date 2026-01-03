@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Shipment Tracking Event JPA Entity
@@ -22,8 +23,7 @@ import java.time.LocalDateTime;
 public class ShipmentTrackingJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipment_id", nullable = false)
@@ -47,7 +47,7 @@ public class ShipmentTrackingJpaEntity {
 
     @Builder
     public ShipmentTrackingJpaEntity(
-            String id,
+            UUID id,
             ShipmentStatus status,
             String location,
             String description,

@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Return JPA Entity
@@ -28,14 +29,13 @@ import java.util.List;
 public class ReturnJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "order_id", nullable = false, length = 36)
-    private String orderId;
+    @Column(name = "order_id", nullable = false)
+    private UUID orderId;
 
-    @Column(name = "customer_id", nullable = false, length = 36)
-    private String customerId;
+    @Column(name = "customer_id", nullable = false)
+    private UUID customerId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "return_type", nullable = false, length = 20)
@@ -75,9 +75,9 @@ public class ReturnJpaEntity {
 
     @Builder
     public ReturnJpaEntity(
-            String id,
-            String orderId,
-            String customerId,
+            UUID id,
+            UUID orderId,
+            UUID customerId,
             ReturnType returnType,
             ReturnReason reason,
             String reasonDetail,

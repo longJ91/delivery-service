@@ -8,7 +8,7 @@ import java.util.UUID;
  * 배송 추적 이벤트
  */
 public record TrackingEvent(
-        String id,
+        UUID id,
         ShipmentStatus status,
         String location,
         String description,
@@ -32,7 +32,7 @@ public record TrackingEvent(
      */
     public static TrackingEvent of(ShipmentStatus status, String location, String description) {
         return new TrackingEvent(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 status,
                 location,
                 description,
@@ -46,7 +46,7 @@ public record TrackingEvent(
      */
     public static TrackingEvent of(ShipmentStatus status, String location, String description, LocalDateTime occurredAt) {
         return new TrackingEvent(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 status,
                 location,
                 description,

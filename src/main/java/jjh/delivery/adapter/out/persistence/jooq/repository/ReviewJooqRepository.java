@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.ReviewImages.REVIEW_IMAGES;
+import java.util.UUID;
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.ReviewReplies.REVIEW_REPLIES;
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.Reviews.REVIEWS;
 import static org.jooq.impl.DSL.*;
@@ -34,7 +35,7 @@ public class ReviewJooqRepository {
      * SELECT DISTINCT r FROM ReviewJpaEntity r
      * LEFT JOIN FETCH r.images LEFT JOIN FETCH r.reply WHERE r.id = :id
      */
-    public Optional<ReviewWithDetails> findByIdWithDetails(String id) {
+    public Optional<ReviewWithDetails> findByIdWithDetails(UUID id) {
         Result<Record> result = dsl
                 .select()
                 .from(REVIEWS)
@@ -58,7 +59,7 @@ public class ReviewJooqRepository {
      * SELECT COALESCE(AVG(r.rating), 0.0) FROM ReviewJpaEntity r
      * WHERE r.productId = :productId AND r.isVisible = true
      */
-    public double getAverageRatingByProductId(String productId) {
+    public double getAverageRatingByProductId(UUID productId) {
         BigDecimal avg = dsl
                 .select(coalesce(avg(REVIEWS.RATING), BigDecimal.ZERO))
                 .from(REVIEWS)
@@ -75,7 +76,7 @@ public class ReviewJooqRepository {
      * SELECT r.rating, COUNT(r) FROM ReviewJpaEntity r
      * WHERE r.productId = :productId AND r.isVisible = true GROUP BY r.rating
      */
-    public Map<Integer, Long> getRatingDistributionByProductId(String productId) {
+    public Map<Integer, Long> getRatingDistributionByProductId(UUID productId) {
         Result<Record2<Integer, Integer>> result = dsl
                 .select(REVIEWS.RATING, count())
                 .from(REVIEWS)

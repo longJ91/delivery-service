@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Return Service - Application Layer
@@ -28,10 +29,10 @@ public class ReturnService implements ManageReturnUseCase {
     public ProductReturn requestReturn(RequestReturnCommand command) {
         List<ReturnItem> items = command.items().stream()
                 .map(itemCmd -> ReturnItem.of(
-                        itemCmd.orderItemId(),
-                        itemCmd.productId(),
+                        UUID.fromString(itemCmd.orderItemId()),
+                        UUID.fromString(itemCmd.productId()),
                         itemCmd.productName(),
-                        itemCmd.variantId(),
+                        itemCmd.variantId() != null ? UUID.fromString(itemCmd.variantId()) : null,
                         itemCmd.variantName(),
                         itemCmd.quantity(),
                         itemCmd.refundAmount()
@@ -39,8 +40,8 @@ public class ReturnService implements ManageReturnUseCase {
                 .toList();
 
         ProductReturn productReturn = ProductReturn.builder()
-                .orderId(command.orderId())
-                .customerId(command.customerId())
+                .orderId(UUID.fromString(command.orderId()))
+                .customerId(UUID.fromString(command.customerId()))
                 .returnType(command.returnType())
                 .reason(command.reason())
                 .reasonDetail(command.reasonDetail())
@@ -51,9 +52,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn approveReturn(String returnId) {
+    public ProductReturn approveReturn(UUID returnId) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.approve();
 
@@ -61,9 +62,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn rejectReturn(String returnId, String reason) {
+    public ProductReturn rejectReturn(UUID returnId, String reason) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.reject(reason);
 
@@ -71,9 +72,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn schedulePickup(String returnId) {
+    public ProductReturn schedulePickup(UUID returnId) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.schedulePickup();
 
@@ -81,9 +82,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn completePickup(String returnId) {
+    public ProductReturn completePickup(UUID returnId) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.pickUp();
 
@@ -91,9 +92,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn startInspection(String returnId) {
+    public ProductReturn startInspection(UUID returnId) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.startInspection();
 
@@ -101,9 +102,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn completeReturn(String returnId) {
+    public ProductReturn completeReturn(UUID returnId) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.complete();
 
@@ -111,9 +112,9 @@ public class ReturnService implements ManageReturnUseCase {
     }
 
     @Override
-    public ProductReturn cancelReturn(String returnId) {
+    public ProductReturn cancelReturn(UUID returnId) {
         ProductReturn productReturn = loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
 
         productReturn.cancel();
 
@@ -122,20 +123,20 @@ public class ReturnService implements ManageReturnUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductReturn getReturn(String returnId) {
+    public ProductReturn getReturn(UUID returnId) {
         return loadReturnPort.findById(returnId)
-                .orElseThrow(() -> new ReturnNotFoundException(returnId));
+                .orElseThrow(() -> new ReturnNotFoundException(returnId.toString()));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductReturn> getReturnsByCustomerId(String customerId) {
+    public List<ProductReturn> getReturnsByCustomerId(UUID customerId) {
         return loadReturnPort.findByCustomerId(customerId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductReturn> getReturnsByOrderId(String orderId) {
+    public List<ProductReturn> getReturnsByOrderId(UUID orderId) {
         return loadReturnPort.findByOrderId(orderId);
     }
 }

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Customer JPA Entity
@@ -24,8 +25,7 @@ import java.util.List;
 public class CustomerJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false, unique = true, length = 255)
     private String email;
@@ -64,7 +64,7 @@ public class CustomerJpaEntity {
 
     @Builder
     public CustomerJpaEntity(
-            String id,
+            UUID id,
             String email,
             String password,
             String name,

@@ -5,15 +5,16 @@ import jjh.delivery.domain.returns.ReturnStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Return JPA Repository
  */
-public interface ReturnJpaRepository extends JpaRepository<ReturnJpaEntity, String> {
+public interface ReturnJpaRepository extends JpaRepository<ReturnJpaEntity, UUID> {
 
-    List<ReturnJpaEntity> findByOrderId(String orderId);
+    List<ReturnJpaEntity> findByOrderId(UUID orderId);
 
-    List<ReturnJpaEntity> findByCustomerId(String customerId);
+    List<ReturnJpaEntity> findByCustomerId(UUID customerId);
 
     List<ReturnJpaEntity> findByStatus(ReturnStatus status);
 }

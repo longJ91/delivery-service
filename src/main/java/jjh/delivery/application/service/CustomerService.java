@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Customer Service
@@ -29,7 +30,7 @@ public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddr
     // ==================== UpdateCustomerProfileUseCase ====================
 
     @Override
-    public Customer updateProfile(String customerId, UpdateProfileCommand command) {
+    public Customer updateProfile(UUID customerId, UpdateProfileCommand command) {
         Customer customer = getCustomerOrThrow(customerId);
         customer.updateProfile(command.name(), command.phoneNumber());
         return saveCustomerPort.save(customer);
@@ -39,13 +40,13 @@ public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddr
 
     @Override
     @Transactional(readOnly = true)
-    public List<CustomerAddress> getAddresses(String customerId) {
+    public List<CustomerAddress> getAddresses(UUID customerId) {
         Customer customer = getCustomerOrThrow(customerId);
         return customer.getAddresses();
     }
 
     @Override
-    public CustomerAddress addAddress(String customerId, AddAddressCommand command) {
+    public CustomerAddress addAddress(UUID customerId, AddAddressCommand command) {
         Customer customer = getCustomerOrThrow(customerId);
 
         CustomerAddress newAddress = CustomerAddress.of(
@@ -70,14 +71,14 @@ public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddr
     }
 
     @Override
-    public void removeAddress(String customerId, String addressId) {
+    public void removeAddress(UUID customerId, UUID addressId) {
         Customer customer = getCustomerOrThrow(customerId);
         customer.removeAddress(addressId);
         saveCustomerPort.save(customer);
     }
 
     @Override
-    public void setDefaultAddress(String customerId, String addressId) {
+    public void setDefaultAddress(UUID customerId, UUID addressId) {
         Customer customer = getCustomerOrThrow(customerId);
         customer.setDefaultAddress(addressId);
         saveCustomerPort.save(customer);
@@ -85,8 +86,8 @@ public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddr
 
     // ==================== Private Methods ====================
 
-    private Customer getCustomerOrThrow(String customerId) {
+    private Customer getCustomerOrThrow(UUID customerId) {
         return loadCustomerPort.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+                .orElseThrow(() -> new CustomerNotFoundException(customerId.toString()));
     }
 }

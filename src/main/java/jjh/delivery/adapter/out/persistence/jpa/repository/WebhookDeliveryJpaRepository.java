@@ -11,14 +11,15 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Webhook Delivery JPA Repository
  */
 @Repository
-public interface WebhookDeliveryJpaRepository extends JpaRepository<WebhookDeliveryJpaEntity, String> {
+public interface WebhookDeliveryJpaRepository extends JpaRepository<WebhookDeliveryJpaEntity, UUID> {
 
-    Page<WebhookDeliveryJpaEntity> findBySubscriptionId(String subscriptionId, Pageable pageable);
+    Page<WebhookDeliveryJpaEntity> findBySubscriptionId(UUID subscriptionId, Pageable pageable);
 
     @Query("SELECT d FROM WebhookDeliveryJpaEntity d WHERE d.status = :status AND d.nextRetryAt <= :now")
     List<WebhookDeliveryJpaEntity> findPendingRetries(

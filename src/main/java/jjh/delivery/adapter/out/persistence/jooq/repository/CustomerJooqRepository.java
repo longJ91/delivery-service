@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.CustomerAddresses.CUSTOMER_ADDRESSES;
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.Customers.CUSTOMERS;
@@ -31,7 +32,7 @@ public class CustomerJooqRepository {
      * Compile-time type-safe version of:
      * SELECT c FROM CustomerJpaEntity c LEFT JOIN FETCH c.addresses WHERE c.id = :id
      */
-    public Optional<CustomerWithAddresses> findByIdWithAddresses(String id) {
+    public Optional<CustomerWithAddresses> findByIdWithAddresses(UUID id) {
         Result<Record> result = dsl
                 .select()
                 .from(CUSTOMERS)
@@ -86,7 +87,7 @@ public class CustomerJooqRepository {
      * Compile-time type-safe version of:
      * SELECT c.password FROM CustomerJpaEntity c WHERE c.id = :customerId
      */
-    public Optional<String> findPasswordById(String customerId) {
+    public Optional<String> findPasswordById(UUID customerId) {
         return dsl
                 .select(CUSTOMERS.PASSWORD)
                 .from(CUSTOMERS)
@@ -99,7 +100,7 @@ public class CustomerJooqRepository {
      * Compile-time type-safe version of:
      * UPDATE CustomerJpaEntity c SET c.password = :password WHERE c.id = :customerId
      */
-    public int updatePassword(String customerId, String password) {
+    public int updatePassword(UUID customerId, String password) {
         return dsl
                 .update(CUSTOMERS)
                 .set(CUSTOMERS.PASSWORD, password)

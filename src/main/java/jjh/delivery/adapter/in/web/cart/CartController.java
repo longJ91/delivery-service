@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Cart REST Controller - Driving Adapter (Inbound)
@@ -39,7 +40,7 @@ public class CartController {
     public ResponseEntity<CartResponse> getCart(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
         Cart cart = manageCartUseCase.getCart(customerId);
 
         List<CartItemResponse> items = cart.getItems().stream()
@@ -57,7 +58,7 @@ public class CartController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AddCartItemRequest request
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
 
         AddCartItemCommand command = new AddCartItemCommand(
                 request.productId(),
@@ -76,10 +77,10 @@ public class CartController {
     @PatchMapping("/items/{itemId}")
     public ResponseEntity<Void> updateItemQuantity(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String itemId,
+            @PathVariable UUID itemId,
             @Valid @RequestBody UpdateCartItemRequest request
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
         manageCartUseCase.updateItemQuantity(customerId, itemId, request.quantity());
         return ResponseEntity.ok().build();
     }
@@ -90,9 +91,9 @@ public class CartController {
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<Void> removeItem(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String itemId
+            @PathVariable UUID itemId
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
         manageCartUseCase.removeItem(customerId, itemId);
         return ResponseEntity.noContent().build();
     }

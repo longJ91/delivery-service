@@ -2,14 +2,15 @@ package jjh.delivery.domain.order;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Order Item Value Object (v2 - Product Delivery)
  */
 public record OrderItem(
-        String productId,
+        UUID productId,
         String productName,
-        String variantId,
+        UUID variantId,
         String variantName,
         String sku,
         Map<String, String> optionValues,
@@ -17,7 +18,7 @@ public record OrderItem(
         BigDecimal unitPrice
 ) {
     public OrderItem {
-        if (productId == null || productId.isBlank()) {
+        if (productId == null) {
             throw new IllegalArgumentException("productId is required");
         }
         if (productName == null || productName.isBlank()) {
@@ -36,7 +37,7 @@ public record OrderItem(
     /**
      * Factory method for simple product (no variant)
      */
-    public static OrderItem of(String productId, String productName, int quantity, BigDecimal unitPrice) {
+    public static OrderItem of(UUID productId, String productName, int quantity, BigDecimal unitPrice) {
         return new OrderItem(productId, productName, null, null, null, null, quantity, unitPrice);
     }
 
@@ -44,9 +45,9 @@ public record OrderItem(
      * Factory method for variant product
      */
     public static OrderItem ofVariant(
-            String productId,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
             String sku,
             Map<String, String> optionValues,
@@ -61,6 +62,6 @@ public record OrderItem(
     }
 
     public boolean hasVariant() {
-        return variantId != null && !variantId.isBlank();
+        return variantId != null;
     }
 }

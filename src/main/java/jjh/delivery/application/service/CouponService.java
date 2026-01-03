@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -47,7 +48,7 @@ public class CouponService implements ManageCouponUseCase {
                 .minimumOrderAmount(command.minimumOrderAmount())
                 .maximumDiscountAmount(command.maximumDiscountAmount())
                 .scope(command.scope())
-                .scopeTargetId(command.scopeTargetId())
+                .scopeTargetId(command.scopeTargetId() != null ? UUID.fromString(command.scopeTargetId()) : null)
                 .totalQuantity(command.totalQuantity())
                 .validFrom(command.validFrom())
                 .validUntil(command.validUntil())
@@ -59,7 +60,7 @@ public class CouponService implements ManageCouponUseCase {
 
     @Override
     public Coupon updateCoupon(UpdateCouponCommand command) {
-        Coupon existingCoupon = getCoupon(command.couponId());
+        Coupon existingCoupon = getCoupon(UUID.fromString(command.couponId()));
 
         Coupon updatedCoupon = Coupon.builder()
                 .id(existingCoupon.getId())
@@ -91,7 +92,7 @@ public class CouponService implements ManageCouponUseCase {
     }
 
     @Override
-    public void deleteCoupon(String couponId) {
+    public void deleteCoupon(UUID couponId) {
         getCoupon(couponId); // 존재 확인
         saveCouponPort.delete(couponId);
     }
@@ -99,14 +100,14 @@ public class CouponService implements ManageCouponUseCase {
     // ==================== 쿠폰 상태 관리 ====================
 
     @Override
-    public Coupon activateCoupon(String couponId) {
+    public Coupon activateCoupon(UUID couponId) {
         Coupon coupon = getCoupon(couponId);
         coupon.activate();
         return saveCouponPort.save(coupon);
     }
 
     @Override
-    public Coupon deactivateCoupon(String couponId) {
+    public Coupon deactivateCoupon(UUID couponId) {
         Coupon coupon = getCoupon(couponId);
         coupon.deactivate();
         return saveCouponPort.save(coupon);
@@ -115,14 +116,14 @@ public class CouponService implements ManageCouponUseCase {
     // ==================== 쿠폰 사용 ====================
 
     @Override
-    public Coupon useCoupon(String couponId) {
+    public Coupon useCoupon(UUID couponId) {
         Coupon coupon = getCoupon(couponId);
         coupon.use();
         return saveCouponPort.save(coupon);
     }
 
     @Override
-    public Coupon cancelCouponUsage(String couponId) {
+    public Coupon cancelCouponUsage(UUID couponId) {
         Coupon coupon = getCoupon(couponId);
         coupon.cancelUse();
         return saveCouponPort.save(coupon);
@@ -139,7 +140,7 @@ public class CouponService implements ManageCouponUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Coupon getCoupon(String couponId) {
+    public Coupon getCoupon(UUID couponId) {
         return loadCouponPort.findById(couponId)
                 .orElseThrow(() -> new NoSuchElementException("Coupon not found: " + couponId));
     }

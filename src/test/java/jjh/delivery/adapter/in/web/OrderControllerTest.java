@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -74,9 +75,10 @@ class OrderControllerTest {
     // =====================================================
 
     private static final String BASE_URL = "/api/v2/orders";
-    private static final String ORDER_ID = "order-123";
-    private static final String CUSTOMER_ID = "customer-456";
-    private static final String SELLER_ID = "seller-789";
+    private static final UUID ORDER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000004");
 
     private Order createOrder() {
         return Order.builder()
@@ -86,18 +88,18 @@ class OrderControllerTest {
                         "홍길동", "010-1234-5678", "12345",
                         "서울시 강남구", "상세주소", null
                 ))
-                .addItem(OrderItem.of("product-1", "테스트 상품", 2, new BigDecimal("10000")))
+                .addItem(OrderItem.of(PRODUCT_ID, "테스트 상품", 2, new BigDecimal("10000")))
                 .build();
     }
 
     private OrderResponse createOrderResponse() {
         return new OrderResponse(
-                ORDER_ID,
+                ORDER_ID.toString(),
                 "ORD-12345678",
-                CUSTOMER_ID,
-                SELLER_ID,
+                CUSTOMER_ID.toString(),
+                SELLER_ID.toString(),
                 List.of(new OrderResponse.OrderItemResponse(
-                        "product-1", "테스트 상품", null, null, "SKU-001",
+                        PRODUCT_ID.toString(), "테스트 상품", null, null, "SKU-001",
                         Map.of(), 2, new BigDecimal("10000"), new BigDecimal("20000")
                 )),
                 OrderStatus.PENDING,
@@ -118,10 +120,10 @@ class OrderControllerTest {
 
     private CreateOrderRequest createValidOrderRequest() {
         return new CreateOrderRequest(
-                CUSTOMER_ID,
-                SELLER_ID,
+                CUSTOMER_ID.toString(),
+                SELLER_ID.toString(),
                 List.of(new CreateOrderRequest.OrderItemRequest(
-                        "product-1", "테스트 상품", null, null, "SKU-001",
+                        PRODUCT_ID.toString(), "테스트 상품", null, null, "SKU-001",
                         Map.of(), 2, new BigDecimal("10000")
                 )),
                 new CreateOrderRequest.ShippingAddressRequest(
@@ -150,7 +152,7 @@ class OrderControllerTest {
 
             given(mapper.toCommand(any())).willReturn(
                     new CreateOrderUseCase.CreateOrderCommand(
-                            CUSTOMER_ID, SELLER_ID, List.of(), null, null, null, null
+                            CUSTOMER_ID.toString(), SELLER_ID.toString(), List.of(), null, null, null, null
                     )
             );
             given(createOrderUseCase.createOrder(any())).willReturn(order);
@@ -161,8 +163,8 @@ class OrderControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.id").value(ORDER_ID))
-                    .andExpect(jsonPath("$.customerId").value(CUSTOMER_ID))
+                    .andExpect(jsonPath("$.id").value(ORDER_ID.toString()))
+                    .andExpect(jsonPath("$.customerId").value(CUSTOMER_ID.toString()))
                     .andExpect(jsonPath("$.status").value("PENDING"));
         }
 
@@ -172,9 +174,9 @@ class OrderControllerTest {
             // given - customerId 누락
             String invalidRequest = """
                     {
-                        "sellerId": "seller-789",
+                        "sellerId": "00000000-0000-0000-0000-000000000003",
                         "items": [{
-                            "productId": "product-1",
+                            "productId": "00000000-0000-0000-0000-000000000004",
                             "productName": "상품명",
                             "quantity": 1,
                             "unitPrice": 10000
@@ -215,21 +217,22 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(get(BASE_URL + "/{orderId}", ORDER_ID))
+            mockMvc.perform(get(BASE_URL + "/{orderId}", ORDER_ID.toString()))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(ORDER_ID))
-                    .andExpect(jsonPath("$.customerId").value(CUSTOMER_ID));
+                    .andExpect(jsonPath("$.id").value(ORDER_ID.toString()))
+                    .andExpect(jsonPath("$.customerId").value(CUSTOMER_ID.toString()));
         }
 
         @Test
         @DisplayName("존재하지 않는 주문 조회 시 404 Not Found")
         void getOrderNotFound() throws Exception {
             // given
-            given(getOrderUseCase.getOrderOrThrow("non-existent"))
-                    .willThrow(new OrderNotFoundException("non-existent"));
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
+            given(getOrderUseCase.getOrderOrThrow(nonExistentId))
+                    .willThrow(new OrderNotFoundException(nonExistentId.toString()));
 
             // when & then
-            mockMvc.perform(get(BASE_URL + "/{orderId}", "non-existent"))
+            mockMvc.perform(get(BASE_URL + "/{orderId}", nonExistentId.toString()))
                     .andExpect(status().isNotFound());
         }
     }
@@ -255,7 +258,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(patch(BASE_URL + "/{orderId}/status", ORDER_ID)
+            mockMvc.perform(patch(BASE_URL + "/{orderId}/status", ORDER_ID.toString())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
@@ -281,7 +284,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(post(BASE_URL + "/{orderId}/pay", ORDER_ID))
+            mockMvc.perform(post(BASE_URL + "/{orderId}/pay", ORDER_ID.toString()))
                     .andExpect(status().isOk());
         }
 
@@ -296,7 +299,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(post(BASE_URL + "/{orderId}/confirm", ORDER_ID))
+            mockMvc.perform(post(BASE_URL + "/{orderId}/confirm", ORDER_ID.toString()))
                     .andExpect(status().isOk());
         }
 
@@ -311,7 +314,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(post(BASE_URL + "/{orderId}/prepare", ORDER_ID))
+            mockMvc.perform(post(BASE_URL + "/{orderId}/prepare", ORDER_ID.toString()))
                     .andExpect(status().isOk());
         }
 
@@ -326,7 +329,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(post(BASE_URL + "/{orderId}/ship", ORDER_ID))
+            mockMvc.perform(post(BASE_URL + "/{orderId}/ship", ORDER_ID.toString()))
                     .andExpect(status().isOk());
         }
 
@@ -341,7 +344,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(post(BASE_URL + "/{orderId}/cancel", ORDER_ID))
+            mockMvc.perform(post(BASE_URL + "/{orderId}/cancel", ORDER_ID.toString()))
                     .andExpect(status().isOk());
         }
 
@@ -356,7 +359,7 @@ class OrderControllerTest {
             given(mapper.toResponse(order)).willReturn(response);
 
             // when & then
-            mockMvc.perform(post(BASE_URL + "/{orderId}/return", ORDER_ID))
+            mockMvc.perform(post(BASE_URL + "/{orderId}/return", ORDER_ID.toString()))
                     .andExpect(status().isOk());
         }
     }
@@ -380,7 +383,7 @@ class OrderControllerTest {
             given(mapper.toResponseList(orders)).willReturn(responses);
 
             // when & then
-            mockMvc.perform(get(BASE_URL + "/customer/{customerId}", CUSTOMER_ID))
+            mockMvc.perform(get(BASE_URL + "/customer/{customerId}", CUSTOMER_ID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$.length()").value(1));
@@ -397,7 +400,7 @@ class OrderControllerTest {
             given(mapper.toResponseList(orders)).willReturn(responses);
 
             // when & then
-            mockMvc.perform(get(BASE_URL + "/seller/{sellerId}", SELLER_ID))
+            mockMvc.perform(get(BASE_URL + "/seller/{sellerId}", SELLER_ID.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray());
         }

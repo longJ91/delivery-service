@@ -7,7 +7,7 @@ import java.util.UUID;
  * Customer Address Value Object
  */
 public record CustomerAddress(
-        String id,
+        UUID id,
         String name,
         String recipientName,
         String phoneNumber,
@@ -48,7 +48,7 @@ public record CustomerAddress(
             boolean isDefault
     ) {
         return new CustomerAddress(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 name,
                 recipientName,
                 phoneNumber,

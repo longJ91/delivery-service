@@ -11,12 +11,13 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Coupon JPA Repository
  */
 @Repository
-public interface CouponJpaRepository extends JpaRepository<CouponJpaEntity, String> {
+public interface CouponJpaRepository extends JpaRepository<CouponJpaEntity, UUID> {
 
     Optional<CouponJpaEntity> findByCode(String code);
 

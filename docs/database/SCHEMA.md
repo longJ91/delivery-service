@@ -13,8 +13,7 @@
 
 | File | Version | Description |
 |------|---------|-------------|
-| `schema_v2.sql` | 2.0.0 | **현재** - 물품 배송 서비스 |
-| `schema.sql` | 1.0.0 | 이전 - 음식 배달 서비스 (참고용) |
+| `schema.sql` | 2.0.0 | **현재** - 물품 배송 서비스 |
 
 ## Service Constraints
 
@@ -296,14 +295,14 @@ version BIGINT NOT NULL DEFAULT 0
 
 ### 스키마 적용
 ```bash
-psql -U postgres -d delivery -f docs/schema_v2.sql
+psql -U postgres -d delivery -f docs/database/schema.sql
 ```
 
 ### 스키마 초기화 (주의: 모든 데이터 삭제)
 ```bash
 psql -U postgres -c "DROP DATABASE IF EXISTS delivery;"
 psql -U postgres -c "CREATE DATABASE delivery;"
-psql -U postgres -d delivery -f docs/schema_v2.sql
+psql -U postgres -d delivery -f docs/database/schema.sql
 ```
 
 ## Migration from v1

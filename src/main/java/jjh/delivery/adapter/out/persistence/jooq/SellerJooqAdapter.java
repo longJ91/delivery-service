@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Seller jOOQ Adapter - Driven Adapter (Outbound)
@@ -21,7 +22,7 @@ public class SellerJooqAdapter implements LoadSellerInfoPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<String> findBusinessNameById(String sellerId) {
+    public Optional<String> findBusinessNameById(UUID sellerId) {
         return repository.findBusinessNameById(sellerId);
     }
 }

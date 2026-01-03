@@ -454,7 +454,7 @@ ALTER TABLE review_replies ADD CONSTRAINT review_replies_seller_id_fkey
 ## Execution Plan
 
 ### Step 1: 신규 스키마 파일 생성
-`docs/schema_v2.sql` 생성 (물품 배송 버전)
+`docs/database/schema.sql` 생성 (물품 배송 버전)
 
 ### Step 2: 마이그레이션 스크립트 작성 (선택)
 기존 데이터가 있는 경우 마이그레이션 SQL 작성

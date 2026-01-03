@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -14,12 +15,21 @@ import static org.assertj.core.api.Assertions.*;
 @DisplayName("Cart 도메인 테스트")
 class CartTest {
 
+    // Deterministic UUIDs for testing
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID PRODUCT_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID PRODUCT_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000004");
+    private static final UUID VARIANT_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000005");
+    private static final UUID VARIANT_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000006");
+    private static final UUID CART_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
+
     // =====================================================
     // Test Fixtures
     // =====================================================
 
     private Cart createEmptyCart() {
-        return Cart.createEmpty("customer-123");
+        return Cart.createEmpty(CUSTOMER_ID);
     }
 
     // =====================================================
@@ -34,11 +44,11 @@ class CartTest {
         @DisplayName("빈 장바구니 생성")
         void createEmptyCart() {
             // when
-            Cart cart = Cart.createEmpty("customer-123");
+            Cart cart = Cart.createEmpty(CUSTOMER_ID);
 
             // then
             assertThat(cart.getId()).isNotNull();
-            assertThat(cart.getCustomerId()).isEqualTo("customer-123");
+            assertThat(cart.getCustomerId()).isEqualTo(CUSTOMER_ID);
             assertThat(cart.getItems()).isEmpty();
             assertThat(cart.isEmpty()).isTrue();
             assertThat(cart.getCreatedAt()).isNotNull();
@@ -49,14 +59,14 @@ class CartTest {
         void restoreCart() {
             // given
             var items = java.util.List.of(
-                    CartItem.create("product-1", "상품1", null, null, "seller-1", 2, new BigDecimal("10000"), null)
+                    CartItem.create(PRODUCT_ID_1, "상품1", null, null, SELLER_ID, 2, new BigDecimal("10000"), null)
             );
 
             // when
-            Cart cart = Cart.restore("cart-id", "customer-123", items, java.time.LocalDateTime.now());
+            Cart cart = Cart.restore(CART_ID, CUSTOMER_ID, items, java.time.LocalDateTime.now());
 
             // then
-            assertThat(cart.getId()).isEqualTo("cart-id");
+            assertThat(cart.getId()).isEqualTo(CART_ID);
             assertThat(cart.getItems()).hasSize(1);
         }
     }
@@ -77,11 +87,11 @@ class CartTest {
 
             // when
             CartItem item = cart.addItem(
-                    "product-1",
+                    PRODUCT_ID_1,
                     "테스트 상품",
                     null,
                     null,
-                    "seller-1",
+                    SELLER_ID,
                     2,
                     new BigDecimal("15000"),
                     "http://example.com/thumb.jpg"
@@ -89,7 +99,7 @@ class CartTest {
 
             // then
             assertThat(cart.getItems()).hasSize(1);
-            assertThat(item.productId()).isEqualTo("product-1");
+            assertThat(item.productId()).isEqualTo(PRODUCT_ID_1);
             assertThat(item.quantity()).isEqualTo(2);
             assertThat(cart.isEmpty()).isFalse();
         }
@@ -99,10 +109,10 @@ class CartTest {
         void addExistingItemIncreasesQuantity() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", null, null, "seller-1", 2, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", null, null, SELLER_ID, 2, new BigDecimal("10000"), null);
 
             // when
-            cart.addItem("product-1", "상품", null, null, "seller-1", 3, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", null, null, SELLER_ID, 3, new BigDecimal("10000"), null);
 
             // then
             assertThat(cart.getItems()).hasSize(1);
@@ -114,10 +124,10 @@ class CartTest {
         void sameProductDifferentVariantAddsNewItem() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", "variant-1", "빨강", "seller-1", 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", VARIANT_ID_1, "빨강", SELLER_ID, 1, new BigDecimal("10000"), null);
 
             // when
-            cart.addItem("product-1", "상품", "variant-2", "파랑", "seller-1", 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", VARIANT_ID_2, "파랑", SELLER_ID, 1, new BigDecimal("10000"), null);
 
             // then
             assertThat(cart.getItems()).hasSize(2);
@@ -137,8 +147,8 @@ class CartTest {
         void updateItemQuantity() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", null, null, "seller-1", 2, new BigDecimal("10000"), null);
-            String itemId = cart.getItems().get(0).id();
+            cart.addItem(PRODUCT_ID_1, "상품", null, null, SELLER_ID, 2, new BigDecimal("10000"), null);
+            UUID itemId = cart.getItems().get(0).id();
 
             // when
             CartItem updated = cart.updateItemQuantity(itemId, 5);
@@ -153,9 +163,10 @@ class CartTest {
         void updateNonExistentItemThrowsException() {
             // given
             Cart cart = createEmptyCart();
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // when & then
-            assertThatThrownBy(() -> cart.updateItemQuantity("non-existent", 5))
+            assertThatThrownBy(() -> cart.updateItemQuantity(nonExistentId, 5))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not found");
         }
@@ -174,16 +185,16 @@ class CartTest {
         void removeItem() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품1", null, null, "seller-1", 1, new BigDecimal("10000"), null);
-            cart.addItem("product-2", "상품2", null, null, "seller-1", 1, new BigDecimal("20000"), null);
-            String itemId = cart.getItems().get(0).id();
+            cart.addItem(PRODUCT_ID_1, "상품1", null, null, SELLER_ID, 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_2, "상품2", null, null, SELLER_ID, 1, new BigDecimal("20000"), null);
+            UUID itemId = cart.getItems().get(0).id();
 
             // when
             cart.removeItem(itemId);
 
             // then
             assertThat(cart.getItems()).hasSize(1);
-            assertThat(cart.getItems().get(0).productId()).isEqualTo("product-2");
+            assertThat(cart.getItems().get(0).productId()).isEqualTo(PRODUCT_ID_2);
         }
 
         @Test
@@ -191,9 +202,10 @@ class CartTest {
         void removeNonExistentItemThrowsException() {
             // given
             Cart cart = createEmptyCart();
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // when & then
-            assertThatThrownBy(() -> cart.removeItem("non-existent"))
+            assertThatThrownBy(() -> cart.removeItem(nonExistentId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not found");
         }
@@ -203,8 +215,8 @@ class CartTest {
         void clearCart() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품1", null, null, "seller-1", 1, new BigDecimal("10000"), null);
-            cart.addItem("product-2", "상품2", null, null, "seller-1", 1, new BigDecimal("20000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품1", null, null, SELLER_ID, 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_2, "상품2", null, null, SELLER_ID, 1, new BigDecimal("20000"), null);
 
             // when
             cart.clear();
@@ -228,8 +240,8 @@ class CartTest {
         void getTotalAmount() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품1", null, null, "seller-1", 2, new BigDecimal("10000"), null);  // 20,000
-            cart.addItem("product-2", "상품2", null, null, "seller-1", 3, new BigDecimal("5000"), null);   // 15,000
+            cart.addItem(PRODUCT_ID_1, "상품1", null, null, SELLER_ID, 2, new BigDecimal("10000"), null);  // 20,000
+            cart.addItem(PRODUCT_ID_2, "상품2", null, null, SELLER_ID, 3, new BigDecimal("5000"), null);   // 15,000
 
             // then
             assertThat(cart.getTotalAmount()).isEqualByComparingTo(new BigDecimal("35000"));
@@ -250,8 +262,8 @@ class CartTest {
         void getTotalItems() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품1", null, null, "seller-1", 2, new BigDecimal("10000"), null);
-            cart.addItem("product-2", "상품2", null, null, "seller-1", 3, new BigDecimal("5000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품1", null, null, SELLER_ID, 2, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_2, "상품2", null, null, SELLER_ID, 3, new BigDecimal("5000"), null);
 
             // then
             assertThat(cart.getTotalItems()).isEqualTo(5);
@@ -271,12 +283,13 @@ class CartTest {
         void findItemById() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", null, null, "seller-1", 1, new BigDecimal("10000"), null);
-            String itemId = cart.getItems().get(0).id();
+            cart.addItem(PRODUCT_ID_1, "상품", null, null, SELLER_ID, 1, new BigDecimal("10000"), null);
+            UUID itemId = cart.getItems().get(0).id();
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // then
             assertThat(cart.findItemById(itemId)).isPresent();
-            assertThat(cart.findItemById("non-existent")).isEmpty();
+            assertThat(cart.findItemById(nonExistentId)).isEmpty();
         }
 
         @Test
@@ -284,12 +297,12 @@ class CartTest {
         void findItemByProductAndVariant() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", "variant-1", "빨강", "seller-1", 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", VARIANT_ID_1, "빨강", SELLER_ID, 1, new BigDecimal("10000"), null);
 
             // then
-            assertThat(cart.findItemByProductAndVariant("product-1", "variant-1")).isPresent();
-            assertThat(cart.findItemByProductAndVariant("product-1", "variant-2")).isEmpty();
-            assertThat(cart.findItemByProductAndVariant("product-2", "variant-1")).isEmpty();
+            assertThat(cart.findItemByProductAndVariant(PRODUCT_ID_1, VARIANT_ID_1)).isPresent();
+            assertThat(cart.findItemByProductAndVariant(PRODUCT_ID_1, VARIANT_ID_2)).isEmpty();
+            assertThat(cart.findItemByProductAndVariant(PRODUCT_ID_2, VARIANT_ID_1)).isEmpty();
         }
 
         @Test
@@ -297,10 +310,10 @@ class CartTest {
         void findItemWithoutVariant() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", null, null, "seller-1", 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", null, null, SELLER_ID, 1, new BigDecimal("10000"), null);
 
             // then
-            assertThat(cart.findItemByProductAndVariant("product-1", null)).isPresent();
+            assertThat(cart.findItemByProductAndVariant(PRODUCT_ID_1, null)).isPresent();
         }
 
         @Test
@@ -308,7 +321,7 @@ class CartTest {
         void itemsListIsImmutable() {
             // given
             Cart cart = createEmptyCart();
-            cart.addItem("product-1", "상품", null, null, "seller-1", 1, new BigDecimal("10000"), null);
+            cart.addItem(PRODUCT_ID_1, "상품", null, null, SELLER_ID, 1, new BigDecimal("10000"), null);
 
             // when & then
             assertThatThrownBy(() -> cart.getItems().clear())

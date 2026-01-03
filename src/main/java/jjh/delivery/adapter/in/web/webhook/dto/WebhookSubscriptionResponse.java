@@ -5,6 +5,7 @@ import jjh.delivery.domain.webhook.WebhookSubscription;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * 웹훅 구독 응답
@@ -25,8 +26,8 @@ public record WebhookSubscriptionResponse(
 ) {
     public static WebhookSubscriptionResponse from(WebhookSubscription subscription) {
         return new WebhookSubscriptionResponse(
-                subscription.getId(),
-                subscription.getSellerId(),
+                subscription.getId().toString(),
+                subscription.getSellerId().toString(),
                 subscription.getName(),
                 subscription.getEndpointUrl(),
                 subscription.getSecret(),
@@ -47,8 +48,8 @@ public record WebhookSubscriptionResponse(
         String maskedSecret = subscription.getSecret().substring(0, 10) + "**********";
 
         return new WebhookSubscriptionResponse(
-                subscription.getId(),
-                subscription.getSellerId(),
+                subscription.getId().toString(),
+                subscription.getSellerId().toString(),
                 subscription.getName(),
                 subscription.getEndpointUrl(),
                 maskedSecret,

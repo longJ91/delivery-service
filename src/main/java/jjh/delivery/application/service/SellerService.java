@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -56,7 +57,7 @@ public class SellerService implements ManageSellerUseCase {
                 .ifPresent(builder::warehouseAddress);
 
         Optional.ofNullable(command.categoryIds())
-                .map(ArrayList::new)
+                .map(ids -> ids.stream().map(UUID::fromString).toList())
                 .ifPresent(builder::categoryIds);
 
         Seller seller = builder.build();
@@ -65,7 +66,7 @@ public class SellerService implements ManageSellerUseCase {
 
     @Override
     public Seller updateSellerInfo(UpdateSellerInfoCommand command) {
-        Seller seller = getSeller(command.sellerId());
+        Seller seller = getSeller(UUID.fromString(command.sellerId()));
 
         // Optional.orElseGet으로 조건부 값 결정 (함수형)
         seller.updateInfo(
@@ -86,7 +87,7 @@ public class SellerService implements ManageSellerUseCase {
     }
 
     @Override
-    public Seller updateWarehouseAddress(String sellerId, WarehouseAddressCommand warehouseAddress) {
+    public Seller updateWarehouseAddress(UUID sellerId, WarehouseAddressCommand warehouseAddress) {
         Seller seller = getSeller(sellerId);
         seller.updateWarehouseAddress(warehouseAddress.toDomain());
         return saveSellerPort.save(seller);
@@ -95,14 +96,14 @@ public class SellerService implements ManageSellerUseCase {
     // ==================== 판매자 상태 관리 ====================
 
     @Override
-    public Seller approveSeller(String sellerId) {
+    public Seller approveSeller(UUID sellerId) {
         Seller seller = getSeller(sellerId);
         seller.approve();
         return saveSellerPort.save(seller);
     }
 
     @Override
-    public void rejectSeller(String sellerId, String reason) {
+    public void rejectSeller(UUID sellerId, String reason) {
         Seller seller = getSeller(sellerId);
         if (seller.getStatus() != SellerStatus.PENDING) {
             throw new IllegalStateException("Only pending sellers can be rejected");
@@ -112,28 +113,28 @@ public class SellerService implements ManageSellerUseCase {
     }
 
     @Override
-    public Seller suspendSeller(String sellerId, String reason) {
+    public Seller suspendSeller(UUID sellerId, String reason) {
         Seller seller = getSeller(sellerId);
         seller.suspend();
         return saveSellerPort.save(seller);
     }
 
     @Override
-    public Seller activateSeller(String sellerId) {
+    public Seller activateSeller(UUID sellerId) {
         Seller seller = getSeller(sellerId);
         seller.activate();
         return saveSellerPort.save(seller);
     }
 
     @Override
-    public Seller makeDormant(String sellerId) {
+    public Seller makeDormant(UUID sellerId) {
         Seller seller = getSeller(sellerId);
         seller.makeDormant();
         return saveSellerPort.save(seller);
     }
 
     @Override
-    public Seller closeSeller(String sellerId) {
+    public Seller closeSeller(UUID sellerId) {
         Seller seller = getSeller(sellerId);
         seller.close();
         return saveSellerPort.save(seller);
@@ -142,14 +143,14 @@ public class SellerService implements ManageSellerUseCase {
     // ==================== 카테고리 관리 ====================
 
     @Override
-    public Seller addCategory(String sellerId, String categoryId) {
+    public Seller addCategory(UUID sellerId, UUID categoryId) {
         Seller seller = getSeller(sellerId);
         seller.addCategory(categoryId);
         return saveSellerPort.save(seller);
     }
 
     @Override
-    public Seller removeCategory(String sellerId, String categoryId) {
+    public Seller removeCategory(UUID sellerId, UUID categoryId) {
         Seller seller = getSeller(sellerId);
         seller.removeCategory(categoryId);
         return saveSellerPort.save(seller);
@@ -159,7 +160,7 @@ public class SellerService implements ManageSellerUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Seller getSeller(String sellerId) {
+    public Seller getSeller(UUID sellerId) {
         return loadSellerPort.findById(sellerId)
                 .orElseThrow(() -> new NoSuchElementException("Seller not found: " + sellerId));
     }

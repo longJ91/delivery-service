@@ -2,6 +2,8 @@ package jjh.delivery.application.service;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.UUID;
+
 import jjh.delivery.application.port.in.ProcessPaymentUseCase;
 import jjh.delivery.application.port.out.LoadPaymentPort;
 import jjh.delivery.application.port.out.SavePaymentPort;
@@ -23,13 +25,14 @@ public class PaymentService implements ProcessPaymentUseCase {
 
     @Override
     public Payment requestPayment(RequestPaymentCommand command) {
+        UUID orderId = UUID.fromString(command.orderId());
         // 이미 해당 주문에 대한 결제가 존재하는지 확인
-        if (loadPaymentPort.existsByOrderId(command.orderId())) {
+        if (loadPaymentPort.existsByOrderId(orderId)) {
             throw new IllegalStateException("이미 해당 주문에 대한 결제가 존재합니다: " + command.orderId());
         }
 
         Payment payment = Payment.builder()
-                .orderId(command.orderId())
+                .orderId(orderId)
                 .paymentMethodType(command.paymentMethodType())
                 .paymentGateway(command.paymentGateway())
                 .amount(command.amount())
@@ -40,7 +43,8 @@ public class PaymentService implements ProcessPaymentUseCase {
 
     @Override
     public Payment confirmPayment(ConfirmPaymentCommand command) {
-        Payment payment = loadPaymentPort.findById(command.paymentId())
+        UUID paymentId = UUID.fromString(command.paymentId());
+        Payment payment = loadPaymentPort.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(command.paymentId()));
 
         payment.complete(command.transactionId());
@@ -49,9 +53,9 @@ public class PaymentService implements ProcessPaymentUseCase {
     }
 
     @Override
-    public Payment failPayment(String paymentId, String reason) {
+    public Payment failPayment(UUID paymentId, String reason) {
         Payment payment = loadPaymentPort.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId.toString()));
 
         payment.fail(reason);
 
@@ -60,14 +64,14 @@ public class PaymentService implements ProcessPaymentUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Payment getPayment(String paymentId) {
+    public Payment getPayment(UUID paymentId) {
         return loadPaymentPort.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId.toString()));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Payment getPaymentByOrderId(String orderId) {
+    public Payment getPaymentByOrderId(UUID orderId) {
         return loadPaymentPort.findByOrderId(orderId)
                 .orElseThrow(() -> new PaymentNotFoundException("주문에 대한 결제를 찾을 수 없습니다: " + orderId));
     }

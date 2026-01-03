@@ -17,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 /**
  * Auth Service
  * 인증 관련 유스케이스 구현
@@ -73,11 +75,11 @@ public class AuthService implements RegisterUseCase, LoginUseCase, RefreshTokenU
 
         // 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(
-                customer.getId(),
+                customer.getId().toString(),
                 customer.getEmail(),
                 "CUSTOMER"
         );
-        String refreshToken = jwtTokenProvider.createRefreshToken(customer.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(customer.getId().toString());
 
         return new TokenResult(
                 accessToken,
@@ -95,11 +97,12 @@ public class AuthService implements RegisterUseCase, LoginUseCase, RefreshTokenU
         }
 
         // 사용자 ID 추출
-        String customerId = jwtTokenProvider.getUserId(refreshToken);
+        String customerIdStr = jwtTokenProvider.getUserId(refreshToken);
+        UUID customerId = UUID.fromString(customerIdStr);
 
         // 고객 조회
         Customer customer = loadCustomerPort.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+                .orElseThrow(() -> new CustomerNotFoundException(customerIdStr));
 
         // 고객 상태 검증
         if (!customer.getStatus().isActive()) {
@@ -108,11 +111,11 @@ public class AuthService implements RegisterUseCase, LoginUseCase, RefreshTokenU
 
         // 새 토큰 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(
-                customer.getId(),
+                customer.getId().toString(),
                 customer.getEmail(),
                 "CUSTOMER"
         );
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(customer.getId());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(customer.getId().toString());
 
         return new TokenResult(
                 newAccessToken,
@@ -123,8 +126,8 @@ public class AuthService implements RegisterUseCase, LoginUseCase, RefreshTokenU
 
     @Override
     @Transactional(readOnly = true)
-    public Customer getMyProfile(String customerId) {
+    public Customer getMyProfile(UUID customerId) {
         return loadCustomerPort.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+                .orElseThrow(() -> new CustomerNotFoundException(customerId.toString()));
     }
 }

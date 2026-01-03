@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
@@ -36,7 +37,7 @@ public class WebhookService implements ManageWebhookUseCase {
     @Override
     public WebhookSubscription createSubscription(CreateSubscriptionCommand command) {
         WebhookSubscription subscription = WebhookSubscription.builder()
-                .sellerId(command.sellerId())
+                .sellerId(UUID.fromString(command.sellerId()))
                 .name(command.name())
                 .endpointUrl(command.endpointUrl())
                 .subscribedEvents(new HashSet<>(command.subscribedEvents()))
@@ -48,7 +49,9 @@ public class WebhookService implements ManageWebhookUseCase {
 
     @Override
     public WebhookSubscription updateSubscription(UpdateSubscriptionCommand command) {
-        WebhookSubscription subscription = getSubscriptionWithOwnerCheck(command.sellerId(), command.subscriptionId());
+        WebhookSubscription subscription = getSubscriptionWithOwnerCheck(
+                UUID.fromString(command.sellerId()),
+                UUID.fromString(command.subscriptionId()));
 
         // Optional + filter로 조건부 업데이트 (함수형)
         Optional.ofNullable(command.name())
@@ -72,27 +75,27 @@ public class WebhookService implements ManageWebhookUseCase {
     }
 
     @Override
-    public void deleteSubscription(String sellerId, String subscriptionId) {
+    public void deleteSubscription(UUID sellerId, UUID subscriptionId) {
         getSubscriptionWithOwnerCheck(sellerId, subscriptionId);
         saveWebhookPort.deleteSubscription(subscriptionId);
     }
 
     @Override
-    public WebhookSubscription activateSubscription(String sellerId, String subscriptionId) {
+    public WebhookSubscription activateSubscription(UUID sellerId, UUID subscriptionId) {
         WebhookSubscription subscription = getSubscriptionWithOwnerCheck(sellerId, subscriptionId);
         subscription.activate();
         return saveWebhookPort.saveSubscription(subscription);
     }
 
     @Override
-    public WebhookSubscription deactivateSubscription(String sellerId, String subscriptionId) {
+    public WebhookSubscription deactivateSubscription(UUID sellerId, UUID subscriptionId) {
         WebhookSubscription subscription = getSubscriptionWithOwnerCheck(sellerId, subscriptionId);
         subscription.deactivate();
         return saveWebhookPort.saveSubscription(subscription);
     }
 
     @Override
-    public WebhookSubscription regenerateSecret(String sellerId, String subscriptionId) {
+    public WebhookSubscription regenerateSecret(UUID sellerId, UUID subscriptionId) {
         WebhookSubscription subscription = getSubscriptionWithOwnerCheck(sellerId, subscriptionId);
         subscription.regenerateSecret();
         return saveWebhookPort.saveSubscription(subscription);
@@ -102,14 +105,14 @@ public class WebhookService implements ManageWebhookUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public WebhookSubscription getSubscription(String subscriptionId) {
+    public WebhookSubscription getSubscription(UUID subscriptionId) {
         return loadWebhookPort.findSubscriptionById(subscriptionId)
                 .orElseThrow(() -> new NoSuchElementException("Webhook subscription not found: " + subscriptionId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<WebhookSubscription> getSellerSubscriptions(String sellerId) {
+    public List<WebhookSubscription> getSellerSubscriptions(UUID sellerId) {
         return loadWebhookPort.findSubscriptionsBySellerId(sellerId);
     }
 
@@ -121,12 +124,12 @@ public class WebhookService implements ManageWebhookUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WebhookDelivery> getDeliveryHistory(String subscriptionId, Pageable pageable) {
+    public Page<WebhookDelivery> getDeliveryHistory(UUID subscriptionId, Pageable pageable) {
         return loadWebhookPort.findDeliveriesBySubscriptionId(subscriptionId, pageable);
     }
 
     @Override
-    public WebhookDelivery testWebhook(String sellerId, String subscriptionId) {
+    public WebhookDelivery testWebhook(UUID sellerId, UUID subscriptionId) {
         WebhookSubscription subscription = getSubscriptionWithOwnerCheck(sellerId, subscriptionId);
 
         // 테스트 페이로드 생성
@@ -152,7 +155,7 @@ public class WebhookService implements ManageWebhookUseCase {
 
     // ==================== Private Methods ====================
 
-    private WebhookSubscription getSubscriptionWithOwnerCheck(String sellerId, String subscriptionId) {
+    private WebhookSubscription getSubscriptionWithOwnerCheck(UUID sellerId, UUID subscriptionId) {
         WebhookSubscription subscription = getSubscription(subscriptionId);
 
         if (!subscription.getSellerId().equals(sellerId)) {

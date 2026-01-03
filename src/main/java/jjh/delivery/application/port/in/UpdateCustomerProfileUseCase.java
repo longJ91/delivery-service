@@ -2,12 +2,14 @@ package jjh.delivery.application.port.in;
 
 import jjh.delivery.domain.customer.Customer;
 
+import java.util.UUID;
+
 /**
  * Update Customer Profile Use Case - Driving Port (Inbound)
  */
 public interface UpdateCustomerProfileUseCase {
 
-    Customer updateProfile(String customerId, UpdateProfileCommand command);
+    Customer updateProfile(UUID customerId, UpdateProfileCommand command);
 
     record UpdateProfileCommand(
             String name,

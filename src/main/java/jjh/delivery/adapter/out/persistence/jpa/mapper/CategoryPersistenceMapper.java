@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +55,7 @@ public class CategoryPersistenceMapper {
                 .toList();
 
         // ID -> Category 맵 생성
-        Map<String, Category> categoryMap = allCategories.stream()
+        Map<UUID, Category> categoryMap = allCategories.stream()
                 .collect(Collectors.toMap(Category::getId, c -> c));
 
         // 트리 구축

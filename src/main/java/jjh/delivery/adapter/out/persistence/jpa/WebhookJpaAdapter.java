@@ -20,6 +20,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Webhook JPA Adapter - Driven Adapter (Outbound)
@@ -36,13 +37,13 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
     // ==================== LoadWebhookPort - Subscription ====================
 
     @Override
-    public Optional<WebhookSubscription> findSubscriptionById(String subscriptionId) {
+    public Optional<WebhookSubscription> findSubscriptionById(UUID subscriptionId) {
         return subscriptionRepository.findById(subscriptionId)
                 .map(mapper::toSubscriptionDomain);
     }
 
     @Override
-    public List<WebhookSubscription> findSubscriptionsBySellerId(String sellerId) {
+    public List<WebhookSubscription> findSubscriptionsBySellerId(UUID sellerId) {
         return subscriptionRepository.findBySellerId(sellerId).stream()
                 .map(mapper::toSubscriptionDomain)
                 .toList();
@@ -65,13 +66,13 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
     // ==================== LoadWebhookPort - Delivery ====================
 
     @Override
-    public Optional<WebhookDelivery> findDeliveryById(String deliveryId) {
+    public Optional<WebhookDelivery> findDeliveryById(UUID deliveryId) {
         return deliveryRepository.findById(deliveryId)
                 .map(mapper::toDeliveryDomain);
     }
 
     @Override
-    public Page<WebhookDelivery> findDeliveriesBySubscriptionId(String subscriptionId, Pageable pageable) {
+    public Page<WebhookDelivery> findDeliveriesBySubscriptionId(UUID subscriptionId, Pageable pageable) {
         return deliveryRepository.findBySubscriptionId(subscriptionId, pageable)
                 .map(mapper::toDeliveryDomain);
     }
@@ -94,7 +95,7 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
     }
 
     @Override
-    public void deleteSubscription(String subscriptionId) {
+    public void deleteSubscription(UUID subscriptionId) {
         subscriptionRepository.deleteById(subscriptionId);
     }
 

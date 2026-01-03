@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order JPA Entity (v2 - Product Delivery)
@@ -27,17 +28,16 @@ import java.util.List;
 public class OrderJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @Column(name = "order_number", nullable = false, unique = true, length = 30)
     private String orderNumber;
 
-    @Column(name = "customer_id", nullable = false, length = 36)
-    private String customerId;
+    @Column(name = "customer_id", nullable = false)
+    private UUID customerId;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
-    private String sellerId;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemJpaEntity> items = new ArrayList<>();
@@ -78,8 +78,8 @@ public class OrderJpaEntity {
     private String shippingMemo;
 
     // 쿠폰 (nullable)
-    @Column(name = "coupon_id", length = 36)
-    private String couponId;
+    @Column(name = "coupon_id")
+    private UUID couponId;
 
     // 타임스탬프
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -108,10 +108,10 @@ public class OrderJpaEntity {
 
     @Builder
     public OrderJpaEntity(
-            String id,
+            UUID id,
             String orderNumber,
-            String customerId,
-            String sellerId,
+            UUID customerId,
+            UUID sellerId,
             OrderStatus status,
             ShippingAddressEmbeddable shippingAddress,
             BigDecimal subtotalAmount,
@@ -120,7 +120,7 @@ public class OrderJpaEntity {
             BigDecimal totalAmount,
             String orderMemo,
             String shippingMemo,
-            String couponId,
+            UUID couponId,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             LocalDateTime paidAt,

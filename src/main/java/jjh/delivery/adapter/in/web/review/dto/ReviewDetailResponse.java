@@ -31,11 +31,11 @@ public record ReviewDetailResponse(
                 .toList();
 
         return new ReviewDetailResponse(
-                review.getId(),
-                review.getOrderId(),
-                review.getCustomerId(),
-                review.getSellerId(),
-                review.getProductId(),
+                review.getId().toString(),
+                review.getOrderId().toString(),
+                review.getCustomerId().toString(),
+                review.getSellerId().toString(),
+                review.getProductId().toString(),
                 review.getRating(),
                 review.getContent(),
                 imageUrls,

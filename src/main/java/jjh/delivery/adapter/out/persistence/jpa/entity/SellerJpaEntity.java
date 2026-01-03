@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Seller JPA Entity
@@ -25,8 +26,7 @@ import java.util.List;
 public class SellerJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @Column(name = "business_name", nullable = false, length = 200)
     private String businessName;
@@ -59,8 +59,8 @@ public class SellerJpaEntity {
             name = "seller_categories",
             joinColumns = @JoinColumn(name = "seller_id")
     )
-    @Column(name = "category_id", length = 36)
-    private List<String> categoryIds = new ArrayList<>();
+    @Column(name = "category_id")
+    private List<UUID> categoryIds = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -79,7 +79,7 @@ public class SellerJpaEntity {
 
     @Builder
     public SellerJpaEntity(
-            String id,
+            UUID id,
             String businessName,
             String businessNumber,
             String representativeName,
@@ -88,7 +88,7 @@ public class SellerJpaEntity {
             SellerType sellerType,
             SellerStatus status,
             WarehouseAddressEmbeddable warehouseAddress,
-            List<String> categoryIds,
+            List<UUID> categoryIds,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             LocalDateTime approvedAt
@@ -133,7 +133,7 @@ public class SellerJpaEntity {
         this.warehouseAddress = warehouseAddress;
     }
 
-    public void setCategoryIds(List<String> categoryIds) {
+    public void setCategoryIds(List<UUID> categoryIds) {
         this.categoryIds = new ArrayList<>(categoryIds);
     }
 

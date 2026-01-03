@@ -1,6 +1,7 @@
 package jjh.delivery.application.port.out;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Load Review Stats Port - Driven Port (Outbound)
@@ -12,10 +13,10 @@ public interface LoadReviewStatsPort {
     /**
      * 상품별 평균 평점 조회
      */
-    double getAverageRatingByProductId(String productId);
+    double getAverageRatingByProductId(UUID productId);
 
     /**
      * 상품별 평점 분포 조회
      */
-    Map<Integer, Long> getRatingDistributionByProductId(String productId);
+    Map<Integer, Long> getRatingDistributionByProductId(UUID productId);
 }

@@ -17,7 +17,7 @@ public record TrackingEventResponse(
 ) {
     public static TrackingEventResponse from(TrackingEvent event) {
         return new TrackingEventResponse(
-                event.id(),
+                event.id().toString(),
                 event.status(),
                 event.location(),
                 event.description(),

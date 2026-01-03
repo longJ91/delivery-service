@@ -5,6 +5,7 @@ import jjh.delivery.domain.order.OrderStatus;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Load Order Port - Driven Port (Outbound)
@@ -12,13 +13,13 @@ import java.util.Optional;
  */
 public interface LoadOrderPort {
 
-    Optional<Order> findById(String orderId);
+    Optional<Order> findById(UUID orderId);
 
-    List<Order> findByCustomerId(String customerId);
+    List<Order> findByCustomerId(UUID customerId);
 
-    List<Order> findBySellerId(String sellerId);
+    List<Order> findBySellerId(UUID sellerId);
 
     List<Order> findByStatus(OrderStatus status);
 
-    boolean existsById(String orderId);
+    boolean existsById(UUID orderId);
 }

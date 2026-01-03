@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +44,9 @@ class CustomerServiceTest {
     // Test Fixtures
     // =====================================================
 
-    private static final String CUSTOMER_ID = "customer-123";
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID NON_EXISTENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000099");
+    private static final UUID ADDRESS_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     private Customer createCustomer() {
         return Customer.builder()
@@ -110,11 +113,11 @@ class CustomerServiceTest {
             // given
             UpdateProfileCommand command = new UpdateProfileCommand("김철수", "010-5555-6666");
 
-            given(loadCustomerPort.findById("non-existent"))
+            given(loadCustomerPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> customerService.updateProfile("non-existent", command))
+            assertThatThrownBy(() -> customerService.updateProfile(NON_EXISTENT_ID, command))
                     .isInstanceOf(CustomerNotFoundException.class);
         }
     }
@@ -165,11 +168,11 @@ class CustomerServiceTest {
         @DisplayName("존재하지 않는 고객 배송지 조회 시 예외")
         void getAddressesNotFoundThrowsException() {
             // given
-            given(loadCustomerPort.findById("non-existent"))
+            given(loadCustomerPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> customerService.getAddresses("non-existent"))
+            assertThatThrownBy(() -> customerService.getAddresses(NON_EXISTENT_ID))
                     .isInstanceOf(CustomerNotFoundException.class);
         }
     }
@@ -232,11 +235,11 @@ class CustomerServiceTest {
             // given
             AddAddressCommand command = createAddAddressCommand();
 
-            given(loadCustomerPort.findById("non-existent"))
+            given(loadCustomerPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> customerService.addAddress("non-existent", command))
+            assertThatThrownBy(() -> customerService.addAddress(NON_EXISTENT_ID, command))
                     .isInstanceOf(CustomerNotFoundException.class);
         }
     }
@@ -254,7 +257,7 @@ class CustomerServiceTest {
         void removeAddressSuccess() {
             // given
             Customer customer = createCustomerWithAddress();
-            String addressId = customer.getAddresses().get(0).id();
+            UUID addressId = customer.getAddresses().get(0).id();
 
             given(loadCustomerPort.findById(CUSTOMER_ID))
                     .willReturn(Optional.of(customer));
@@ -278,7 +281,7 @@ class CustomerServiceTest {
                     .willReturn(Optional.of(customer));
 
             // when & then
-            assertThatThrownBy(() -> customerService.removeAddress(CUSTOMER_ID, "non-existent"))
+            assertThatThrownBy(() -> customerService.removeAddress(CUSTOMER_ID, NON_EXISTENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Address not found");
         }
@@ -287,11 +290,11 @@ class CustomerServiceTest {
         @DisplayName("존재하지 않는 고객 배송지 삭제 시 예외")
         void removeAddressCustomerNotFoundThrowsException() {
             // given
-            given(loadCustomerPort.findById("non-existent"))
+            given(loadCustomerPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> customerService.removeAddress("non-existent", "address-id"))
+            assertThatThrownBy(() -> customerService.removeAddress(NON_EXISTENT_ID, ADDRESS_ID))
                     .isInstanceOf(CustomerNotFoundException.class);
         }
     }
@@ -314,7 +317,7 @@ class CustomerServiceTest {
                     "회사", "홍길동", "010-9999-8888",
                     "54321", "서울시 서초구", "회사 상세", false
             ));
-            String secondAddressId = customer.getAddresses().get(1).id();
+            UUID secondAddressId = customer.getAddresses().get(1).id();
 
             given(loadCustomerPort.findById(CUSTOMER_ID))
                     .willReturn(Optional.of(customer));
@@ -341,7 +344,7 @@ class CustomerServiceTest {
                     .willReturn(Optional.of(customer));
 
             // when & then
-            assertThatThrownBy(() -> customerService.setDefaultAddress(CUSTOMER_ID, "non-existent"))
+            assertThatThrownBy(() -> customerService.setDefaultAddress(CUSTOMER_ID, NON_EXISTENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Address not found");
         }
@@ -350,11 +353,11 @@ class CustomerServiceTest {
         @DisplayName("존재하지 않는 고객 기본 배송지 설정 시 예외")
         void setDefaultAddressCustomerNotFoundThrowsException() {
             // given
-            given(loadCustomerPort.findById("non-existent"))
+            given(loadCustomerPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> customerService.setDefaultAddress("non-existent", "address-id"))
+            assertThatThrownBy(() -> customerService.setDefaultAddress(NON_EXISTENT_ID, ADDRESS_ID))
                     .isInstanceOf(CustomerNotFoundException.class);
         }
     }

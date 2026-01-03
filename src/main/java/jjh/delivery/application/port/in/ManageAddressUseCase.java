@@ -4,6 +4,7 @@ import jjh.delivery.domain.customer.Customer;
 import jjh.delivery.domain.customer.CustomerAddress;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Manage Address Use Case - Driving Port (Inbound)
@@ -11,13 +12,13 @@ import java.util.List;
  */
 public interface ManageAddressUseCase {
 
-    List<CustomerAddress> getAddresses(String customerId);
+    List<CustomerAddress> getAddresses(UUID customerId);
 
-    CustomerAddress addAddress(String customerId, AddAddressCommand command);
+    CustomerAddress addAddress(UUID customerId, AddAddressCommand command);
 
-    void removeAddress(String customerId, String addressId);
+    void removeAddress(UUID customerId, UUID addressId);
 
-    void setDefaultAddress(String customerId, String addressId);
+    void setDefaultAddress(UUID customerId, UUID addressId);
 
     record AddAddressCommand(
             String name,

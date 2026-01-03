@@ -25,8 +25,7 @@ docs/
 ├── database/                    # 데이터베이스
 │   ├── README.md
 │   ├── SCHEMA.md                # 스키마 설계 문서
-│   ├── schema_v2.sql            # DDL (물품 배송)
-│   ├── schema.sql               # DDL (음식 배달, legacy)
+│   ├── schema.sql               # PostgreSQL DDL (물품 배송)
 │   └── MIGRATION.md             # 마이그레이션 계획
 └── guides/                      # 가이드
     ├── README.md
@@ -54,7 +53,7 @@ docs/
 | Document | Description |
 |----------|-------------|
 | [database/SCHEMA.md](./database/SCHEMA.md) | 스키마 설계 문서 |
-| [database/schema_v2.sql](./database/schema_v2.sql) | PostgreSQL DDL |
+| [database/schema.sql](./database/schema.sql) | PostgreSQL DDL |
 | [database/MIGRATION.md](./database/MIGRATION.md) | 마이그레이션 계획 |
 
 ### Guides & References
@@ -94,7 +93,7 @@ docs/
 
 ```bash
 # 스키마 적용
-psql -U postgres -d delivery -f docs/database/schema_v2.sql
+psql -U postgres -d delivery -f docs/database/schema.sql
 ```
 
 ## Key Features

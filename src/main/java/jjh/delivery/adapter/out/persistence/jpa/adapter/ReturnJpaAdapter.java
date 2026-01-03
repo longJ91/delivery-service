@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Return JPA Adapter - Driven Adapter (Outbound)
@@ -25,20 +26,20 @@ public class ReturnJpaAdapter implements LoadReturnPort, SaveReturnPort {
     private final ReturnPersistenceMapper mapper;
 
     @Override
-    public Optional<ProductReturn> findById(String returnId) {
+    public Optional<ProductReturn> findById(UUID returnId) {
         return returnJpaRepository.findById(returnId)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public List<ProductReturn> findByOrderId(String orderId) {
+    public List<ProductReturn> findByOrderId(UUID orderId) {
         return returnJpaRepository.findByOrderId(orderId).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
-    public List<ProductReturn> findByCustomerId(String customerId) {
+    public List<ProductReturn> findByCustomerId(UUID customerId) {
         return returnJpaRepository.findByCustomerId(customerId).stream()
                 .map(mapper::toDomain)
                 .toList();
@@ -52,7 +53,7 @@ public class ReturnJpaAdapter implements LoadReturnPort, SaveReturnPort {
     }
 
     @Override
-    public boolean existsById(String returnId) {
+    public boolean existsById(UUID returnId) {
         return returnJpaRepository.existsById(returnId);
     }
 

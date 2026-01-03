@@ -1,11 +1,12 @@
 -- Delivery Service Database Schema
 -- Generated for jOOQ Code Generation
+-- All IDs use UUID type for consistency
 
 -- =====================================================
 -- Customer Tables
 -- =====================================================
 CREATE TABLE customers (
-    id VARCHAR(36) PRIMARY KEY,
+    id UUID PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -19,8 +20,8 @@ CREATE TABLE customers (
 );
 
 CREATE TABLE customer_addresses (
-    id VARCHAR(36) PRIMARY KEY,
-    customer_id VARCHAR(36) NOT NULL REFERENCES customers(id),
+    id UUID PRIMARY KEY,
+    customer_id UUID NOT NULL REFERENCES customers(id),
     name VARCHAR(50) NOT NULL,
     recipient_name VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
@@ -35,7 +36,7 @@ CREATE TABLE customer_addresses (
 -- Seller Tables
 -- =====================================================
 CREATE TABLE sellers (
-    id VARCHAR(36) PRIMARY KEY,
+    id UUID PRIMARY KEY,
     business_name VARCHAR(200) NOT NULL,
     business_number VARCHAR(20) NOT NULL UNIQUE,
     representative_name VARCHAR(100) NOT NULL,
@@ -54,8 +55,8 @@ CREATE TABLE sellers (
 );
 
 CREATE TABLE seller_categories (
-    seller_id VARCHAR(36) NOT NULL REFERENCES sellers(id),
-    category_id VARCHAR(36) NOT NULL,
+    seller_id UUID NOT NULL REFERENCES sellers(id),
+    category_id UUID NOT NULL,
     PRIMARY KEY (seller_id, category_id)
 );
 
@@ -63,8 +64,8 @@ CREATE TABLE seller_categories (
 -- Category Tables
 -- =====================================================
 CREATE TABLE categories (
-    id VARCHAR(36) PRIMARY KEY,
-    parent_id VARCHAR(36),
+    id UUID PRIMARY KEY,
+    parent_id UUID,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
     image_url VARCHAR(500),
@@ -79,8 +80,8 @@ CREATE TABLE categories (
 -- Product Tables
 -- =====================================================
 CREATE TABLE products (
-    id VARCHAR(36) PRIMARY KEY,
-    seller_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    seller_id UUID NOT NULL,
     name VARCHAR(200) NOT NULL,
     description TEXT,
     base_price DECIMAL(12, 2) NOT NULL,
@@ -93,24 +94,24 @@ CREATE TABLE products (
 );
 
 CREATE TABLE product_variants (
-    id VARCHAR(36) PRIMARY KEY,
-    product_id VARCHAR(36) NOT NULL REFERENCES products(id),
+    id UUID PRIMARY KEY,
+    product_id UUID NOT NULL REFERENCES products(id),
     name VARCHAR(200) NOT NULL,
     sku VARCHAR(50),
-    option_values VARCHAR(2000),
+    option_values JSONB,
     additional_price DECIMAL(10, 2) NOT NULL,
     stock_quantity INT NOT NULL,
     is_active BOOLEAN NOT NULL
 );
 
 CREATE TABLE product_categories (
-    product_id VARCHAR(36) NOT NULL REFERENCES products(id),
-    category_id VARCHAR(36) NOT NULL,
+    product_id UUID NOT NULL REFERENCES products(id),
+    category_id UUID NOT NULL,
     PRIMARY KEY (product_id, category_id)
 );
 
 CREATE TABLE product_images (
-    product_id VARCHAR(36) NOT NULL REFERENCES products(id),
+    product_id UUID NOT NULL REFERENCES products(id),
     image_url VARCHAR(500),
     display_order INT NOT NULL,
     PRIMARY KEY (product_id, display_order)
@@ -120,10 +121,10 @@ CREATE TABLE product_images (
 -- Order Tables
 -- =====================================================
 CREATE TABLE orders (
-    id VARCHAR(36) PRIMARY KEY,
+    id UUID PRIMARY KEY,
     order_number VARCHAR(30) NOT NULL UNIQUE,
-    customer_id VARCHAR(36) NOT NULL,
-    seller_id VARCHAR(36) NOT NULL,
+    customer_id UUID NOT NULL,
+    seller_id UUID NOT NULL,
     status VARCHAR(30) NOT NULL,
     shipping_recipient_name VARCHAR(100),
     shipping_phone_number VARCHAR(20),
@@ -137,7 +138,7 @@ CREATE TABLE orders (
     total_amount DECIMAL(12, 2) NOT NULL,
     order_memo VARCHAR(500),
     shipping_memo VARCHAR(500),
-    coupon_id VARCHAR(36),
+    coupon_id UUID,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     paid_at TIMESTAMP,
@@ -149,14 +150,14 @@ CREATE TABLE orders (
 );
 
 CREATE TABLE order_items (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
-    product_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    order_id UUID NOT NULL REFERENCES orders(id),
+    product_id UUID NOT NULL,
     product_name VARCHAR(200) NOT NULL,
-    variant_id VARCHAR(36),
+    variant_id UUID,
     variant_name VARCHAR(200),
     sku VARCHAR(50),
-    option_values VARCHAR(2000),
+    option_values JSONB,
     quantity INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL
 );
@@ -165,11 +166,11 @@ CREATE TABLE order_items (
 -- Review Tables
 -- =====================================================
 CREATE TABLE reviews (
-    id VARCHAR(36) PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL UNIQUE,
-    customer_id VARCHAR(36) NOT NULL,
-    seller_id VARCHAR(36) NOT NULL,
-    product_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    order_id UUID NOT NULL UNIQUE,
+    customer_id UUID NOT NULL,
+    seller_id UUID NOT NULL,
+    product_id UUID NOT NULL,
     rating INT NOT NULL,
     content TEXT,
     is_visible BOOLEAN NOT NULL,
@@ -179,17 +180,17 @@ CREATE TABLE reviews (
 );
 
 CREATE TABLE review_images (
-    id VARCHAR(36) PRIMARY KEY,
-    review_id VARCHAR(36) NOT NULL REFERENCES reviews(id),
+    id UUID PRIMARY KEY,
+    review_id UUID NOT NULL REFERENCES reviews(id),
     image_url VARCHAR(255) NOT NULL,
     display_order INT NOT NULL,
     created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE review_replies (
-    id VARCHAR(36) PRIMARY KEY,
-    review_id VARCHAR(36) NOT NULL UNIQUE REFERENCES reviews(id),
-    seller_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    review_id UUID NOT NULL UNIQUE REFERENCES reviews(id),
+    seller_id UUID NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
@@ -199,20 +200,20 @@ CREATE TABLE review_replies (
 -- Cart Tables
 -- =====================================================
 CREATE TABLE carts (
-    id VARCHAR(36) PRIMARY KEY,
-    customer_id VARCHAR(36) NOT NULL UNIQUE,
+    id UUID PRIMARY KEY,
+    customer_id UUID NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE cart_items (
-    id VARCHAR(36) PRIMARY KEY,
-    cart_id VARCHAR(36) NOT NULL REFERENCES carts(id),
-    product_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    cart_id UUID NOT NULL REFERENCES carts(id),
+    product_id UUID NOT NULL,
     product_name VARCHAR(200) NOT NULL,
-    variant_id VARCHAR(36),
+    variant_id UUID,
     variant_name VARCHAR(200),
-    seller_id VARCHAR(36) NOT NULL,
+    seller_id UUID NOT NULL,
     quantity INT NOT NULL,
     unit_price DECIMAL(12, 2) NOT NULL,
     thumbnail_url VARCHAR(500),
@@ -223,7 +224,7 @@ CREATE TABLE cart_items (
 -- Coupon Tables
 -- =====================================================
 CREATE TABLE coupons (
-    id VARCHAR(36) PRIMARY KEY,
+    id UUID PRIMARY KEY,
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
@@ -232,7 +233,7 @@ CREATE TABLE coupons (
     minimum_order_amount DECIMAL(10, 2) NOT NULL,
     maximum_discount_amount DECIMAL(10, 2),
     scope VARCHAR(20) NOT NULL,
-    scope_target_id VARCHAR(36),
+    scope_target_id UUID,
     total_quantity INT,
     used_quantity INT NOT NULL,
     valid_from TIMESTAMP,
@@ -247,8 +248,8 @@ CREATE TABLE coupons (
 -- Webhook Tables
 -- =====================================================
 CREATE TABLE webhook_subscriptions (
-    id VARCHAR(36) PRIMARY KEY,
-    seller_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    seller_id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
     endpoint_url VARCHAR(500) NOT NULL,
     secret VARCHAR(100) NOT NULL,
@@ -261,14 +262,14 @@ CREATE TABLE webhook_subscriptions (
 );
 
 CREATE TABLE webhook_subscribed_events (
-    subscription_id VARCHAR(36) NOT NULL REFERENCES webhook_subscriptions(id),
+    subscription_id UUID NOT NULL REFERENCES webhook_subscriptions(id),
     event_type VARCHAR(50) NOT NULL,
     PRIMARY KEY (subscription_id, event_type)
 );
 
 CREATE TABLE webhook_deliveries (
-    id VARCHAR(36) PRIMARY KEY,
-    subscription_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    subscription_id UUID NOT NULL,
     event_type VARCHAR(50) NOT NULL,
     payload TEXT NOT NULL,
     endpoint_url VARCHAR(500) NOT NULL,
@@ -285,9 +286,9 @@ CREATE TABLE webhook_deliveries (
 -- Shipment Tables
 -- =====================================================
 CREATE TABLE shipments (
-    id VARCHAR(36) PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL,
-    seller_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    order_id UUID NOT NULL,
+    seller_id UUID NOT NULL,
     carrier VARCHAR(50) NOT NULL,
     tracking_number VARCHAR(100),
     status VARCHAR(30) NOT NULL,
@@ -307,8 +308,8 @@ CREATE TABLE shipments (
 );
 
 CREATE TABLE shipment_trackings (
-    id VARCHAR(36) PRIMARY KEY,
-    shipment_id VARCHAR(36) NOT NULL REFERENCES shipments(id),
+    id UUID PRIMARY KEY,
+    shipment_id UUID NOT NULL REFERENCES shipments(id),
     status VARCHAR(30) NOT NULL,
     location VARCHAR(200),
     description VARCHAR(500),
@@ -320,24 +321,18 @@ CREATE TABLE shipment_trackings (
 -- Payment Tables
 -- =====================================================
 CREATE TABLE payments (
-    id VARCHAR(36) PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL,
-    customer_id VARCHAR(36) NOT NULL,
-    payment_method VARCHAR(30) NOT NULL,
-    payment_key VARCHAR(100),
+    id UUID PRIMARY KEY,
+    order_id UUID NOT NULL,
+    payment_method_type VARCHAR(20) NOT NULL,
+    payment_gateway VARCHAR(50),
+    transaction_id VARCHAR(100),
     amount DECIMAL(12, 2) NOT NULL,
+    refunded_amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
     status VARCHAR(20) NOT NULL,
-    pg_provider VARCHAR(30),
-    pg_transaction_id VARCHAR(100),
-    card_company VARCHAR(30),
-    card_number_masked VARCHAR(20),
-    installment_months INT,
-    approved_at TIMESTAMP,
-    cancelled_at TIMESTAMP,
-    cancel_reason VARCHAR(500),
-    metadata TEXT,
+    failure_reason VARCHAR(500),
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
+    paid_at TIMESTAMP,
     version BIGINT
 );
 
@@ -345,10 +340,10 @@ CREATE TABLE payments (
 -- Return Tables
 -- =====================================================
 CREATE TABLE returns (
-    id VARCHAR(36) PRIMARY KEY,
-    order_id VARCHAR(36) NOT NULL,
-    customer_id VARCHAR(36) NOT NULL,
-    seller_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    order_id UUID NOT NULL,
+    customer_id UUID NOT NULL,
+    seller_id UUID NOT NULL,
     return_type VARCHAR(20) NOT NULL,
     reason VARCHAR(500) NOT NULL,
     status VARCHAR(30) NOT NULL,
@@ -367,16 +362,15 @@ CREATE TABLE returns (
 );
 
 CREATE TABLE return_items (
-    id VARCHAR(36) PRIMARY KEY,
-    return_id VARCHAR(36) NOT NULL REFERENCES returns(id),
-    order_item_id BIGINT NOT NULL,
-    product_id VARCHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    return_id UUID NOT NULL REFERENCES returns(id),
+    order_item_id UUID NOT NULL,
+    product_id UUID NOT NULL,
     product_name VARCHAR(200) NOT NULL,
-    variant_id VARCHAR(36),
+    variant_id UUID,
     variant_name VARCHAR(200),
     quantity INT NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL,
-    reason VARCHAR(500)
+    refund_amount DECIMAL(10, 2) NOT NULL
 );
 
 -- =====================================================
@@ -403,6 +397,7 @@ CREATE INDEX idx_orders_customer_id ON orders(customer_id);
 CREATE INDEX idx_orders_seller_id ON orders(seller_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX idx_order_items_product_id ON order_items(product_id);
 CREATE INDEX idx_order_items_variant_id ON order_items(variant_id);
 

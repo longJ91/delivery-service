@@ -9,8 +9,8 @@ import java.util.UUID;
  */
 public class WebhookDelivery {
 
-    private final String id;
-    private final String subscriptionId;
+    private final UUID id;
+    private final UUID subscriptionId;
     private final WebhookEventType eventType;
     private final String payload;
     private final String endpointUrl;
@@ -23,7 +23,7 @@ public class WebhookDelivery {
     private LocalDateTime deliveredAt;
 
     private WebhookDelivery(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.subscriptionId = builder.subscriptionId;
         this.eventType = builder.eventType;
         this.payload = builder.payload;
@@ -87,11 +87,11 @@ public class WebhookDelivery {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getSubscriptionId() {
+    public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
@@ -140,8 +140,8 @@ public class WebhookDelivery {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String subscriptionId;
+        private UUID id;
+        private UUID subscriptionId;
         private WebhookEventType eventType;
         private String payload;
         private String endpointUrl;
@@ -153,12 +153,12 @@ public class WebhookDelivery {
         private LocalDateTime createdAt;
         private LocalDateTime deliveredAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder subscriptionId(String subscriptionId) {
+        public Builder subscriptionId(UUID subscriptionId) {
             this.subscriptionId = subscriptionId;
             return this;
         }
@@ -219,7 +219,7 @@ public class WebhookDelivery {
         }
 
         private void validateRequired() {
-            if (subscriptionId == null || subscriptionId.isBlank()) {
+            if (subscriptionId == null) {
                 throw new IllegalArgumentException("subscriptionId is required");
             }
             if (eventType == null) {

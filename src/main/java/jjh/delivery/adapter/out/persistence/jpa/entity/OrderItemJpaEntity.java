@@ -10,6 +10,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Order Item JPA Entity (v2 - Product Delivery)
@@ -24,21 +25,20 @@ import java.util.Map;
 public class OrderItemJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private OrderJpaEntity order;
 
-    @Column(name = "product_id", nullable = false, length = 36)
-    private String productId;
+    @Column(name = "product_id", nullable = false)
+    private UUID productId;
 
     @Column(name = "product_name", nullable = false, length = 200)
     private String productName;
 
-    @Column(name = "variant_id", length = 36)
-    private String variantId;
+    @Column(name = "variant_id")
+    private UUID variantId;
 
     @Column(name = "variant_name", length = 200)
     private String variantName;
@@ -58,15 +58,17 @@ public class OrderItemJpaEntity {
 
     @Builder
     public OrderItemJpaEntity(
-            String productId,
+            UUID id,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
             String sku,
             Map<String, String> optionValues,
             int quantity,
             BigDecimal unitPrice
     ) {
+        this.id = id;
         this.productId = productId;
         this.productName = productName;
         this.variantId = variantId;
@@ -81,28 +83,30 @@ public class OrderItemJpaEntity {
      * Factory method for simple product (no variant)
      */
     public static OrderItemJpaEntity of(
-            String productId,
+            UUID id,
+            UUID productId,
             String productName,
             int quantity,
             BigDecimal unitPrice
     ) {
-        return new OrderItemJpaEntity(productId, productName, null, null, null, null, quantity, unitPrice);
+        return new OrderItemJpaEntity(id, productId, productName, null, null, null, null, quantity, unitPrice);
     }
 
     /**
      * Factory method for variant product
      */
     public static OrderItemJpaEntity ofVariant(
-            String productId,
+            UUID id,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
             String sku,
             Map<String, String> optionValues,
             int quantity,
             BigDecimal unitPrice
     ) {
-        return new OrderItemJpaEntity(productId, productName, variantId, variantName, sku, optionValues, quantity, unitPrice);
+        return new OrderItemJpaEntity(id, productId, productName, variantId, variantName, sku, optionValues, quantity, unitPrice);
     }
 
     void setOrder(OrderJpaEntity order) {
@@ -113,7 +117,7 @@ public class OrderItemJpaEntity {
      * Check if this item has variant
      */
     public boolean hasVariant() {
-        return variantId != null && !variantId.isBlank();
+        return variantId != null;
     }
 
     /**

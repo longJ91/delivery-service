@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Load Coupon Port - Driven Port (Outbound)
@@ -13,7 +14,7 @@ import java.util.Optional;
  */
 public interface LoadCouponPort {
 
-    Optional<Coupon> findById(String couponId);
+    Optional<Coupon> findById(UUID couponId);
 
     Optional<Coupon> findByCode(String code);
 

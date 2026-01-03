@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +47,10 @@ class SellerServiceTest {
     // =====================================================
     // Test Fixtures
     // =====================================================
+
+    private static final UUID NON_EXISTENT_UUID = UUID.fromString("00000000-0000-0000-0000-000000000099");
+    private static final UUID CATEGORY_1_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID CATEGORY_2_UUID = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     private Seller createPendingSeller() {
         return Seller.builder()
@@ -172,7 +177,7 @@ class SellerServiceTest {
                     "010-9999-8888",
                     SellerType.CORPORATION,
                     warehouseAddress,
-                    List.of("cat-1", "cat-2")
+                    List.of(CATEGORY_1_UUID.toString(), CATEGORY_2_UUID.toString())
             );
 
             given(loadSellerPort.existsByBusinessNumber(command.businessNumber()))
@@ -188,7 +193,7 @@ class SellerServiceTest {
             // then
             assertThat(result.getWarehouseAddress()).isNotNull();
             assertThat(result.getWarehouseAddress().postalCode()).isEqualTo("12345");
-            assertThat(result.getCategoryIds()).containsExactly("cat-1", "cat-2");
+            assertThat(result.getCategoryIds()).containsExactly(CATEGORY_1_UUID, CATEGORY_2_UUID);
         }
     }
 
@@ -206,7 +211,7 @@ class SellerServiceTest {
             // given
             Seller seller = createActiveSeller();
             UpdateSellerInfoCommand command = new UpdateSellerInfoCommand(
-                    seller.getId(),
+                    seller.getId().toString(),
                     "수정된 상점명",
                     "이영희",
                     "updated@example.com",
@@ -234,7 +239,7 @@ class SellerServiceTest {
             // given
             Seller seller = createActiveSeller();
             UpdateSellerInfoCommand command = new UpdateSellerInfoCommand(
-                    seller.getId(),
+                    seller.getId().toString(),
                     "수정된 상점명",
                     null,  // 기존 값 유지
                     null,  // 기존 값 유지
@@ -260,14 +265,14 @@ class SellerServiceTest {
         void updateNonExistentSellerThrowsException() {
             // given
             UpdateSellerInfoCommand command = new UpdateSellerInfoCommand(
-                    "non-existent",
+                    NON_EXISTENT_UUID.toString(),
                     "상점명",
                     null,
                     null,
                     null
             );
 
-            given(loadSellerPort.findById("non-existent"))
+            given(loadSellerPort.findById(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -434,10 +439,10 @@ class SellerServiceTest {
                     .willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            Seller result = sellerService.addCategory(seller.getId(), "category-1");
+            Seller result = sellerService.addCategory(seller.getId(), CATEGORY_1_UUID);
 
             // then
-            assertThat(result.getCategoryIds()).contains("category-1");
+            assertThat(result.getCategoryIds()).contains(CATEGORY_1_UUID);
         }
 
         @Test
@@ -450,7 +455,7 @@ class SellerServiceTest {
                     .representativeName("홍길동")
                     .email("seller@example.com")
                     .sellerType(SellerType.INDIVIDUAL)
-                    .categoryIds(List.of("cat-1", "cat-2"))
+                    .categoryIds(List.of(CATEGORY_1_UUID, CATEGORY_2_UUID))
                     .build();
 
             given(loadSellerPort.findById(seller.getId()))
@@ -459,10 +464,10 @@ class SellerServiceTest {
                     .willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            Seller result = sellerService.removeCategory(seller.getId(), "cat-1");
+            Seller result = sellerService.removeCategory(seller.getId(), CATEGORY_1_UUID);
 
             // then
-            assertThat(result.getCategoryIds()).containsExactly("cat-2");
+            assertThat(result.getCategoryIds()).containsExactly(CATEGORY_2_UUID);
         }
     }
 
@@ -494,11 +499,11 @@ class SellerServiceTest {
         @DisplayName("존재하지 않는 ID로 조회 시 예외")
         void getSellerNotFoundThrowsException() {
             // given
-            given(loadSellerPort.findById("non-existent"))
+            given(loadSellerPort.findById(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> sellerService.getSeller("non-existent"))
+            assertThatThrownBy(() -> sellerService.getSeller(NON_EXISTENT_UUID))
                     .isInstanceOf(NoSuchElementException.class)
                     .hasMessageContaining("Seller not found");
         }

@@ -19,8 +19,8 @@ public record ReviewReplyResponse(
             return null;
         }
         return new ReviewReplyResponse(
-                reply.id(),
-                reply.sellerId(),
+                reply.id().toString(),
+                reply.sellerId().toString(),
                 reply.content(),
                 reply.createdAt(),
                 reply.updatedAt()

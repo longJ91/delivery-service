@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Cart JPA Entity
@@ -22,11 +23,10 @@ import java.util.List;
 public class CartJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "customer_id", nullable = false, unique = true, length = 36)
-    private String customerId;
+    @Column(name = "customer_id", nullable = false, unique = true)
+    private UUID customerId;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("addedAt DESC")
@@ -39,7 +39,7 @@ public class CartJpaEntity {
     private LocalDateTime updatedAt;
 
     @Builder
-    public CartJpaEntity(String id, String customerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public CartJpaEntity(UUID id, UUID customerId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.customerId = customerId;
         this.createdAt = createdAt;

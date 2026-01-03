@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order REST Controller - Driving Adapter (Inbound)
@@ -40,14 +41,14 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable UUID orderId) {
         Order order = getOrderUseCase.getOrderOrThrow(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderResponse> updateStatus(
-            @PathVariable String orderId,
+            @PathVariable UUID orderId,
             @Valid @RequestBody UpdateOrderStatusRequest request
     ) {
         Order order = updateOrderStatusUseCase.updateStatus(orderId, request.status());
@@ -55,49 +56,49 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/pay")
-    public ResponseEntity<OrderResponse> payOrder(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> payOrder(@PathVariable UUID orderId) {
         Order order = updateOrderStatusUseCase.payOrder(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @PostMapping("/{orderId}/confirm")
-    public ResponseEntity<OrderResponse> confirmOrder(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> confirmOrder(@PathVariable UUID orderId) {
         Order order = updateOrderStatusUseCase.confirmOrder(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @PostMapping("/{orderId}/prepare")
-    public ResponseEntity<OrderResponse> startPreparing(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> startPreparing(@PathVariable UUID orderId) {
         Order order = updateOrderStatusUseCase.startPreparing(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @PostMapping("/{orderId}/ship")
-    public ResponseEntity<OrderResponse> shipOrder(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> shipOrder(@PathVariable UUID orderId) {
         Order order = updateOrderStatusUseCase.shipOrder(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable UUID orderId) {
         Order order = updateOrderStatusUseCase.cancelOrder(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @PostMapping("/{orderId}/return")
-    public ResponseEntity<OrderResponse> requestReturn(@PathVariable String orderId) {
+    public ResponseEntity<OrderResponse> requestReturn(@PathVariable UUID orderId) {
         Order order = updateOrderStatusUseCase.requestReturn(orderId);
         return ResponseEntity.ok(mapper.toResponse(order));
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable String customerId) {
+    public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable UUID customerId) {
         List<Order> orders = searchOrderUseCase.findByCustomerId(customerId);
         return ResponseEntity.ok(mapper.toResponseList(orders));
     }
 
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<List<OrderResponse>> getOrdersBySeller(@PathVariable String sellerId) {
+    public ResponseEntity<List<OrderResponse>> getOrdersBySeller(@PathVariable UUID sellerId) {
         List<Order> orders = searchOrderUseCase.findBySellerId(sellerId);
         return ResponseEntity.ok(mapper.toResponseList(orders));
     }

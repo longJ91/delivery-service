@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Manage Webhook Use Case - Driving Port (Inbound)
@@ -30,34 +31,34 @@ public interface ManageWebhookUseCase {
     /**
      * 웹훅 구독 삭제
      */
-    void deleteSubscription(String sellerId, String subscriptionId);
+    void deleteSubscription(UUID sellerId, UUID subscriptionId);
 
     /**
      * 웹훅 구독 활성화
      */
-    WebhookSubscription activateSubscription(String sellerId, String subscriptionId);
+    WebhookSubscription activateSubscription(UUID sellerId, UUID subscriptionId);
 
     /**
      * 웹훅 구독 비활성화
      */
-    WebhookSubscription deactivateSubscription(String sellerId, String subscriptionId);
+    WebhookSubscription deactivateSubscription(UUID sellerId, UUID subscriptionId);
 
     /**
      * 시크릿 재생성
      */
-    WebhookSubscription regenerateSecret(String sellerId, String subscriptionId);
+    WebhookSubscription regenerateSecret(UUID sellerId, UUID subscriptionId);
 
     // ==================== 조회 ====================
 
     /**
      * 구독 조회
      */
-    WebhookSubscription getSubscription(String subscriptionId);
+    WebhookSubscription getSubscription(UUID subscriptionId);
 
     /**
      * 판매자의 구독 목록 조회
      */
-    List<WebhookSubscription> getSellerSubscriptions(String sellerId);
+    List<WebhookSubscription> getSellerSubscriptions(UUID sellerId);
 
     /**
      * 전체 구독 목록 조회 (Admin)
@@ -67,12 +68,12 @@ public interface ManageWebhookUseCase {
     /**
      * 전송 기록 조회
      */
-    Page<WebhookDelivery> getDeliveryHistory(String subscriptionId, Pageable pageable);
+    Page<WebhookDelivery> getDeliveryHistory(UUID subscriptionId, Pageable pageable);
 
     /**
      * 웹훅 테스트
      */
-    WebhookDelivery testWebhook(String sellerId, String subscriptionId);
+    WebhookDelivery testWebhook(UUID sellerId, UUID subscriptionId);
 
     // ==================== Commands ====================
 

@@ -12,11 +12,11 @@ import java.util.UUID;
  */
 public class Review {
 
-    private final String id;
-    private final String orderId;
-    private final String customerId;
-    private final String sellerId;
-    private final String productId;
+    private final UUID id;
+    private final UUID orderId;
+    private final UUID customerId;
+    private final UUID sellerId;
+    private final UUID productId;
     private int rating;
     private String content;
     private List<ReviewImage> images;
@@ -26,7 +26,7 @@ public class Review {
     private LocalDateTime updatedAt;
 
     private Review(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.orderId = builder.orderId;
         this.customerId = builder.customerId;
         this.sellerId = builder.sellerId;
@@ -63,7 +63,7 @@ public class Review {
      */
     public void addImage(String imageUrl) {
         int nextOrder = this.images.size();
-        this.images.add(ReviewImage.ofNew(imageUrl, nextOrder));
+        this.images.add(ReviewImage.ofNew(UUID.randomUUID(), imageUrl, nextOrder));
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -78,7 +78,7 @@ public class Review {
     /**
      * 이미지 삭제
      */
-    public void removeImage(String imageId) {
+    public void removeImage(UUID imageId) {
         this.images.removeIf(image -> image.id().equals(imageId));
         this.updatedAt = LocalDateTime.now();
     }
@@ -86,7 +86,7 @@ public class Review {
     /**
      * 판매자 답글 추가
      */
-    public void addReply(String sellerId, String content) {
+    public void addReply(UUID sellerId, String content) {
         if (!this.sellerId.equals(sellerId)) {
             throw new IllegalArgumentException("Only the seller of this review can reply");
         }
@@ -100,7 +100,7 @@ public class Review {
     /**
      * 판매자 답글 수정
      */
-    public void updateReply(String sellerId, String content) {
+    public void updateReply(UUID sellerId, String content) {
         if (this.reply == null) {
             throw new IllegalStateException("No reply exists. Use addReply instead.");
         }
@@ -114,7 +114,7 @@ public class Review {
     /**
      * 판매자 답글 삭제
      */
-    public void deleteReply(String sellerId) {
+    public void deleteReply(UUID sellerId) {
         if (this.reply == null) {
             throw new IllegalStateException("No reply exists to delete");
         }
@@ -180,23 +180,23 @@ public class Review {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getOrderId() {
+    public UUID getOrderId() {
         return orderId;
     }
 
-    public String getCustomerId() {
+    public UUID getCustomerId() {
         return customerId;
     }
 
-    public String getSellerId() {
+    public UUID getSellerId() {
         return sellerId;
     }
 
-    public String getProductId() {
+    public UUID getProductId() {
         return productId;
     }
 
@@ -233,11 +233,11 @@ public class Review {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String orderId;
-        private String customerId;
-        private String sellerId;
-        private String productId;
+        private UUID id;
+        private UUID orderId;
+        private UUID customerId;
+        private UUID sellerId;
+        private UUID productId;
         private int rating;
         private String content;
         private List<ReviewImage> images;
@@ -245,27 +245,27 @@ public class Review {
         private boolean isVisible = true;
         private LocalDateTime createdAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder orderId(String orderId) {
+        public Builder orderId(UUID orderId) {
             this.orderId = orderId;
             return this;
         }
 
-        public Builder customerId(String customerId) {
+        public Builder customerId(UUID customerId) {
             this.customerId = customerId;
             return this;
         }
 
-        public Builder sellerId(String sellerId) {
+        public Builder sellerId(UUID sellerId) {
             this.sellerId = sellerId;
             return this;
         }
 
-        public Builder productId(String productId) {
+        public Builder productId(UUID productId) {
             this.productId = productId;
             return this;
         }
@@ -306,16 +306,16 @@ public class Review {
         }
 
         private void validateRequired() {
-            if (orderId == null || orderId.isBlank()) {
+            if (orderId == null) {
                 throw new IllegalArgumentException("orderId is required");
             }
-            if (customerId == null || customerId.isBlank()) {
+            if (customerId == null) {
                 throw new IllegalArgumentException("customerId is required");
             }
-            if (sellerId == null || sellerId.isBlank()) {
+            if (sellerId == null) {
                 throw new IllegalArgumentException("sellerId is required");
             }
-            if (productId == null || productId.isBlank()) {
+            if (productId == null) {
                 throw new IllegalArgumentException("productId is required");
             }
             if (rating < 1 || rating > 5) {

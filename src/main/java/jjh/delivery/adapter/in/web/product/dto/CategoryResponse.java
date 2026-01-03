@@ -3,6 +3,7 @@ package jjh.delivery.adapter.in.web.product.dto;
 import jjh.delivery.domain.category.Category;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 카테고리 응답
@@ -15,7 +16,7 @@ public record CategoryResponse(
 ) {
     public static CategoryResponse from(Category category) {
         return new CategoryResponse(
-                category.getId(),
+                category.getId().toString(),
                 category.getName(),
                 category.getDepth(),
                 category.getChildren().stream()

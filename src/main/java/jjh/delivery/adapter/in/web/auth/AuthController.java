@@ -10,6 +10,9 @@ import jjh.delivery.application.port.in.RefreshTokenUseCase;
 import jjh.delivery.application.port.in.RegisterUseCase;
 import jjh.delivery.config.security.AuthenticatedUser;
 import jjh.delivery.domain.customer.Customer;
+
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -94,7 +97,7 @@ public class AuthController {
     public ResponseEntity<CustomerResponse> getMe(
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        Customer customer = getMyProfileUseCase.getMyProfile(user.id());
+        Customer customer = getMyProfileUseCase.getMyProfile(UUID.fromString(user.id()));
         return ResponseEntity.ok(CustomerResponse.from(customer));
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Manage Coupon Use Case - Driving Port (Inbound)
@@ -31,31 +32,31 @@ public interface ManageCouponUseCase {
     /**
      * 쿠폰 삭제
      */
-    void deleteCoupon(String couponId);
+    void deleteCoupon(UUID couponId);
 
     // ==================== 쿠폰 상태 관리 ====================
 
     /**
      * 쿠폰 활성화
      */
-    Coupon activateCoupon(String couponId);
+    Coupon activateCoupon(UUID couponId);
 
     /**
      * 쿠폰 비활성화
      */
-    Coupon deactivateCoupon(String couponId);
+    Coupon deactivateCoupon(UUID couponId);
 
     // ==================== 쿠폰 사용 ====================
 
     /**
      * 쿠폰 사용 (주문 시)
      */
-    Coupon useCoupon(String couponId);
+    Coupon useCoupon(UUID couponId);
 
     /**
      * 쿠폰 사용 취소 (환불 시)
      */
-    Coupon cancelCouponUsage(String couponId);
+    Coupon cancelCouponUsage(UUID couponId);
 
     /**
      * 할인 금액 계산
@@ -67,7 +68,7 @@ public interface ManageCouponUseCase {
     /**
      * 쿠폰 조회 (ID)
      */
-    Coupon getCoupon(String couponId);
+    Coupon getCoupon(UUID couponId);
 
     /**
      * 쿠폰 조회 (코드)
@@ -147,7 +148,7 @@ public interface ManageCouponUseCase {
 
     record CouponValidationResult(
             boolean valid,
-            String couponId,
+            UUID couponId,
             String couponCode,
             BigDecimal discountAmount,
             String message

@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 /**
  * Payment REST Controller - Driving Adapter (Inbound)
  * 결제 API
@@ -49,11 +51,11 @@ public class PaymentController {
      */
     @PostMapping("/{paymentId}/confirm")
     public ResponseEntity<PaymentResponse> confirmPayment(
-            @PathVariable String paymentId,
+            @PathVariable UUID paymentId,
             @Valid @RequestBody ConfirmPaymentRequest request
     ) {
         ConfirmPaymentCommand command = new ConfirmPaymentCommand(
-                paymentId,
+                paymentId.toString(),
                 request.transactionId()
         );
 
@@ -67,7 +69,7 @@ public class PaymentController {
      */
     @GetMapping("/{paymentId}")
     public ResponseEntity<PaymentResponse> getPayment(
-            @PathVariable String paymentId
+            @PathVariable UUID paymentId
     ) {
         Payment payment = processPaymentUseCase.getPayment(paymentId);
 
@@ -79,7 +81,7 @@ public class PaymentController {
      */
     @GetMapping("/order/{orderId}")
     public ResponseEntity<PaymentResponse> getPaymentByOrderId(
-            @PathVariable String orderId
+            @PathVariable UUID orderId
     ) {
         Payment payment = processPaymentUseCase.getPaymentByOrderId(orderId);
 

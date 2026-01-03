@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Shipment JPA Adapter - Driven Adapter (Outbound)
@@ -25,13 +26,13 @@ public class ShipmentJpaAdapter implements LoadShipmentPort, SaveShipmentPort {
     private final ShipmentPersistenceMapper mapper;
 
     @Override
-    public Optional<Shipment> findById(String shipmentId) {
+    public Optional<Shipment> findById(UUID shipmentId) {
         return shipmentJpaRepository.findById(shipmentId)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public Optional<Shipment> findByOrderId(String orderId) {
+    public Optional<Shipment> findByOrderId(UUID orderId) {
         return shipmentJpaRepository.findByOrderId(orderId)
                 .map(mapper::toDomain);
     }
@@ -50,7 +51,7 @@ public class ShipmentJpaAdapter implements LoadShipmentPort, SaveShipmentPort {
     }
 
     @Override
-    public boolean existsByOrderId(String orderId) {
+    public boolean existsByOrderId(UUID orderId) {
         return shipmentJpaRepository.existsByOrderId(orderId);
     }
 

@@ -19,7 +19,7 @@ public record AddressResponse(
 ) {
     public static AddressResponse from(CustomerAddress address) {
         return new AddressResponse(
-                address.id(),
+                address.id().toString(),
                 address.name(),
                 address.recipientName(),
                 address.phoneNumber(),

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Load Webhook Port - Driven Port (Outbound)
@@ -17,9 +18,9 @@ public interface LoadWebhookPort {
 
     // ==================== Subscription ====================
 
-    Optional<WebhookSubscription> findSubscriptionById(String subscriptionId);
+    Optional<WebhookSubscription> findSubscriptionById(UUID subscriptionId);
 
-    List<WebhookSubscription> findSubscriptionsBySellerId(String sellerId);
+    List<WebhookSubscription> findSubscriptionsBySellerId(UUID sellerId);
 
     List<WebhookSubscription> findActiveSubscriptionsByEventType(WebhookEventType eventType);
 
@@ -27,9 +28,9 @@ public interface LoadWebhookPort {
 
     // ==================== Delivery ====================
 
-    Optional<WebhookDelivery> findDeliveryById(String deliveryId);
+    Optional<WebhookDelivery> findDeliveryById(UUID deliveryId);
 
-    Page<WebhookDelivery> findDeliveriesBySubscriptionId(String subscriptionId, Pageable pageable);
+    Page<WebhookDelivery> findDeliveriesBySubscriptionId(UUID subscriptionId, Pageable pageable);
 
     List<WebhookDelivery> findPendingRetries();
 }

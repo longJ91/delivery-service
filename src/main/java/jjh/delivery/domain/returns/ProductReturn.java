@@ -13,9 +13,9 @@ import java.util.UUID;
  */
 public class ProductReturn {
 
-    private final String id;
-    private final String orderId;
-    private final String customerId;
+    private final UUID id;
+    private final UUID orderId;
+    private final UUID customerId;
     private ReturnType returnType;
     private ReturnReason reason;
     private String reasonDetail;
@@ -28,7 +28,7 @@ public class ProductReturn {
     private LocalDateTime completedAt;
 
     private ProductReturn(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.orderId = builder.orderId;
         this.customerId = builder.customerId;
         this.returnType = builder.returnType;
@@ -166,15 +166,15 @@ public class ProductReturn {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getOrderId() {
+    public UUID getOrderId() {
         return orderId;
     }
 
-    public String getCustomerId() {
+    public UUID getCustomerId() {
         return customerId;
     }
 
@@ -223,9 +223,9 @@ public class ProductReturn {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String orderId;
-        private String customerId;
+        private UUID id;
+        private UUID orderId;
+        private UUID customerId;
         private ReturnType returnType;
         private ReturnReason reason;
         private String reasonDetail;
@@ -235,17 +235,17 @@ public class ProductReturn {
         private LocalDateTime createdAt;
         private LocalDateTime completedAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder orderId(String orderId) {
+        public Builder orderId(UUID orderId) {
             this.orderId = orderId;
             return this;
         }
 
-        public Builder customerId(String customerId) {
+        public Builder customerId(UUID customerId) {
             this.customerId = customerId;
             return this;
         }
@@ -301,10 +301,10 @@ public class ProductReturn {
         }
 
         private void validateRequired() {
-            if (orderId == null || orderId.isBlank()) {
+            if (orderId == null) {
                 throw new IllegalArgumentException("orderId is required");
             }
-            if (customerId == null || customerId.isBlank()) {
+            if (customerId == null) {
                 throw new IllegalArgumentException("customerId is required");
             }
             if (returnType == null) {

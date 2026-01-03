@@ -6,6 +6,7 @@ import jjh.delivery.domain.seller.SellerType;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 판매자 응답
@@ -40,7 +41,7 @@ public record SellerResponse(
         }
 
         return new SellerResponse(
-                seller.getId(),
+                seller.getId().toString(),
                 seller.getBusinessName(),
                 seller.getBusinessNumber(),
                 seller.getRepresentativeName(),
@@ -49,7 +50,7 @@ public record SellerResponse(
                 seller.getSellerType(),
                 seller.getStatus(),
                 warehouseAddress,
-                seller.getCategoryIds(),
+                seller.getCategoryIds().stream().map(UUID::toString).toList(),
                 seller.canSell(),
                 seller.getCreatedAt(),
                 seller.getUpdatedAt(),

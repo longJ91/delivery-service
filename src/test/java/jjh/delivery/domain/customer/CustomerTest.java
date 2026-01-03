@@ -4,6 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.*;
 
 /**
@@ -203,7 +205,7 @@ class CustomerTest {
             Customer customer = createValidCustomerBuilder().build();
             customer.addAddress(createAddress("집", false));
             customer.addAddress(createAddress("회사", false));
-            String addressId = customer.getAddresses().get(1).id();
+            UUID addressId = customer.getAddresses().get(1).id();
 
             // when
             customer.removeAddress(addressId);
@@ -219,7 +221,7 @@ class CustomerTest {
             Customer customer = createValidCustomerBuilder().build();
             customer.addAddress(createAddress("집", false));
             customer.addAddress(createAddress("회사", false));
-            String defaultAddressId = customer.getDefaultAddress().get().id();
+            UUID defaultAddressId = customer.getDefaultAddress().get().id();
 
             // when
             customer.removeAddress(defaultAddressId);
@@ -236,7 +238,7 @@ class CustomerTest {
             Customer customer = createValidCustomerBuilder().build();
             customer.addAddress(createAddress("집", false));
             customer.addAddress(createAddress("회사", false));
-            String secondAddressId = customer.getAddresses().get(1).id();
+            UUID secondAddressId = customer.getAddresses().get(1).id();
 
             // when
             customer.setDefaultAddress(secondAddressId);
@@ -265,9 +267,10 @@ class CustomerTest {
         void removeNonExistentAddressThrowsException() {
             // given
             Customer customer = createValidCustomerBuilder().build();
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // when & then
-            assertThatThrownBy(() -> customer.removeAddress("non-existent"))
+            assertThatThrownBy(() -> customer.removeAddress(nonExistentId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not found");
         }
@@ -418,11 +421,12 @@ class CustomerTest {
             // given
             Customer customer = createValidCustomerBuilder().build();
             customer.addAddress(createAddress("집", false));
-            String addressId = customer.getAddresses().get(0).id();
+            UUID addressId = customer.getAddresses().get(0).id();
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // then
             assertThat(customer.findAddress(addressId)).isPresent();
-            assertThat(customer.findAddress("non-existent")).isEmpty();
+            assertThat(customer.findAddress(nonExistentId)).isEmpty();
         }
 
         @Test

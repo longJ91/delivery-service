@@ -17,7 +17,7 @@ public record CouponValidationResponse(
     public static CouponValidationResponse from(CouponValidationResult result) {
         return new CouponValidationResponse(
                 result.valid(),
-                result.couponId(),
+                result.couponId() != null ? result.couponId().toString() : null,
                 result.couponCode(),
                 result.discountAmount(),
                 result.message()

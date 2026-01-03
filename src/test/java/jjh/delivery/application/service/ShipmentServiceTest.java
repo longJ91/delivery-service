@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,9 +45,12 @@ class ShipmentServiceTest {
     // Test Fixtures
     // =====================================================
 
+    private static final UUID ORDER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID NON_EXISTENT_UUID = UUID.fromString("00000000-0000-0000-0000-000000000099");
+
     private Shipment createPendingShipment() {
         return Shipment.builder()
-                .orderId("order-123")
+                .orderId(ORDER_UUID)
                 .estimatedDeliveryDate(LocalDateTime.now().plusDays(3))
                 .build();
     }
@@ -82,11 +86,11 @@ class ShipmentServiceTest {
         void createShipmentSuccess() {
             // given
             CreateShipmentCommand command = new CreateShipmentCommand(
-                    "order-123",
+                    ORDER_UUID.toString(),
                     LocalDateTime.now().plusDays(3)
             );
 
-            given(loadShipmentPort.existsByOrderId("order-123")).willReturn(false);
+            given(loadShipmentPort.existsByOrderId(ORDER_UUID)).willReturn(false);
             given(saveShipmentPort.save(any(Shipment.class)))
                     .willAnswer(invocation -> invocation.getArgument(0));
 
@@ -95,7 +99,7 @@ class ShipmentServiceTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.getOrderId()).isEqualTo("order-123");
+            assertThat(result.getOrderId()).isEqualTo(ORDER_UUID);
             assertThat(result.getStatus()).isEqualTo(ShipmentStatus.PENDING);
             verify(saveShipmentPort).save(any(Shipment.class));
         }
@@ -105,11 +109,11 @@ class ShipmentServiceTest {
         void createShipmentDuplicateOrderThrowsException() {
             // given
             CreateShipmentCommand command = new CreateShipmentCommand(
-                    "order-123",
+                    ORDER_UUID.toString(),
                     LocalDateTime.now().plusDays(3)
             );
 
-            given(loadShipmentPort.existsByOrderId("order-123")).willReturn(true);
+            given(loadShipmentPort.existsByOrderId(ORDER_UUID)).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> shipmentService.createShipment(command))
@@ -134,7 +138,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createPendingShipment();
             RegisterTrackingCommand command = new RegisterTrackingCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShippingCarrier.CJ_LOGISTICS,
                     "123456789012"
             );
@@ -158,12 +162,12 @@ class ShipmentServiceTest {
         void registerTrackingNotFoundThrowsException() {
             // given
             RegisterTrackingCommand command = new RegisterTrackingCommand(
-                    "non-existent",
+                    NON_EXISTENT_UUID.toString(),
                     ShippingCarrier.CJ_LOGISTICS,
                     "123456789012"
             );
 
-            given(loadShipmentPort.findById("non-existent"))
+            given(loadShipmentPort.findById(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -188,7 +192,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createPendingShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.PICKED_UP,
                     "서울 물류센터",
                     null
@@ -214,7 +218,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createPickedUpShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.IN_TRANSIT,
                     "대전 허브",
                     "대전 허브로 이동 중"
@@ -238,7 +242,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createInTransitShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.OUT_FOR_DELIVERY,
                     "강남 영업소",
                     null
@@ -262,7 +266,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createOutForDeliveryShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.DELIVERED,
                     "고객 주소",
                     null
@@ -288,7 +292,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createOutForDeliveryShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.FAILED_ATTEMPT,
                     "배송지",
                     "부재중"
@@ -312,7 +316,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createPendingShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.CANCELLED,
                     null,
                     "고객 요청"
@@ -335,13 +339,13 @@ class ShipmentServiceTest {
         void updateStatusNotFoundThrowsException() {
             // given
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    "non-existent",
+                    NON_EXISTENT_UUID.toString(),
                     ShipmentStatus.PICKED_UP,
                     "물류센터",
                     null
             );
 
-            given(loadShipmentPort.findById("non-existent"))
+            given(loadShipmentPort.findById(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -355,7 +359,7 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createPendingShipment();
             UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                    shipment.getId(),
+                    shipment.getId().toString(),
                     ShipmentStatus.PENDING, // PENDING은 Strategy Map에 없음
                     "위치",
                     null
@@ -399,11 +403,11 @@ class ShipmentServiceTest {
         @DisplayName("존재하지 않는 ID로 조회 시 예외")
         void getShipmentNotFoundThrowsException() {
             // given
-            given(loadShipmentPort.findById("non-existent"))
+            given(loadShipmentPort.findById(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> shipmentService.getShipment("non-existent"))
+            assertThatThrownBy(() -> shipmentService.getShipment(NON_EXISTENT_UUID))
                     .isInstanceOf(ShipmentNotFoundException.class);
         }
 
@@ -413,25 +417,25 @@ class ShipmentServiceTest {
             // given
             Shipment shipment = createPendingShipment();
 
-            given(loadShipmentPort.findByOrderId("order-123"))
+            given(loadShipmentPort.findByOrderId(ORDER_UUID))
                     .willReturn(Optional.of(shipment));
 
             // when
-            Shipment result = shipmentService.getShipmentByOrderId("order-123");
+            Shipment result = shipmentService.getShipmentByOrderId(ORDER_UUID);
 
             // then
-            assertThat(result.getOrderId()).isEqualTo("order-123");
+            assertThat(result.getOrderId()).isEqualTo(ORDER_UUID);
         }
 
         @Test
         @DisplayName("존재하지 않는 주문 ID로 조회 시 예외")
         void getShipmentByOrderIdNotFoundThrowsException() {
             // given
-            given(loadShipmentPort.findByOrderId("non-existent"))
+            given(loadShipmentPort.findByOrderId(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> shipmentService.getShipmentByOrderId("non-existent"))
+            assertThatThrownBy(() -> shipmentService.getShipmentByOrderId(NON_EXISTENT_UUID))
                     .isInstanceOf(ShipmentNotFoundException.class)
                     .hasMessageContaining("주문에 대한 배송을 찾을 수 없습니다");
         }

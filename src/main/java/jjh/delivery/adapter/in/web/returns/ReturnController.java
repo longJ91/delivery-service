@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Return REST Controller - Driving Adapter (Inbound)
@@ -67,7 +68,7 @@ public class ReturnController {
      */
     @GetMapping("/{returnId}")
     public ResponseEntity<ReturnResponse> getReturn(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.getReturn(returnId);
 
@@ -81,7 +82,7 @@ public class ReturnController {
     public ResponseEntity<ReturnListResponse> getMyReturns(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String customerId = userDetails.getUsername();
+        UUID customerId = UUID.fromString(userDetails.getUsername());
         List<ProductReturn> returns = manageReturnUseCase.getReturnsByCustomerId(customerId);
 
         return ResponseEntity.ok(ReturnListResponse.from(returns));
@@ -92,7 +93,7 @@ public class ReturnController {
      */
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ReturnListResponse> getReturnsByOrderId(
-            @PathVariable String orderId
+            @PathVariable UUID orderId
     ) {
         List<ProductReturn> returns = manageReturnUseCase.getReturnsByOrderId(orderId);
 
@@ -104,7 +105,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/cancel")
     public ResponseEntity<ReturnResponse> cancelReturn(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.cancelReturn(returnId);
 
@@ -118,7 +119,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/approve")
     public ResponseEntity<ReturnResponse> approveReturn(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.approveReturn(returnId);
 
@@ -130,7 +131,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/reject")
     public ResponseEntity<ReturnResponse> rejectReturn(
-            @PathVariable String returnId,
+            @PathVariable UUID returnId,
             @Valid @RequestBody RejectReturnRequest request
     ) {
         ProductReturn productReturn = manageReturnUseCase.rejectReturn(returnId, request.reason());
@@ -143,7 +144,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/schedule-pickup")
     public ResponseEntity<ReturnResponse> schedulePickup(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.schedulePickup(returnId);
 
@@ -155,7 +156,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/complete-pickup")
     public ResponseEntity<ReturnResponse> completePickup(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.completePickup(returnId);
 
@@ -167,7 +168,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/start-inspection")
     public ResponseEntity<ReturnResponse> startInspection(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.startInspection(returnId);
 
@@ -179,7 +180,7 @@ public class ReturnController {
      */
     @PostMapping("/{returnId}/complete")
     public ResponseEntity<ReturnResponse> completeReturn(
-            @PathVariable String returnId
+            @PathVariable UUID returnId
     ) {
         ProductReturn productReturn = manageReturnUseCase.completeReturn(returnId);
 

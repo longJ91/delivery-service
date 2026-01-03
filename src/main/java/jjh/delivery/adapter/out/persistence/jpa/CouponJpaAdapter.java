@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Coupon JPA Adapter - Driven Adapter (Outbound)
@@ -30,7 +31,7 @@ public class CouponJpaAdapter implements LoadCouponPort, SaveCouponPort {
     // ==================== LoadCouponPort ====================
 
     @Override
-    public Optional<Coupon> findById(String couponId) {
+    public Optional<Coupon> findById(UUID couponId) {
         return couponJpaRepository.findById(couponId)
                 .map(couponMapper::toDomain);
     }
@@ -71,7 +72,7 @@ public class CouponJpaAdapter implements LoadCouponPort, SaveCouponPort {
     }
 
     @Override
-    public void delete(String couponId) {
+    public void delete(UUID couponId) {
         couponJpaRepository.deleteById(couponId);
     }
 }

@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,9 +59,10 @@ class OrderServiceTest {
     // Test Fixtures
     // =====================================================
 
-    private static final String ORDER_ID = "order-123";
-    private static final String CUSTOMER_ID = "customer-456";
-    private static final String SELLER_ID = "seller-789";
+    private static final UUID ORDER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000004");
 
     private Order createOrder() {
         return Order.builder()
@@ -70,7 +72,7 @@ class OrderServiceTest {
                         "홍길동", "010-1234-5678", "12345",
                         "서울시 강남구", "상세주소", null
                 ))
-                .addItem(OrderItem.of("product-1", "테스트 상품", 2, new BigDecimal("10000")))
+                .addItem(OrderItem.of(PRODUCT_ID, "테스트 상품", 2, new BigDecimal("10000")))
                 .build();
     }
 
@@ -118,9 +120,9 @@ class OrderServiceTest {
 
     private CreateOrderCommand createOrderCommand() {
         return new CreateOrderCommand(
-                CUSTOMER_ID,
-                SELLER_ID,
-                List.of(OrderItemCommand.of("product-1", "테스트 상품", 2, new BigDecimal("10000"))),
+                CUSTOMER_ID.toString(),
+                SELLER_ID.toString(),
+                List.of(OrderItemCommand.of(PRODUCT_ID.toString(), "테스트 상품", 2, new BigDecimal("10000"))),
                 ShippingAddress.of("홍길동", "010-1234-5678", "12345", "서울시 강남구", "상세주소", null),
                 "주문 메모",
                 "배송 메모",
@@ -164,12 +166,13 @@ class OrderServiceTest {
         @DisplayName("변형 상품 포함 주문 생성")
         void createOrderWithVariantSuccess() {
             // given
+            String variantId = "00000000-0000-0000-0000-000000000005";
             CreateOrderCommand command = new CreateOrderCommand(
-                    CUSTOMER_ID,
-                    SELLER_ID,
+                    CUSTOMER_ID.toString(),
+                    SELLER_ID.toString(),
                     List.of(OrderItemCommand.ofVariant(
-                            "product-1", "테스트 상품",
-                            "variant-1", "빨강/L", "SKU-RED-L",
+                            PRODUCT_ID.toString(), "테스트 상품",
+                            variantId, "빨강/L", "SKU-RED-L",
                             Map.of("색상", "빨강", "사이즈", "L"),
                             1, new BigDecimal("12000")
                     )),
@@ -185,7 +188,7 @@ class OrderServiceTest {
 
             // then
             assertThat(result.getItems()).hasSize(1);
-            assertThat(result.getItems().get(0).variantId()).isEqualTo("variant-1");
+            assertThat(result.getItems().get(0).variantId()).isEqualTo(UUID.fromString(variantId));
             assertThat(result.getItems().get(0).variantName()).isEqualTo("빨강/L");
         }
     }
@@ -219,11 +222,12 @@ class OrderServiceTest {
         @DisplayName("주문 없으면 빈 Optional 반환")
         void getOrderNotFoundReturnsEmpty() {
             // given
-            given(loadOrderPort.findById("non-existent"))
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-999999999999");
+            given(loadOrderPort.findById(nonExistentId))
                     .willReturn(Optional.empty());
 
             // when
-            Optional<Order> result = orderService.getOrder("non-existent");
+            Optional<Order> result = orderService.getOrder(nonExistentId);
 
             // then
             assertThat(result).isEmpty();
@@ -249,11 +253,12 @@ class OrderServiceTest {
         @DisplayName("getOrderOrThrow 주문 없으면 예외")
         void getOrderOrThrowNotFoundThrowsException() {
             // given
-            given(loadOrderPort.findById("non-existent"))
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-999999999999");
+            given(loadOrderPort.findById(nonExistentId))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> orderService.getOrderOrThrow("non-existent"))
+            assertThatThrownBy(() -> orderService.getOrderOrThrow(nonExistentId))
                     .isInstanceOf(OrderNotFoundException.class);
         }
     }
@@ -408,11 +413,12 @@ class OrderServiceTest {
         @DisplayName("존재하지 않는 주문 상태 변경 시 예외")
         void updateStatusNotFoundThrowsException() {
             // given
-            given(loadOrderPort.findById("non-existent"))
+            UUID nonExistentId = UUID.fromString("00000000-0000-0000-0000-999999999999");
+            given(loadOrderPort.findById(nonExistentId))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> orderService.payOrder("non-existent"))
+            assertThatThrownBy(() -> orderService.payOrder(nonExistentId))
                     .isInstanceOf(OrderNotFoundException.class);
         }
     }
@@ -465,7 +471,7 @@ class OrderServiceTest {
             // given
             List<Order> orders = List.of(createOrder());
             SearchOrderQuery query = SearchOrderQuery.builder()
-                    .customerId(CUSTOMER_ID)
+                    .customerId(CUSTOMER_ID.toString())
                     .build();
 
             given(orderSearchPort.search(query))

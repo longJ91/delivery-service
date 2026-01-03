@@ -31,7 +31,7 @@ public class OrderKafkaAdapter implements OrderEventPort {
     @Override
     public void publish(OrderEvent event) {
         String topic = resolveTopic(event);
-        String key = event.orderId();
+        String key = event.orderId().toString();
 
         try {
             kafkaTemplate.send(topic, key, event).get();
@@ -45,7 +45,7 @@ public class OrderKafkaAdapter implements OrderEventPort {
     @Override
     public void publishAsync(OrderEvent event) {
         String topic = resolveTopic(event);
-        String key = event.orderId();
+        String key = event.orderId().toString();
 
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key, event);
 

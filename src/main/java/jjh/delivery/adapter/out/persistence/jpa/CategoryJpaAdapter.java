@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +27,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Category> findById(String categoryId) {
+    public Optional<Category> findById(UUID categoryId) {
         return repository.findById(categoryId)
                 .map(mapper::toDomain);
     }
@@ -40,7 +41,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Category> findByParentId(String parentId) {
+    public List<Category> findByParentId(UUID parentId) {
         return repository.findByParentIdAndIsActiveTrueOrderByDisplayOrder(parentId).stream()
                 .map(mapper::toDomain)
                 .toList();
@@ -58,7 +59,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
      * JPA Entities → Domain Category Tree 구성
      */
     private List<Category> buildTree(List<CategoryJpaEntity> entities) {
-        Map<String, Category> categoryMap = entities.stream()
+        Map<UUID, Category> categoryMap = entities.stream()
                 .collect(Collectors.toMap(
                         CategoryJpaEntity::getId,
                         mapper::toDomain,

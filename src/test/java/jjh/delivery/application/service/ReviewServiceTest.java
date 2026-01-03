@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,11 +54,13 @@ class ReviewServiceTest {
     // Test Fixtures
     // =====================================================
 
-    private static final String REVIEW_ID = "review-123";
-    private static final String CUSTOMER_ID = "customer-456";
-    private static final String SELLER_ID = "seller-789";
-    private static final String ORDER_ID = "order-111";
-    private static final String PRODUCT_ID = "product-222";
+    private static final UUID REVIEW_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
+    private static final UUID ORDER_ID = UUID.fromString("00000000-0000-0000-0000-000000000011");
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000012");
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000013");
+    private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000014");
+    private static final UUID NON_EXISTENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000099");
+    private static final UUID OTHER_CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000098");
 
     private Review createReview() {
         return Review.builder()
@@ -79,10 +82,10 @@ class ReviewServiceTest {
 
     private CreateReviewCommand createReviewCommand() {
         return new CreateReviewCommand(
-                CUSTOMER_ID,
-                ORDER_ID,
-                SELLER_ID,
-                PRODUCT_ID,
+                CUSTOMER_ID.toString(),
+                ORDER_ID.toString(),
+                SELLER_ID.toString(),
+                PRODUCT_ID.toString(),
                 5,
                 "좋은 상품입니다!",
                 List.of("http://image1.jpg", "http://image2.jpg")
@@ -140,7 +143,7 @@ class ReviewServiceTest {
         void createReviewWithoutImagesSuccess() {
             // given
             CreateReviewCommand command = new CreateReviewCommand(
-                    CUSTOMER_ID, ORDER_ID, SELLER_ID, PRODUCT_ID, 4, "괜찮아요", null
+                    CUSTOMER_ID.toString(), ORDER_ID.toString(), SELLER_ID.toString(), PRODUCT_ID.toString(), 4, "괜찮아요", null
             );
 
             given(loadReviewPort.existsByOrderId(ORDER_ID))
@@ -170,7 +173,7 @@ class ReviewServiceTest {
             // given
             Review review = createReview();
             UpdateReviewCommand command = new UpdateReviewCommand(
-                    REVIEW_ID, CUSTOMER_ID, 4, "수정된 내용", null
+                    REVIEW_ID.toString(), CUSTOMER_ID.toString(), 4, "수정된 내용", null
             );
 
             given(loadReviewPort.findById(REVIEW_ID))
@@ -192,7 +195,7 @@ class ReviewServiceTest {
             // given
             Review review = createReview();
             UpdateReviewCommand command = new UpdateReviewCommand(
-                    REVIEW_ID, "other-customer", 4, "수정 시도", null
+                    REVIEW_ID.toString(), OTHER_CUSTOMER_ID.toString(), 4, "수정 시도", null
             );
 
             given(loadReviewPort.findById(REVIEW_ID))
@@ -209,10 +212,10 @@ class ReviewServiceTest {
         void updateReviewNotFoundThrowsException() {
             // given
             UpdateReviewCommand command = new UpdateReviewCommand(
-                    "non-existent", CUSTOMER_ID, 4, "내용", null
+                    NON_EXISTENT_ID.toString(), CUSTOMER_ID.toString(), 4, "내용", null
             );
 
-            given(loadReviewPort.findById("non-existent"))
+            given(loadReviewPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -255,7 +258,7 @@ class ReviewServiceTest {
                     .willReturn(Optional.of(review));
 
             // when & then
-            assertThatThrownBy(() -> reviewService.deleteReview(REVIEW_ID, "other-customer"))
+            assertThatThrownBy(() -> reviewService.deleteReview(REVIEW_ID, OTHER_CUSTOMER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("리뷰를 삭제할 권한이 없습니다");
         }
@@ -407,11 +410,11 @@ class ReviewServiceTest {
         @DisplayName("존재하지 않는 리뷰에 답글 추가 시 예외")
         void addReplyNotFoundThrowsException() {
             // given
-            given(loadReviewPort.findById("non-existent"))
+            given(loadReviewPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> reviewService.addReply("non-existent", SELLER_ID, "답글"))
+            assertThatThrownBy(() -> reviewService.addReply(NON_EXISTENT_ID, SELLER_ID, "답글"))
                     .isInstanceOf(ReviewNotFoundException.class);
         }
     }

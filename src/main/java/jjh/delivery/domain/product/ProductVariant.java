@@ -9,7 +9,7 @@ import java.util.UUID;
  * 상품 옵션 조합 (예: 색상-사이즈)
  */
 public record ProductVariant(
-        String id,
+        UUID id,
         String name,
         String sku,
         Map<String, String> optionValues,
@@ -42,7 +42,7 @@ public record ProductVariant(
             int stockQuantity
     ) {
         return new ProductVariant(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 name,
                 sku,
                 optionValues,

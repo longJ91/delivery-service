@@ -2,6 +2,8 @@ package jjh.delivery.application.port.out;
 
 import jjh.delivery.domain.cart.Cart;
 
+import java.util.UUID;
+
 /**
  * Cart 저장 Port - Driven Port (Outbound)
  */
@@ -15,5 +17,5 @@ public interface SaveCartPort {
     /**
      * 장바구니 삭제
      */
-    void deleteByCustomerId(String customerId);
+    void deleteByCustomerId(UUID customerId);
 }

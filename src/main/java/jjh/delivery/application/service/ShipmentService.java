@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 /**
@@ -39,12 +40,13 @@ public class ShipmentService implements ManageShipmentUseCase {
 
     @Override
     public Shipment createShipment(CreateShipmentCommand command) {
-        if (loadShipmentPort.existsByOrderId(command.orderId())) {
+        UUID orderId = UUID.fromString(command.orderId());
+        if (loadShipmentPort.existsByOrderId(orderId)) {
             throw new IllegalStateException("이미 해당 주문에 대한 배송이 존재합니다: " + command.orderId());
         }
 
         Shipment shipment = Shipment.builder()
-                .orderId(command.orderId())
+                .orderId(orderId)
                 .estimatedDeliveryDate(command.estimatedDeliveryDate())
                 .build();
 
@@ -53,7 +55,8 @@ public class ShipmentService implements ManageShipmentUseCase {
 
     @Override
     public Shipment registerTracking(RegisterTrackingCommand command) {
-        Shipment shipment = loadShipmentPort.findById(command.shipmentId())
+        UUID shipmentId = UUID.fromString(command.shipmentId());
+        Shipment shipment = loadShipmentPort.findById(shipmentId)
                 .orElseThrow(() -> new ShipmentNotFoundException(command.shipmentId()));
 
         shipment.registerTracking(command.carrier(), command.trackingNumber());
@@ -63,7 +66,8 @@ public class ShipmentService implements ManageShipmentUseCase {
 
     @Override
     public Shipment updateStatus(UpdateShipmentStatusCommand command) {
-        Shipment shipment = loadShipmentPort.findById(command.shipmentId())
+        UUID shipmentId = UUID.fromString(command.shipmentId());
+        Shipment shipment = loadShipmentPort.findById(shipmentId)
                 .orElseThrow(() -> new ShipmentNotFoundException(command.shipmentId()));
 
         // Strategy Map 패턴으로 상태별 핸들러 적용 (함수형)
@@ -76,14 +80,14 @@ public class ShipmentService implements ManageShipmentUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Shipment getShipment(String shipmentId) {
+    public Shipment getShipment(UUID shipmentId) {
         return loadShipmentPort.findById(shipmentId)
-                .orElseThrow(() -> new ShipmentNotFoundException(shipmentId));
+                .orElseThrow(() -> new ShipmentNotFoundException(shipmentId.toString()));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Shipment getShipmentByOrderId(String orderId) {
+    public Shipment getShipmentByOrderId(UUID orderId) {
         return loadShipmentPort.findByOrderId(orderId)
                 .orElseThrow(() -> new ShipmentNotFoundException("주문에 대한 배송을 찾을 수 없습니다: " + orderId));
     }

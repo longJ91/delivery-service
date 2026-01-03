@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Review Use Case - Driving Port (Inbound)
@@ -25,42 +26,42 @@ public interface ManageReviewUseCase {
     /**
      * 리뷰 삭제
      */
-    void deleteReview(String reviewId, String customerId);
+    void deleteReview(UUID reviewId, UUID customerId);
 
     /**
      * 리뷰 조회
      */
-    Review getReview(String reviewId);
+    Review getReview(UUID reviewId);
 
     /**
      * 상품별 리뷰 목록 조회
      */
-    Page<Review> getReviewsByProductId(String productId, Pageable pageable);
+    Page<Review> getReviewsByProductId(UUID productId, Pageable pageable);
 
     /**
      * 내 리뷰 목록 조회
      */
-    Page<Review> getMyReviews(String customerId, Pageable pageable);
+    Page<Review> getMyReviews(UUID customerId, Pageable pageable);
 
     /**
      * 상품별 평점 정보
      */
-    ReviewRatingInfo getProductRatingInfo(String productId);
+    ReviewRatingInfo getProductRatingInfo(UUID productId);
 
     /**
      * 판매자 답글 추가
      */
-    Review addReply(String reviewId, String sellerId, String content);
+    Review addReply(UUID reviewId, UUID sellerId, String content);
 
     /**
      * 판매자 답글 수정
      */
-    Review updateReply(String reviewId, String sellerId, String content);
+    Review updateReply(UUID reviewId, UUID sellerId, String content);
 
     /**
      * 판매자 답글 삭제
      */
-    Review deleteReply(String reviewId, String sellerId);
+    Review deleteReply(UUID reviewId, UUID sellerId);
 
     // ==================== Commands ====================
 

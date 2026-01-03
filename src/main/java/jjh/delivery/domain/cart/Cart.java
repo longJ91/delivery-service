@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Cart Aggregate Root
@@ -13,13 +14,13 @@ import java.util.Optional;
  */
 public class Cart {
 
-    private final String id;
-    private final String customerId;
+    private final UUID id;
+    private final UUID customerId;
     private final List<CartItem> items;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Cart(String id, String customerId, List<CartItem> items, LocalDateTime createdAt) {
+    private Cart(UUID id, UUID customerId, List<CartItem> items, LocalDateTime createdAt) {
         this.id = id;
         this.customerId = customerId;
         this.items = new ArrayList<>(items);
@@ -30,9 +31,9 @@ public class Cart {
     /**
      * 새 장바구니 생성
      */
-    public static Cart createEmpty(String customerId) {
+    public static Cart createEmpty(UUID customerId) {
         return new Cart(
-                java.util.UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 customerId,
                 new ArrayList<>(),
                 LocalDateTime.now()
@@ -42,7 +43,7 @@ public class Cart {
     /**
      * 기존 장바구니 복원
      */
-    public static Cart restore(String id, String customerId, List<CartItem> items, LocalDateTime createdAt) {
+    public static Cart restore(UUID id, UUID customerId, List<CartItem> items, LocalDateTime createdAt) {
         return new Cart(id, customerId, items, createdAt);
     }
 
@@ -54,11 +55,11 @@ public class Cart {
      * 상품 추가
      */
     public CartItem addItem(
-            String productId,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
-            String sellerId,
+            UUID sellerId,
             int quantity,
             BigDecimal unitPrice,
             String thumbnailUrl
@@ -92,7 +93,7 @@ public class Cart {
     /**
      * 수량 변경
      */
-    public CartItem updateItemQuantity(String itemId, int quantity) {
+    public CartItem updateItemQuantity(UUID itemId, int quantity) {
         CartItem item = findItemById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart item not found: " + itemId));
 
@@ -105,7 +106,7 @@ public class Cart {
     /**
      * 상품 제거
      */
-    public void removeItem(String itemId) {
+    public void removeItem(UUID itemId) {
         boolean removed = items.removeIf(item -> item.id().equals(itemId));
         if (!removed) {
             throw new IllegalArgumentException("Cart item not found: " + itemId);
@@ -153,7 +154,7 @@ public class Cart {
     /**
      * 항목 조회
      */
-    public Optional<CartItem> findItemById(String itemId) {
+    public Optional<CartItem> findItemById(UUID itemId) {
         return items.stream()
                 .filter(item -> item.id().equals(itemId))
                 .findFirst();
@@ -162,7 +163,7 @@ public class Cart {
     /**
      * 상품+옵션으로 항목 조회
      */
-    public Optional<CartItem> findItemByProductAndVariant(String productId, String variantId) {
+    public Optional<CartItem> findItemByProductAndVariant(UUID productId, UUID variantId) {
         return items.stream()
                 .filter(item -> item.productId().equals(productId) &&
                         (variantId == null ? item.variantId() == null : variantId.equals(item.variantId())))
@@ -173,11 +174,11 @@ public class Cart {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getCustomerId() {
+    public UUID getCustomerId() {
         return customerId;
     }
 

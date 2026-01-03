@@ -8,24 +8,25 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Order JPA Repository
  */
-public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, String> {
+public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID> {
 
     @Query("SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.id = :id")
-    Optional<OrderJpaEntity> findByIdWithItems(@Param("id") String id);
+    Optional<OrderJpaEntity> findByIdWithItems(@Param("id") UUID id);
 
     @Query("SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.customerId = :customerId ORDER BY o.createdAt DESC")
-    List<OrderJpaEntity> findByCustomerIdWithItems(@Param("customerId") String customerId);
+    List<OrderJpaEntity> findByCustomerIdWithItems(@Param("customerId") UUID customerId);
 
     @Query("SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.sellerId = :sellerId ORDER BY o.createdAt DESC")
-    List<OrderJpaEntity> findBySellerIdWithItems(@Param("sellerId") String sellerId);
+    List<OrderJpaEntity> findBySellerIdWithItems(@Param("sellerId") UUID sellerId);
 
     List<OrderJpaEntity> findByStatus(OrderStatus status);
 
-    List<OrderJpaEntity> findByCustomerId(String customerId);
+    List<OrderJpaEntity> findByCustomerId(UUID customerId);
 
-    List<OrderJpaEntity> findBySellerId(String sellerId);
+    List<OrderJpaEntity> findBySellerId(UUID sellerId);
 }

@@ -32,8 +32,8 @@ public record ShipmentResponse(
                 .toList();
 
         return new ShipmentResponse(
-                shipment.getId(),
-                shipment.getOrderId(),
+                shipment.getId().toString(),
+                shipment.getOrderId().toString(),
                 shipment.getCarrier(),
                 shipment.getCarrier() != null ? shipment.getCarrier().getDisplayName() : null,
                 shipment.getTrackingNumber(),

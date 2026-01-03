@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 /**
  * Shipment REST Controller - Driving Adapter (Inbound)
  * 배송 관리 API
@@ -44,11 +46,11 @@ public class ShipmentController {
      */
     @PostMapping("/{shipmentId}/tracking")
     public ResponseEntity<ShipmentResponse> registerTracking(
-            @PathVariable String shipmentId,
+            @PathVariable UUID shipmentId,
             @Valid @RequestBody RegisterTrackingRequest request
     ) {
         RegisterTrackingCommand command = new RegisterTrackingCommand(
-                shipmentId,
+                shipmentId.toString(),
                 request.carrier(),
                 request.trackingNumber()
         );
@@ -63,11 +65,11 @@ public class ShipmentController {
      */
     @PatchMapping("/{shipmentId}/status")
     public ResponseEntity<ShipmentResponse> updateStatus(
-            @PathVariable String shipmentId,
+            @PathVariable UUID shipmentId,
             @Valid @RequestBody UpdateShipmentStatusRequest request
     ) {
         UpdateShipmentStatusCommand command = new UpdateShipmentStatusCommand(
-                shipmentId,
+                shipmentId.toString(),
                 request.status(),
                 request.location(),
                 request.description()
@@ -83,7 +85,7 @@ public class ShipmentController {
      */
     @GetMapping("/{shipmentId}")
     public ResponseEntity<ShipmentResponse> getShipment(
-            @PathVariable String shipmentId
+            @PathVariable UUID shipmentId
     ) {
         Shipment shipment = manageShipmentUseCase.getShipment(shipmentId);
 
@@ -95,7 +97,7 @@ public class ShipmentController {
      */
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ShipmentResponse> getShipmentByOrderId(
-            @PathVariable String orderId
+            @PathVariable UUID orderId
     ) {
         Shipment shipment = manageShipmentUseCase.getShipmentByOrderId(orderId);
 

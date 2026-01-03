@@ -3,23 +3,25 @@ package jjh.delivery.application.port.in;
 import jjh.delivery.domain.order.Order;
 import jjh.delivery.domain.order.OrderStatus;
 
+import java.util.UUID;
+
 /**
  * Update Order Status Use Case - Driving Port (Inbound)
  * v2 - Product Delivery
  */
 public interface UpdateOrderStatusUseCase {
 
-    Order payOrder(String orderId);
+    Order payOrder(UUID orderId);
 
-    Order confirmOrder(String orderId);
+    Order confirmOrder(UUID orderId);
 
-    Order startPreparing(String orderId);
+    Order startPreparing(UUID orderId);
 
-    Order shipOrder(String orderId);
+    Order shipOrder(UUID orderId);
 
-    Order cancelOrder(String orderId);
+    Order cancelOrder(UUID orderId);
 
-    Order requestReturn(String orderId);
+    Order requestReturn(UUID orderId);
 
-    Order updateStatus(String orderId, OrderStatus newStatus);
+    Order updateStatus(UUID orderId, OrderStatus newStatus);
 }

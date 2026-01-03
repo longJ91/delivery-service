@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.CartItems.CART_ITEMS;
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.Carts.CARTS;
@@ -29,7 +30,7 @@ public class CartJooqRepository {
      * Compile-time type-safe version of:
      * SELECT DISTINCT c FROM CartJpaEntity c LEFT JOIN FETCH c.items WHERE c.customerId = :customerId
      */
-    public Optional<CartWithItems> findByCustomerIdWithItems(String customerId) {
+    public Optional<CartWithItems> findByCustomerIdWithItems(UUID customerId) {
         Result<Record> result = dsl
                 .select()
                 .from(CARTS)

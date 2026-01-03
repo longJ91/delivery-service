@@ -12,7 +12,7 @@ import java.util.UUID;
  */
 public class Seller {
 
-    private final String id;
+    private final UUID id;
     private String businessName;
     private String businessNumber;
     private String representativeName;
@@ -21,13 +21,13 @@ public class Seller {
     private SellerType sellerType;
     private SellerStatus status;
     private WarehouseAddress warehouseAddress;
-    private final List<String> categoryIds;
+    private final List<UUID> categoryIds;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime approvedAt;
 
     private Seller(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.businessName = builder.businessName;
         this.businessNumber = builder.businessNumber;
         this.representativeName = builder.representativeName;
@@ -84,7 +84,7 @@ public class Seller {
     /**
      * 카테고리 추가
      */
-    public void addCategory(String categoryId) {
+    public void addCategory(UUID categoryId) {
         if (!categoryIds.contains(categoryId)) {
             categoryIds.add(categoryId);
             this.updatedAt = LocalDateTime.now();
@@ -94,7 +94,7 @@ public class Seller {
     /**
      * 카테고리 제거
      */
-    public void removeCategory(String categoryId) {
+    public void removeCategory(UUID categoryId) {
         if (categoryIds.remove(categoryId)) {
             this.updatedAt = LocalDateTime.now();
         }
@@ -158,7 +158,7 @@ public class Seller {
     /**
      * 특정 카테고리에 속하는지 확인
      */
-    public boolean hasCategory(String categoryId) {
+    public boolean hasCategory(UUID categoryId) {
         return categoryIds.contains(categoryId);
     }
 
@@ -166,7 +166,7 @@ public class Seller {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -202,7 +202,7 @@ public class Seller {
         return warehouseAddress;
     }
 
-    public List<String> getCategoryIds() {
+    public List<UUID> getCategoryIds() {
         return Collections.unmodifiableList(categoryIds);
     }
 
@@ -223,7 +223,7 @@ public class Seller {
     // =====================================================
 
     public static class Builder {
-        private String id;
+        private UUID id;
         private String businessName;
         private String businessNumber;
         private String representativeName;
@@ -232,11 +232,11 @@ public class Seller {
         private SellerType sellerType;
         private SellerStatus status;
         private WarehouseAddress warehouseAddress;
-        private List<String> categoryIds = new ArrayList<>();
+        private List<UUID> categoryIds = new ArrayList<>();
         private LocalDateTime createdAt;
         private LocalDateTime approvedAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -281,12 +281,12 @@ public class Seller {
             return this;
         }
 
-        public Builder categoryIds(List<String> categoryIds) {
+        public Builder categoryIds(List<UUID> categoryIds) {
             this.categoryIds = new ArrayList<>(categoryIds);
             return this;
         }
 
-        public Builder addCategoryId(String categoryId) {
+        public Builder addCategoryId(UUID categoryId) {
             this.categoryIds.add(categoryId);
             return this;
         }

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Payment JPA Entity
@@ -25,11 +26,10 @@ import java.time.LocalDateTime;
 public class PaymentJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "order_id", nullable = false, length = 36)
-    private String orderId;
+    @Column(name = "order_id", nullable = false)
+    private UUID orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method_type", nullable = false, length = 20)
@@ -68,8 +68,8 @@ public class PaymentJpaEntity {
 
     @Builder
     public PaymentJpaEntity(
-            String id,
-            String orderId,
+            UUID id,
+            UUID orderId,
             PaymentMethodType paymentMethodType,
             String paymentGateway,
             String transactionId,

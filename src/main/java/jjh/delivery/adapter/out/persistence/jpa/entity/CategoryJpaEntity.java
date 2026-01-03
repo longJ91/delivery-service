@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Category JPA Entity
@@ -22,11 +23,10 @@ import java.time.LocalDateTime;
 public class CategoryJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "parent_id", length = 36)
-    private String parentId;
+    @Column(name = "parent_id")
+    private UUID parentId;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -54,8 +54,8 @@ public class CategoryJpaEntity {
 
     @Builder
     public CategoryJpaEntity(
-            String id,
-            String parentId,
+            UUID id,
+            UUID parentId,
             String name,
             String description,
             String imageUrl,

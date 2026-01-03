@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Customer Address JPA Entity
@@ -20,8 +21,7 @@ import java.time.LocalDateTime;
 public class CustomerAddressJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -53,7 +53,7 @@ public class CustomerAddressJpaEntity {
 
     @Builder
     public CustomerAddressJpaEntity(
-            String id,
+            UUID id,
             String name,
             String recipientName,
             String phoneNumber,

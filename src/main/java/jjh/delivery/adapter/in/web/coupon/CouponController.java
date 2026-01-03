@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Coupon REST Controller - Driving Adapter (Inbound)
@@ -62,11 +63,11 @@ public class CouponController {
      */
     @PutMapping("/{couponId}")
     public ResponseEntity<CouponResponse> updateCoupon(
-            @PathVariable String couponId,
+            @PathVariable UUID couponId,
             @Valid @RequestBody UpdateCouponRequest request
     ) {
         UpdateCouponCommand command = new UpdateCouponCommand(
-                couponId,
+                couponId.toString(),
                 request.name(),
                 request.description(),
                 request.minimumOrderAmount(),
@@ -86,7 +87,7 @@ public class CouponController {
      */
     @DeleteMapping("/{couponId}")
     public ResponseEntity<Void> deleteCoupon(
-            @PathVariable String couponId
+            @PathVariable UUID couponId
     ) {
         manageCouponUseCase.deleteCoupon(couponId);
 
@@ -98,7 +99,7 @@ public class CouponController {
      */
     @PostMapping("/{couponId}/activate")
     public ResponseEntity<CouponResponse> activateCoupon(
-            @PathVariable String couponId
+            @PathVariable UUID couponId
     ) {
         Coupon coupon = manageCouponUseCase.activateCoupon(couponId);
 
@@ -110,7 +111,7 @@ public class CouponController {
      */
     @PostMapping("/{couponId}/deactivate")
     public ResponseEntity<CouponResponse> deactivateCoupon(
-            @PathVariable String couponId
+            @PathVariable UUID couponId
     ) {
         Coupon coupon = manageCouponUseCase.deactivateCoupon(couponId);
 
@@ -124,7 +125,7 @@ public class CouponController {
      */
     @GetMapping("/{couponId}")
     public ResponseEntity<CouponResponse> getCoupon(
-            @PathVariable String couponId
+            @PathVariable UUID couponId
     ) {
         Coupon coupon = manageCouponUseCase.getCoupon(couponId);
 

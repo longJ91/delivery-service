@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.OrderItems.ORDER_ITEMS;
+import java.util.UUID;
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.Orders.ORDERS;
 
 /**
@@ -29,7 +30,7 @@ public class OrderJooqRepository {
      * Compile-time type-safe version of:
      * SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items WHERE o.id = :id
      */
-    public Optional<OrderWithItems> findByIdWithItems(String id) {
+    public Optional<OrderWithItems> findByIdWithItems(UUID id) {
         Result<Record> result = dsl
                 .select()
                 .from(ORDERS)
@@ -51,7 +52,7 @@ public class OrderJooqRepository {
      * SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items
      * WHERE o.customerId = :customerId ORDER BY o.createdAt DESC
      */
-    public List<OrderWithItems> findByCustomerIdWithItems(String customerId) {
+    public List<OrderWithItems> findByCustomerIdWithItems(UUID customerId) {
         Result<Record> result = dsl
                 .select()
                 .from(ORDERS)
@@ -70,7 +71,7 @@ public class OrderJooqRepository {
      * SELECT o FROM OrderJpaEntity o LEFT JOIN FETCH o.items
      * WHERE o.sellerId = :sellerId ORDER BY o.createdAt DESC
      */
-    public List<OrderWithItems> findBySellerIdWithItems(String sellerId) {
+    public List<OrderWithItems> findBySellerIdWithItems(UUID sellerId) {
         Result<Record> result = dsl
                 .select()
                 .from(ORDERS)
@@ -92,11 +93,11 @@ public class OrderJooqRepository {
         }
 
         // Group by order ID
-        Map<String, List<Record>> groupedByOrderId = result.stream()
+        Map<UUID, List<Record>> groupedByOrderId = result.stream()
                 .collect(Collectors.groupingBy(r -> r.get(ORDERS.ID)));
 
         List<OrderWithItems> orders = new ArrayList<>();
-        for (Map.Entry<String, List<Record>> entry : groupedByOrderId.entrySet()) {
+        for (Map.Entry<UUID, List<Record>> entry : groupedByOrderId.entrySet()) {
             List<Record> records = entry.getValue();
             OrdersRecord order = records.get(0).into(ORDERS);
             List<OrderItemsRecord> items = records.stream()

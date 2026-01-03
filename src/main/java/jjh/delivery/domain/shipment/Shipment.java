@@ -12,8 +12,8 @@ import java.util.UUID;
  */
 public class Shipment {
 
-    private final String id;
-    private final String orderId;
+    private final UUID id;
+    private final UUID orderId;
     private ShippingCarrier carrier;
     private String trackingNumber;
     private ShipmentStatus status;
@@ -25,7 +25,7 @@ public class Shipment {
     private LocalDateTime deliveredAt;
 
     private Shipment(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.orderId = builder.orderId;
         this.carrier = builder.carrier;
         this.trackingNumber = builder.trackingNumber;
@@ -214,11 +214,11 @@ public class Shipment {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getOrderId() {
+    public UUID getOrderId() {
         return orderId;
     }
 
@@ -263,8 +263,8 @@ public class Shipment {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String orderId;
+        private UUID id;
+        private UUID orderId;
         private ShippingCarrier carrier;
         private String trackingNumber;
         private ShipmentStatus status;
@@ -274,12 +274,12 @@ public class Shipment {
         private LocalDateTime shippedAt;
         private LocalDateTime deliveredAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder orderId(String orderId) {
+        public Builder orderId(UUID orderId) {
             this.orderId = orderId;
             return this;
         }
@@ -330,7 +330,7 @@ public class Shipment {
         }
 
         private void validateRequired() {
-            if (orderId == null || orderId.isBlank()) {
+            if (orderId == null) {
                 throw new IllegalArgumentException("orderId is required");
             }
         }

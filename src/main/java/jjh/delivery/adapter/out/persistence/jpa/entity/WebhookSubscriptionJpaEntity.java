@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Webhook Subscription JPA Entity
@@ -24,11 +25,10 @@ import java.util.Set;
 public class WebhookSubscriptionJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
-    private String sellerId;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -68,8 +68,8 @@ public class WebhookSubscriptionJpaEntity {
 
     @Builder
     public WebhookSubscriptionJpaEntity(
-            String id,
-            String sellerId,
+            UUID id,
+            UUID sellerId,
             String name,
             String endpointUrl,
             String secret,

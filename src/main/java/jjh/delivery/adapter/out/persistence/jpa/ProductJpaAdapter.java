@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Product JPA Adapter - Driven Adapter (Outbound)
@@ -33,7 +34,7 @@ public class ProductJpaAdapter implements LoadProductPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Product> findById(String productId) {
+    public Optional<Product> findById(UUID productId) {
         return repository.findByIdWithVariants(productId)
                 .map(mapper::toDomain);
     }
@@ -48,7 +49,7 @@ public class ProductJpaAdapter implements LoadProductPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> findBySellerId(String sellerId, ProductStatus status, Pageable pageable) {
+    public Page<Product> findBySellerId(UUID sellerId, ProductStatus status, Pageable pageable) {
         if (status != null) {
             return repository.findBySellerIdAndStatus(sellerId, status, pageable)
                     .map(mapper::toDomain);
@@ -58,7 +59,7 @@ public class ProductJpaAdapter implements LoadProductPort {
     }
 
     @Override
-    public boolean existsById(String productId) {
+    public boolean existsById(UUID productId) {
         return repository.existsById(productId);
     }
 
@@ -70,11 +71,11 @@ public class ProductJpaAdapter implements LoadProductPort {
                 predicates.add(root.get("status").in(query.statuses()));
             }
 
-            if (query.sellerId() != null && !query.sellerId().isBlank()) {
+            if (query.sellerId() != null) {
                 predicates.add(cb.equal(root.get("sellerId"), query.sellerId()));
             }
 
-            if (query.categoryId() != null && !query.categoryId().isBlank()) {
+            if (query.categoryId() != null) {
                 predicates.add(cb.isMember(query.categoryId(), root.get("categoryIds")));
             }
 

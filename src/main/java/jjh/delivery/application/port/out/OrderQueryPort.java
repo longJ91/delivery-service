@@ -6,6 +6,7 @@ import jjh.delivery.domain.order.OrderStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order Query Port - Driven Port (Outbound)
@@ -16,12 +17,12 @@ public interface OrderQueryPort {
 
     List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria);
 
-    List<OrderStatistics> getOrderStatisticsBySeller(String sellerId, LocalDateTime from, LocalDateTime to);
+    List<OrderStatistics> getOrderStatisticsBySeller(UUID sellerId, LocalDateTime from, LocalDateTime to);
 
     List<Order> findOrdersForReport(ReportCriteria criteria);
 
     record ComplexQueryCriteria(
-            List<String> sellerIds,
+            List<UUID> sellerIds,
             List<OrderStatus> statuses,
             BigDecimal minAmount,
             BigDecimal maxAmount,
@@ -34,14 +35,14 @@ public interface OrderQueryPort {
     ) {}
 
     record ReportCriteria(
-            String sellerId,
+            UUID sellerId,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             boolean includeItems
     ) {}
 
     record OrderStatistics(
-            String sellerId,
+            UUID sellerId,
             long totalOrders,
             long completedOrders,
             long cancelledOrders,

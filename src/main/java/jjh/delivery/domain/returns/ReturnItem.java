@@ -7,20 +7,20 @@ import java.util.UUID;
  * Return Item Value Object
  */
 public record ReturnItem(
-        String id,
-        String orderItemId,
-        String productId,
+        UUID id,
+        UUID orderItemId,
+        UUID productId,
         String productName,
-        String variantId,
+        UUID variantId,
         String variantName,
         int quantity,
         BigDecimal refundAmount
 ) {
     public ReturnItem {
-        if (orderItemId == null || orderItemId.isBlank()) {
+        if (orderItemId == null) {
             throw new IllegalArgumentException("orderItemId is required");
         }
-        if (productId == null || productId.isBlank()) {
+        if (productId == null) {
             throw new IllegalArgumentException("productId is required");
         }
         if (quantity <= 0) {
@@ -35,16 +35,16 @@ public record ReturnItem(
      * Factory method
      */
     public static ReturnItem of(
-            String orderItemId,
-            String productId,
+            UUID orderItemId,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
             int quantity,
             BigDecimal refundAmount
     ) {
         return new ReturnItem(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 orderItemId,
                 productId,
                 productName,
@@ -59,6 +59,6 @@ public record ReturnItem(
      * 변형 상품 여부
      */
     public boolean hasVariant() {
-        return variantId != null && !variantId.isBlank();
+        return variantId != null;
     }
 }

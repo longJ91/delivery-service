@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Review Reply JPA Entity
@@ -21,15 +22,14 @@ import java.time.LocalDateTime;
 public class ReviewReplyJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false, unique = true)
     private ReviewJpaEntity review;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
-    private String sellerId;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -42,8 +42,8 @@ public class ReviewReplyJpaEntity {
 
     @Builder
     public ReviewReplyJpaEntity(
-            String id,
-            String sellerId,
+            UUID id,
+            UUID sellerId,
             String content,
             LocalDateTime createdAt,
             LocalDateTime updatedAt

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Customer jOOQ Adapter - Driven Adapter (Outbound)
@@ -30,7 +31,7 @@ public class CustomerJooqAdapter implements LoadCustomerCredentialsPort, UpdateC
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<String> findPasswordByCustomerId(String customerId) {
+    public Optional<String> findPasswordByCustomerId(UUID customerId) {
         return repository.findPasswordById(customerId);
     }
 
@@ -38,7 +39,7 @@ public class CustomerJooqAdapter implements LoadCustomerCredentialsPort, UpdateC
 
     @Override
     @Transactional
-    public void updatePassword(String customerId, String encodedPassword) {
+    public void updatePassword(UUID customerId, String encodedPassword) {
         repository.updatePassword(customerId, encodedPassword);
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Seller JPA Adapter - Driven Adapter (Outbound)
@@ -32,13 +33,13 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsById(String sellerId) {
+    public boolean existsById(UUID sellerId) {
         return repository.existsById(sellerId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Seller> findById(String sellerId) {
+    public Optional<Seller> findById(UUID sellerId) {
         return repository.findById(sellerId)
                 .map(mapper::toDomain);
     }
@@ -95,7 +96,7 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     @Override
     @Transactional
-    public void delete(String sellerId) {
+    public void delete(UUID sellerId) {
         repository.deleteById(sellerId);
     }
 }

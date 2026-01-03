@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 상품 상세 응답
@@ -37,7 +38,7 @@ public record ProductDetailResponse(
             double ratingAvg,
             long reviewCount
     ) {
-        String primaryCategoryId = product.getCategoryIds().isEmpty() ? null : product.getCategoryIds().get(0);
+        String primaryCategoryId = product.getCategoryIds().isEmpty() ? null : product.getCategoryIds().get(0).toString();
         String primarySku = product.getVariants().isEmpty() ? null : product.getVariants().get(0).sku();
 
         List<ProductImageResponse> imageResponses = new java.util.ArrayList<>();
@@ -50,8 +51,8 @@ public record ProductDetailResponse(
         }
 
         return new ProductDetailResponse(
-                product.getId(),
-                product.getSellerId(),
+                product.getId().toString(),
+                product.getSellerId().toString(),
                 sellerName,
                 primaryCategoryId,
                 product.getName(),
@@ -89,7 +90,7 @@ public record ProductDetailResponse(
     ) {
         public static ProductVariantResponse from(ProductVariant variant) {
             return new ProductVariantResponse(
-                    variant.id(),
+                    variant.id().toString(),
                     variant.name(),
                     variant.sku(),
                     variant.additionalPrice(),

@@ -14,6 +14,7 @@ import jjh.delivery.domain.order.ShippingAddress;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order Web Mapper (v2 - Product Delivery)
@@ -70,10 +71,10 @@ public class OrderWebMapper {
 
     public OrderResponse toResponse(Order order) {
         return new OrderResponse(
-                order.getId(),
+                uuidToString(order.getId()),
                 order.getOrderNumber(),
-                order.getCustomerId(),
-                order.getSellerId(),
+                uuidToString(order.getCustomerId()),
+                uuidToString(order.getSellerId()),
                 order.getItems().stream()
                         .map(this::toItemResponse)
                         .toList(),
@@ -85,7 +86,7 @@ public class OrderWebMapper {
                 order.getTotalAmount(),
                 order.getOrderMemo(),
                 order.getShippingMemo(),
-                order.getCouponId(),
+                uuidToString(order.getCouponId()),
                 order.getCreatedAt(),
                 order.getUpdatedAt(),
                 order.getPaidAt(),
@@ -98,9 +99,9 @@ public class OrderWebMapper {
 
     private OrderItemResponse toItemResponse(OrderItem item) {
         return new OrderItemResponse(
-                item.productId(),
+                uuidToString(item.productId()),
                 item.productName(),
-                item.variantId(),
+                uuidToString(item.variantId()),
                 item.variantName(),
                 item.sku(),
                 item.optionValues(),
@@ -108,6 +109,10 @@ public class OrderWebMapper {
                 item.unitPrice(),
                 item.calculateSubtotal()
         );
+    }
+
+    private String uuidToString(UUID uuid) {
+        return uuid != null ? uuid.toString() : null;
     }
 
     private ShippingAddressResponse toShippingAddressResponse(ShippingAddress address) {

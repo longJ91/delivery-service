@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Manage Seller Use Case - Driving Port (Inbound)
@@ -30,58 +31,58 @@ public interface ManageSellerUseCase {
     /**
      * 창고 주소 수정
      */
-    Seller updateWarehouseAddress(String sellerId, WarehouseAddressCommand warehouseAddress);
+    Seller updateWarehouseAddress(UUID sellerId, WarehouseAddressCommand warehouseAddress);
 
     // ==================== 판매자 상태 관리 (Admin) ====================
 
     /**
      * 판매자 승인
      */
-    Seller approveSeller(String sellerId);
+    Seller approveSeller(UUID sellerId);
 
     /**
      * 판매자 거절
      */
-    void rejectSeller(String sellerId, String reason);
+    void rejectSeller(UUID sellerId, String reason);
 
     /**
      * 판매자 정지
      */
-    Seller suspendSeller(String sellerId, String reason);
+    Seller suspendSeller(UUID sellerId, String reason);
 
     /**
      * 판매자 활성화
      */
-    Seller activateSeller(String sellerId);
+    Seller activateSeller(UUID sellerId);
 
     /**
      * 판매자 휴면 전환
      */
-    Seller makeDormant(String sellerId);
+    Seller makeDormant(UUID sellerId);
 
     /**
      * 판매자 폐업
      */
-    Seller closeSeller(String sellerId);
+    Seller closeSeller(UUID sellerId);
 
     // ==================== 카테고리 관리 ====================
 
     /**
      * 카테고리 추가
      */
-    Seller addCategory(String sellerId, String categoryId);
+    Seller addCategory(UUID sellerId, UUID categoryId);
 
     /**
      * 카테고리 제거
      */
-    Seller removeCategory(String sellerId, String categoryId);
+    Seller removeCategory(UUID sellerId, UUID categoryId);
 
     // ==================== 조회 ====================
 
     /**
      * 판매자 조회
      */
-    Seller getSeller(String sellerId);
+    Seller getSeller(UUID sellerId);
 
     /**
      * 사업자번호로 조회

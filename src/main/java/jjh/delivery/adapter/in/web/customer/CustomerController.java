@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Customer REST Controller - Driving Adapter (Inbound)
@@ -56,7 +57,7 @@ public class CustomerController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request
     ) {
-        String customerId = getCustomerIdFromAuth(userDetails);
+        UUID customerId = getCustomerIdFromAuth(userDetails);
         UpdateProfileCommand command = new UpdateProfileCommand(request.name(), request.phone());
         Customer updated = updateCustomerProfileUseCase.updateProfile(customerId, command);
         return ResponseEntity.ok(CustomerResponse.from(updated));
@@ -69,7 +70,7 @@ public class CustomerController {
     public ResponseEntity<AddressListResponse> getMyAddresses(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String customerId = getCustomerIdFromAuth(userDetails);
+        UUID customerId = getCustomerIdFromAuth(userDetails);
         List<CustomerAddress> addresses = manageAddressUseCase.getAddresses(customerId);
         return ResponseEntity.ok(AddressListResponse.from(addresses));
     }
@@ -82,7 +83,7 @@ public class CustomerController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AddAddressRequest request
     ) {
-        String customerId = getCustomerIdFromAuth(userDetails);
+        UUID customerId = getCustomerIdFromAuth(userDetails);
 
         AddAddressCommand command = new AddAddressCommand(
                 request.name(),
@@ -104,9 +105,9 @@ public class CustomerController {
     @DeleteMapping("/me/addresses/{addressId}")
     public ResponseEntity<Void> removeAddress(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String addressId
+            @PathVariable UUID addressId
     ) {
-        String customerId = getCustomerIdFromAuth(userDetails);
+        UUID customerId = getCustomerIdFromAuth(userDetails);
         manageAddressUseCase.removeAddress(customerId, addressId);
         return ResponseEntity.noContent().build();
     }
@@ -117,23 +118,23 @@ public class CustomerController {
     @PatchMapping("/me/addresses/{addressId}/default")
     public ResponseEntity<Void> setDefaultAddress(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String addressId
+            @PathVariable UUID addressId
     ) {
-        String customerId = getCustomerIdFromAuth(userDetails);
+        UUID customerId = getCustomerIdFromAuth(userDetails);
         manageAddressUseCase.setDefaultAddress(customerId, addressId);
         return ResponseEntity.ok().build();
     }
 
     // ==================== Private Methods ====================
 
-    private String getCustomerIdFromAuth(UserDetails userDetails) {
+    private UUID getCustomerIdFromAuth(UserDetails userDetails) {
         // UserDetails.getUsername()은 customerId로 설정되어 있다고 가정
-        return userDetails.getUsername();
+        return UUID.fromString(userDetails.getUsername());
     }
 
     private Customer getCustomerFromAuth(UserDetails userDetails) {
-        String customerId = getCustomerIdFromAuth(userDetails);
+        UUID customerId = getCustomerIdFromAuth(userDetails);
         return loadCustomerPort.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+                .orElseThrow(() -> new CustomerNotFoundException(customerId.toString()));
     }
 }

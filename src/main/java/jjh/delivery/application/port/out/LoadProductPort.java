@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Product 조회 Port - Driven Port (Outbound)
@@ -18,7 +19,7 @@ public interface LoadProductPort {
     /**
      * ID로 상품 조회
      */
-    Optional<Product> findById(String productId);
+    Optional<Product> findById(UUID productId);
 
     /**
      * 상품 목록 검색
@@ -28,19 +29,19 @@ public interface LoadProductPort {
     /**
      * 판매자별 상품 목록 조회
      */
-    Page<Product> findBySellerId(String sellerId, ProductStatus status, Pageable pageable);
+    Page<Product> findBySellerId(UUID sellerId, ProductStatus status, Pageable pageable);
 
     /**
      * 상품 존재 여부 확인
      */
-    boolean existsById(String productId);
+    boolean existsById(UUID productId);
 
     /**
      * 상품 검색 쿼리
      */
     record SearchProductQuery(
-            String categoryId,
-            String sellerId,
+            UUID categoryId,
+            UUID sellerId,
             String keyword,
             BigDecimal minPrice,
             BigDecimal maxPrice,
@@ -51,19 +52,19 @@ public interface LoadProductPort {
         }
 
         public static class Builder {
-            private String categoryId;
-            private String sellerId;
+            private UUID categoryId;
+            private UUID sellerId;
             private String keyword;
             private BigDecimal minPrice;
             private BigDecimal maxPrice;
             private List<ProductStatus> statuses = List.of(ProductStatus.ACTIVE);
 
-            public Builder categoryId(String categoryId) {
+            public Builder categoryId(UUID categoryId) {
                 this.categoryId = categoryId;
                 return this;
             }
 
-            public Builder sellerId(String sellerId) {
+            public Builder sellerId(UUID sellerId) {
                 this.sellerId = sellerId;
                 return this;
             }

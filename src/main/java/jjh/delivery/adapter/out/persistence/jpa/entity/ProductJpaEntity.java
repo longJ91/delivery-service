@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Product JPA Entity
@@ -26,11 +27,10 @@ import java.util.List;
 public class ProductJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
-    private String sellerId;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
     @Column(nullable = false, length = 200)
     private String name;
@@ -53,8 +53,8 @@ public class ProductJpaEntity {
             name = "product_categories",
             joinColumns = @JoinColumn(name = "product_id")
     )
-    @Column(name = "category_id", length = 36)
-    private List<String> categoryIds = new ArrayList<>();
+    @Column(name = "category_id")
+    private List<UUID> categoryIds = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(
@@ -82,8 +82,8 @@ public class ProductJpaEntity {
 
     @Builder
     public ProductJpaEntity(
-            String id,
-            String sellerId,
+            UUID id,
+            UUID sellerId,
             String name,
             String description,
             BigDecimal basePrice,
@@ -134,7 +134,7 @@ public class ProductJpaEntity {
         this.status = status;
     }
 
-    public void setCategoryIds(List<String> categoryIds) {
+    public void setCategoryIds(List<UUID> categoryIds) {
         this.categoryIds = new ArrayList<>(categoryIds);
     }
 

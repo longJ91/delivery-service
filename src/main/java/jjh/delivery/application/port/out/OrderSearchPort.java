@@ -4,6 +4,7 @@ import jjh.delivery.application.port.in.SearchOrderUseCase.SearchOrderQuery;
 import jjh.delivery.domain.order.Order;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order Search Port - Driven Port (Outbound)
@@ -13,13 +14,13 @@ public interface OrderSearchPort {
 
     void index(Order order);
 
-    void delete(String orderId);
+    void delete(UUID orderId);
 
     List<Order> search(SearchOrderQuery query);
 
-    List<Order> findByCustomerId(String customerId);
+    List<Order> findByCustomerId(UUID customerId);
 
-    List<Order> findBySellerId(String sellerId);
+    List<Order> findBySellerId(UUID sellerId);
 
     void reindexAll();
 }

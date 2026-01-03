@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -13,6 +14,10 @@ import static org.assertj.core.api.Assertions.*;
  */
 @DisplayName("Seller 도메인 테스트")
 class SellerTest {
+
+    // Deterministic UUIDs for testing
+    private static final UUID CATEGORY_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID CATEGORY_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     // =====================================================
     // Test Fixtures
@@ -110,11 +115,11 @@ class SellerTest {
         void createWithCategories() {
             // given & when
             Seller seller = createValidSellerBuilder()
-                    .categoryIds(List.of("cat-1", "cat-2"))
+                    .categoryIds(List.of(CATEGORY_ID_1, CATEGORY_ID_2))
                     .build();
 
             // then
-            assertThat(seller.getCategoryIds()).containsExactly("cat-1", "cat-2");
+            assertThat(seller.getCategoryIds()).containsExactly(CATEGORY_ID_1, CATEGORY_ID_2);
         }
     }
 
@@ -406,11 +411,11 @@ class SellerTest {
             Seller seller = createValidSellerBuilder().build();
 
             // when
-            seller.addCategory("category-1");
-            seller.addCategory("category-2");
+            seller.addCategory(CATEGORY_ID_1);
+            seller.addCategory(CATEGORY_ID_2);
 
             // then
-            assertThat(seller.getCategoryIds()).containsExactly("category-1", "category-2");
+            assertThat(seller.getCategoryIds()).containsExactly(CATEGORY_ID_1, CATEGORY_ID_2);
         }
 
         @Test
@@ -420,8 +425,8 @@ class SellerTest {
             Seller seller = createValidSellerBuilder().build();
 
             // when
-            seller.addCategory("category-1");
-            seller.addCategory("category-1");
+            seller.addCategory(CATEGORY_ID_1);
+            seller.addCategory(CATEGORY_ID_1);
 
             // then
             assertThat(seller.getCategoryIds()).hasSize(1);
@@ -432,14 +437,14 @@ class SellerTest {
         void removeCategory() {
             // given
             Seller seller = createValidSellerBuilder()
-                    .categoryIds(List.of("cat-1", "cat-2"))
+                    .categoryIds(List.of(CATEGORY_ID_1, CATEGORY_ID_2))
                     .build();
 
             // when
-            seller.removeCategory("cat-1");
+            seller.removeCategory(CATEGORY_ID_1);
 
             // then
-            assertThat(seller.getCategoryIds()).containsExactly("cat-2");
+            assertThat(seller.getCategoryIds()).containsExactly(CATEGORY_ID_2);
         }
 
         @Test
@@ -447,12 +452,13 @@ class SellerTest {
         void hasCategory() {
             // given
             Seller seller = createValidSellerBuilder()
-                    .categoryIds(List.of("cat-1"))
+                    .categoryIds(List.of(CATEGORY_ID_1))
                     .build();
+            UUID nonExistentCategoryId = UUID.fromString("00000000-0000-0000-0000-000000000999");
 
             // then
-            assertThat(seller.hasCategory("cat-1")).isTrue();
-            assertThat(seller.hasCategory("cat-999")).isFalse();
+            assertThat(seller.hasCategory(CATEGORY_ID_1)).isTrue();
+            assertThat(seller.hasCategory(nonExistentCategoryId)).isFalse();
         }
     }
 
@@ -503,11 +509,11 @@ class SellerTest {
         void categoryIdsIsImmutable() {
             // given
             Seller seller = createValidSellerBuilder()
-                    .categoryIds(List.of("cat-1"))
+                    .categoryIds(List.of(CATEGORY_ID_1))
                     .build();
 
             // when & then
-            assertThatThrownBy(() -> seller.getCategoryIds().add("cat-2"))
+            assertThatThrownBy(() -> seller.getCategoryIds().add(CATEGORY_ID_2))
                     .isInstanceOf(UnsupportedOperationException.class);
         }
     }

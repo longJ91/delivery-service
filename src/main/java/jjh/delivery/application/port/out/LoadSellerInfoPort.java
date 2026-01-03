@@ -1,6 +1,7 @@
 package jjh.delivery.application.port.out;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Load Seller Info Port - Driven Port (Outbound)
@@ -12,5 +13,5 @@ public interface LoadSellerInfoPort {
     /**
      * ID로 판매자 상호명 조회
      */
-    Optional<String> findBusinessNameById(String sellerId);
+    Optional<String> findBusinessNameById(UUID sellerId);
 }

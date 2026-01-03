@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -14,6 +15,10 @@ import static org.assertj.core.api.Assertions.*;
  */
 @DisplayName("OrderItem 도메인 테스트")
 class OrderItemTest {
+
+    // Deterministic UUIDs for testing
+    private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID VARIANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     // =====================================================
     // 생성 테스트
@@ -28,14 +33,14 @@ class OrderItemTest {
         void createSimpleOrderItem() {
             // given & when
             OrderItem item = OrderItem.of(
-                    "product-123",
+                    PRODUCT_ID,
                     "테스트 상품",
                     2,
                     new BigDecimal("15000")
             );
 
             // then
-            assertThat(item.productId()).isEqualTo("product-123");
+            assertThat(item.productId()).isEqualTo(PRODUCT_ID);
             assertThat(item.productName()).isEqualTo("테스트 상품");
             assertThat(item.quantity()).isEqualTo(2);
             assertThat(item.unitPrice()).isEqualByComparingTo(new BigDecimal("15000"));
@@ -51,9 +56,9 @@ class OrderItemTest {
 
             // when
             OrderItem item = OrderItem.ofVariant(
-                    "product-123",
+                    PRODUCT_ID,
                     "테스트 상품",
-                    "variant-456",
+                    VARIANT_ID,
                     "빨강/L",
                     "SKU-RED-L",
                     options,
@@ -62,8 +67,8 @@ class OrderItemTest {
             );
 
             // then
-            assertThat(item.productId()).isEqualTo("product-123");
-            assertThat(item.variantId()).isEqualTo("variant-456");
+            assertThat(item.productId()).isEqualTo(PRODUCT_ID);
+            assertThat(item.variantId()).isEqualTo(VARIANT_ID);
             assertThat(item.variantName()).isEqualTo("빨강/L");
             assertThat(item.sku()).isEqualTo("SKU-RED-L");
             assertThat(item.optionValues()).containsEntry("색상", "빨강");
@@ -80,19 +85,10 @@ class OrderItemTest {
         }
 
         @Test
-        @DisplayName("빈 productId로 생성 시 예외 발생")
-        void createWithBlankProductIdThrowsException() {
-            assertThatThrownBy(() ->
-                    OrderItem.of("  ", "상품명", 1, new BigDecimal("10000"))
-            ).isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("productId");
-        }
-
-        @Test
         @DisplayName("productName 없이 생성 시 예외 발생")
         void createWithoutProductNameThrowsException() {
             assertThatThrownBy(() ->
-                    OrderItem.of("product-123", null, 1, new BigDecimal("10000"))
+                    OrderItem.of(PRODUCT_ID, null, 1, new BigDecimal("10000"))
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("productName");
         }
@@ -101,7 +97,7 @@ class OrderItemTest {
         @DisplayName("수량이 0일 때 예외 발생")
         void createWithZeroQuantityThrowsException() {
             assertThatThrownBy(() ->
-                    OrderItem.of("product-123", "상품명", 0, new BigDecimal("10000"))
+                    OrderItem.of(PRODUCT_ID, "상품명", 0, new BigDecimal("10000"))
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("quantity");
         }
@@ -110,7 +106,7 @@ class OrderItemTest {
         @DisplayName("수량이 음수일 때 예외 발생")
         void createWithNegativeQuantityThrowsException() {
             assertThatThrownBy(() ->
-                    OrderItem.of("product-123", "상품명", -1, new BigDecimal("10000"))
+                    OrderItem.of(PRODUCT_ID, "상품명", -1, new BigDecimal("10000"))
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("quantity");
         }
@@ -119,7 +115,7 @@ class OrderItemTest {
         @DisplayName("단가가 null일 때 예외 발생")
         void createWithNullUnitPriceThrowsException() {
             assertThatThrownBy(() ->
-                    OrderItem.of("product-123", "상품명", 1, null)
+                    OrderItem.of(PRODUCT_ID, "상품명", 1, null)
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("unitPrice");
         }
@@ -128,7 +124,7 @@ class OrderItemTest {
         @DisplayName("단가가 0일 때 예외 발생")
         void createWithZeroUnitPriceThrowsException() {
             assertThatThrownBy(() ->
-                    OrderItem.of("product-123", "상품명", 1, BigDecimal.ZERO)
+                    OrderItem.of(PRODUCT_ID, "상품명", 1, BigDecimal.ZERO)
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("unitPrice");
         }
@@ -137,7 +133,7 @@ class OrderItemTest {
         @DisplayName("단가가 음수일 때 예외 발생")
         void createWithNegativeUnitPriceThrowsException() {
             assertThatThrownBy(() ->
-                    OrderItem.of("product-123", "상품명", 1, new BigDecimal("-100"))
+                    OrderItem.of(PRODUCT_ID, "상품명", 1, new BigDecimal("-100"))
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("unitPrice");
         }
@@ -156,7 +152,7 @@ class OrderItemTest {
         void calculateSubtotal() {
             // given
             OrderItem item = OrderItem.of(
-                    "product-123",
+                    PRODUCT_ID,
                     "테스트 상품",
                     3,
                     new BigDecimal("15000")
@@ -174,7 +170,7 @@ class OrderItemTest {
         void subtotalEqualsUnitPriceForSingleQuantity() {
             // given
             OrderItem item = OrderItem.of(
-                    "product-123",
+                    PRODUCT_ID,
                     "테스트 상품",
                     1,
                     new BigDecimal("25000")
@@ -192,7 +188,7 @@ class OrderItemTest {
         void calculateSubtotalForLargeQuantity() {
             // given
             OrderItem item = OrderItem.of(
-                    "product-123",
+                    PRODUCT_ID,
                     "대량 상품",
                     1000,
                     new BigDecimal("9900")
@@ -219,27 +215,8 @@ class OrderItemTest {
         void noVariantWhenVariantIdIsNull() {
             // given
             OrderItem item = OrderItem.of(
-                    "product-123",
+                    PRODUCT_ID,
                     "상품",
-                    1,
-                    new BigDecimal("10000")
-            );
-
-            // then
-            assertThat(item.hasVariant()).isFalse();
-        }
-
-        @Test
-        @DisplayName("variantId가 빈 문자열이면 변형 상품 아님")
-        void noVariantWhenVariantIdIsBlank() {
-            // given
-            OrderItem item = new OrderItem(
-                    "product-123",
-                    "상품",
-                    "",  // blank variantId
-                    null,
-                    null,
-                    null,
                     1,
                     new BigDecimal("10000")
             );
@@ -253,9 +230,9 @@ class OrderItemTest {
         void hasVariantWhenVariantIdExists() {
             // given
             OrderItem item = OrderItem.ofVariant(
-                    "product-123",
+                    PRODUCT_ID,
                     "상품",
-                    "variant-456",
+                    VARIANT_ID,
                     "옵션명",
                     "SKU-001",
                     null,
@@ -282,9 +259,9 @@ class OrderItemTest {
             // given
             Map<String, String> options = Map.of("색상", "빨강");
             OrderItem item = OrderItem.ofVariant(
-                    "product-123",
+                    PRODUCT_ID,
                     "상품",
-                    "variant-456",
+                    VARIANT_ID,
                     "빨강",
                     "SKU-RED",
                     options,
@@ -302,9 +279,9 @@ class OrderItemTest {
         void nullOptionValuesBecomesEmptyMap() {
             // given
             OrderItem item = OrderItem.ofVariant(
-                    "product-123",
+                    PRODUCT_ID,
                     "상품",
-                    "variant-456",
+                    VARIANT_ID,
                     "옵션명",
                     "SKU-001",
                     null,
@@ -330,8 +307,8 @@ class OrderItemTest {
         @DisplayName("동일한 값을 가진 OrderItem은 동등")
         void equalOrderItemsAreEqual() {
             // given
-            OrderItem item1 = OrderItem.of("product-123", "상품", 2, new BigDecimal("10000"));
-            OrderItem item2 = OrderItem.of("product-123", "상품", 2, new BigDecimal("10000"));
+            OrderItem item1 = OrderItem.of(PRODUCT_ID, "상품", 2, new BigDecimal("10000"));
+            OrderItem item2 = OrderItem.of(PRODUCT_ID, "상품", 2, new BigDecimal("10000"));
 
             // then
             assertThat(item1).isEqualTo(item2);
@@ -342,8 +319,9 @@ class OrderItemTest {
         @DisplayName("다른 값을 가진 OrderItem은 비동등")
         void differentOrderItemsAreNotEqual() {
             // given
-            OrderItem item1 = OrderItem.of("product-123", "상품", 2, new BigDecimal("10000"));
-            OrderItem item2 = OrderItem.of("product-456", "상품", 2, new BigDecimal("10000"));
+            UUID anotherProductId = UUID.fromString("00000000-0000-0000-0000-000000000099");
+            OrderItem item1 = OrderItem.of(PRODUCT_ID, "상품", 2, new BigDecimal("10000"));
+            OrderItem item2 = OrderItem.of(anotherProductId, "상품", 2, new BigDecimal("10000"));
 
             // then
             assertThat(item1).isNotEqualTo(item2);

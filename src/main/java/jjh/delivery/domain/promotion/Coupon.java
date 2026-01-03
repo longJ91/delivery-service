@@ -10,7 +10,7 @@ import java.util.UUID;
  */
 public class Coupon {
 
-    private final String id;
+    private final UUID id;
     private final String code;
     private String name;
     private String description;
@@ -19,7 +19,7 @@ public class Coupon {
     private BigDecimal minimumOrderAmount;
     private BigDecimal maximumDiscountAmount;
     private CouponScope scope;
-    private String scopeTargetId;
+    private UUID scopeTargetId;
     private int totalQuantity;
     private int usedQuantity;
     private LocalDateTime validFrom;
@@ -29,7 +29,7 @@ public class Coupon {
     private LocalDateTime updatedAt;
 
     private Coupon(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.code = builder.code;
         this.name = builder.name;
         this.description = builder.description;
@@ -151,7 +151,7 @@ public class Coupon {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -187,7 +187,7 @@ public class Coupon {
         return scope;
     }
 
-    public String getScopeTargetId() {
+    public UUID getScopeTargetId() {
         return scopeTargetId;
     }
 
@@ -224,7 +224,7 @@ public class Coupon {
     // =====================================================
 
     public static class Builder {
-        private String id;
+        private UUID id;
         private String code;
         private String name;
         private String description;
@@ -233,7 +233,7 @@ public class Coupon {
         private BigDecimal minimumOrderAmount;
         private BigDecimal maximumDiscountAmount;
         private CouponScope scope;
-        private String scopeTargetId;
+        private UUID scopeTargetId;
         private int totalQuantity;
         private int usedQuantity;
         private LocalDateTime validFrom;
@@ -241,7 +241,7 @@ public class Coupon {
         private boolean isActive = true;
         private LocalDateTime createdAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -286,7 +286,7 @@ public class Coupon {
             return this;
         }
 
-        public Builder scopeTargetId(String scopeTargetId) {
+        public Builder scopeTargetId(UUID scopeTargetId) {
             this.scopeTargetId = scopeTargetId;
             return this;
         }

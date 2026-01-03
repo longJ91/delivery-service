@@ -6,6 +6,7 @@ import jjh.delivery.domain.review.ReviewReply;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 리뷰 응답
@@ -22,8 +23,8 @@ public record ReviewResponse(
 ) {
     public static ReviewResponse from(Review review, String customerName) {
         return new ReviewResponse(
-                review.getId(),
-                review.getCustomerId(),
+                review.getId().toString(),
+                review.getCustomerId().toString(),
                 maskCustomerName(customerName),
                 review.getRating(),
                 review.getContent(),
@@ -56,7 +57,7 @@ public record ReviewResponse(
             String imageUrl
     ) {
         public static ReviewImageResponse from(ReviewImage image) {
-            return new ReviewImageResponse(image.id(), image.imageUrl());
+            return new ReviewImageResponse(image.id().toString(), image.imageUrl());
         }
     }
 

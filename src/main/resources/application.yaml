@@ -16,7 +16,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -49,13 +49,55 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,env,loggers,caches,scheduledtasks,mappings
+      base-path: /actuator
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    info:
+      enabled: true
+    env:
+      show-values: when_authorized
+    loggers:
+      enabled: true
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+    elasticsearch:
+      enabled: true
+    kafka:
+      enabled: true
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Info endpoint
+info:
+  app:
+    name: ${spring.application.name}
+    version: '@project.version@'
+    description: Delivery Service API
+  java:
+    version: ${java.version}
 
 # SpringDoc OpenAPI
 springdoc:

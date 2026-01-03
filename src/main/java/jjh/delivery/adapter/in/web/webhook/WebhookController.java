@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -64,14 +65,14 @@ public class WebhookController {
     @PutMapping("/{subscriptionId}")
     public ResponseEntity<WebhookSubscriptionResponse> updateSubscription(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId,
+            @PathVariable UUID subscriptionId,
             @Valid @RequestBody UpdateWebhookRequest request
     ) {
         String sellerId = userDetails.getUsername();
 
         UpdateSubscriptionCommand command = new UpdateSubscriptionCommand(
                 sellerId,
-                subscriptionId,
+                subscriptionId.toString(),
                 request.name(),
                 request.endpointUrl(),
                 request.subscribedEvents()
@@ -88,9 +89,9 @@ public class WebhookController {
     @DeleteMapping("/{subscriptionId}")
     public ResponseEntity<Void> deleteSubscription(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId
+            @PathVariable UUID subscriptionId
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         manageWebhookUseCase.deleteSubscription(sellerId, subscriptionId);
 
         return ResponseEntity.noContent().build();
@@ -102,9 +103,9 @@ public class WebhookController {
     @PostMapping("/{subscriptionId}/activate")
     public ResponseEntity<WebhookSubscriptionResponse> activateSubscription(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId
+            @PathVariable UUID subscriptionId
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         WebhookSubscription subscription = manageWebhookUseCase.activateSubscription(sellerId, subscriptionId);
 
         return ResponseEntity.ok(WebhookSubscriptionResponse.fromWithMaskedSecret(subscription));
@@ -116,9 +117,9 @@ public class WebhookController {
     @PostMapping("/{subscriptionId}/deactivate")
     public ResponseEntity<WebhookSubscriptionResponse> deactivateSubscription(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId
+            @PathVariable UUID subscriptionId
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         WebhookSubscription subscription = manageWebhookUseCase.deactivateSubscription(sellerId, subscriptionId);
 
         return ResponseEntity.ok(WebhookSubscriptionResponse.fromWithMaskedSecret(subscription));
@@ -130,9 +131,9 @@ public class WebhookController {
     @PostMapping("/{subscriptionId}/regenerate-secret")
     public ResponseEntity<WebhookSubscriptionResponse> regenerateSecret(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId
+            @PathVariable UUID subscriptionId
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         WebhookSubscription subscription = manageWebhookUseCase.regenerateSecret(sellerId, subscriptionId);
 
         // 새 시크릿은 마스킹 없이 반환
@@ -147,7 +148,7 @@ public class WebhookController {
     @GetMapping("/{subscriptionId}")
     public ResponseEntity<WebhookSubscriptionResponse> getSubscription(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId
+            @PathVariable UUID subscriptionId
     ) {
         WebhookSubscription subscription = manageWebhookUseCase.getSubscription(subscriptionId);
 
@@ -167,7 +168,7 @@ public class WebhookController {
     public ResponseEntity<List<WebhookSubscriptionResponse>> getMySubscriptions(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         List<WebhookSubscription> subscriptions = manageWebhookUseCase.getSellerSubscriptions(sellerId);
 
         List<WebhookSubscriptionResponse> response = subscriptions.stream()
@@ -183,7 +184,7 @@ public class WebhookController {
     @GetMapping("/{subscriptionId}/deliveries")
     public ResponseEntity<WebhookDeliveryListResponse> getDeliveryHistory(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId,
+            @PathVariable UUID subscriptionId,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         // 소유자 확인
@@ -204,9 +205,9 @@ public class WebhookController {
     @PostMapping("/{subscriptionId}/test")
     public ResponseEntity<WebhookDeliveryResponse> testWebhook(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String subscriptionId
+            @PathVariable UUID subscriptionId
     ) {
-        String sellerId = userDetails.getUsername();
+        UUID sellerId = UUID.fromString(userDetails.getUsername());
         WebhookDelivery delivery = manageWebhookUseCase.testWebhook(sellerId, subscriptionId);
 
         return ResponseEntity.ok(WebhookDeliveryResponse.from(delivery));

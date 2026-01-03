@@ -4,15 +4,16 @@ import jjh.delivery.domain.order.Order;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Order Created Domain Event (v2 - Product Delivery)
  */
 public record OrderCreatedEvent(
-        String orderId,
+        UUID orderId,
         String orderNumber,
-        String customerId,
-        String sellerId,
+        UUID customerId,
+        UUID sellerId,
         BigDecimal totalAmount,
         String shippingAddress,
         LocalDateTime occurredAt

@@ -8,14 +8,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Webhook Subscription JPA Repository
  */
 @Repository
-public interface WebhookSubscriptionJpaRepository extends JpaRepository<WebhookSubscriptionJpaEntity, String> {
+public interface WebhookSubscriptionJpaRepository extends JpaRepository<WebhookSubscriptionJpaEntity, UUID> {
 
-    List<WebhookSubscriptionJpaEntity> findBySellerId(String sellerId);
+    List<WebhookSubscriptionJpaEntity> findBySellerId(UUID sellerId);
 
     @Query("SELECT w FROM WebhookSubscriptionJpaEntity w WHERE w.isActive = true AND :eventType MEMBER OF w.subscribedEvents")
     List<WebhookSubscriptionJpaEntity> findActiveByEventType(@Param("eventType") WebhookEventType eventType);

@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Webhook Delivery JPA Entity
@@ -24,11 +25,10 @@ import java.time.LocalDateTime;
 public class WebhookDeliveryJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "subscription_id", nullable = false, length = 36)
-    private String subscriptionId;
+    @Column(name = "subscription_id", nullable = false)
+    private UUID subscriptionId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, length = 50)
@@ -64,8 +64,8 @@ public class WebhookDeliveryJpaEntity {
 
     @Builder
     public WebhookDeliveryJpaEntity(
-            String id,
-            String subscriptionId,
+            UUID id,
+            UUID subscriptionId,
             WebhookEventType eventType,
             String payload,
             String endpointUrl,

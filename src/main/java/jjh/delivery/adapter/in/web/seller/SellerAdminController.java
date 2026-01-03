@@ -18,6 +18,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 /**
  * Seller Admin REST Controller - Driving Adapter (Inbound)
  * 판매자 관리 API
@@ -62,12 +64,12 @@ public class SellerAdminController {
     @PutMapping("/{sellerId}")
     public ResponseEntity<SellerResponse> updateSellerInfo(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String sellerId,
+            @PathVariable UUID sellerId,
             @Valid @RequestBody UpdateSellerInfoRequest request
     ) {
         // TODO: 본인 확인 로직 추가 필요
         UpdateSellerInfoCommand command = new UpdateSellerInfoCommand(
-                sellerId,
+                sellerId.toString(),
                 request.businessName(),
                 request.representativeName(),
                 request.email(),
@@ -85,7 +87,7 @@ public class SellerAdminController {
     @PutMapping("/{sellerId}/warehouse-address")
     public ResponseEntity<SellerResponse> updateWarehouseAddress(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String sellerId,
+            @PathVariable UUID sellerId,
             @Valid @RequestBody WarehouseAddressRequest request
     ) {
         Seller seller = manageSellerUseCase.updateWarehouseAddress(sellerId, request.toCommand());
@@ -100,7 +102,7 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/approve")
     public ResponseEntity<SellerResponse> approveSeller(
-            @PathVariable String sellerId
+            @PathVariable UUID sellerId
     ) {
         Seller seller = manageSellerUseCase.approveSeller(sellerId);
 
@@ -112,7 +114,7 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/reject")
     public ResponseEntity<Void> rejectSeller(
-            @PathVariable String sellerId,
+            @PathVariable UUID sellerId,
             @Valid @RequestBody RejectSellerRequest request
     ) {
         manageSellerUseCase.rejectSeller(sellerId, request.reason());
@@ -125,7 +127,7 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/suspend")
     public ResponseEntity<SellerResponse> suspendSeller(
-            @PathVariable String sellerId,
+            @PathVariable UUID sellerId,
             @Valid @RequestBody SuspendSellerRequest request
     ) {
         Seller seller = manageSellerUseCase.suspendSeller(sellerId, request.reason());
@@ -138,7 +140,7 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/activate")
     public ResponseEntity<SellerResponse> activateSeller(
-            @PathVariable String sellerId
+            @PathVariable UUID sellerId
     ) {
         Seller seller = manageSellerUseCase.activateSeller(sellerId);
 
@@ -150,7 +152,7 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/dormant")
     public ResponseEntity<SellerResponse> makeDormant(
-            @PathVariable String sellerId
+            @PathVariable UUID sellerId
     ) {
         Seller seller = manageSellerUseCase.makeDormant(sellerId);
 
@@ -162,7 +164,7 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/close")
     public ResponseEntity<SellerResponse> closeSeller(
-            @PathVariable String sellerId
+            @PathVariable UUID sellerId
     ) {
         Seller seller = manageSellerUseCase.closeSeller(sellerId);
 
@@ -176,8 +178,8 @@ public class SellerAdminController {
      */
     @PostMapping("/{sellerId}/categories/{categoryId}")
     public ResponseEntity<SellerResponse> addCategory(
-            @PathVariable String sellerId,
-            @PathVariable String categoryId
+            @PathVariable UUID sellerId,
+            @PathVariable UUID categoryId
     ) {
         Seller seller = manageSellerUseCase.addCategory(sellerId, categoryId);
 
@@ -189,8 +191,8 @@ public class SellerAdminController {
      */
     @DeleteMapping("/{sellerId}/categories/{categoryId}")
     public ResponseEntity<SellerResponse> removeCategory(
-            @PathVariable String sellerId,
-            @PathVariable String categoryId
+            @PathVariable UUID sellerId,
+            @PathVariable UUID categoryId
     ) {
         Seller seller = manageSellerUseCase.removeCategory(sellerId, categoryId);
 
@@ -204,7 +206,7 @@ public class SellerAdminController {
      */
     @GetMapping("/{sellerId}")
     public ResponseEntity<SellerResponse> getSeller(
-            @PathVariable String sellerId
+            @PathVariable UUID sellerId
     ) {
         Seller seller = manageSellerUseCase.getSeller(sellerId);
 

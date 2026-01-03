@@ -24,16 +24,16 @@ public record CartItemResponse(
 ) {
     public static CartItemResponse from(CartItem item, String sellerName, int stock, boolean isAvailable) {
         return new CartItemResponse(
-                item.id(),
-                item.productId(),
+                item.id().toString(),
+                item.productId().toString(),
                 item.productName(),
-                item.variantId(),
+                item.variantId() != null ? item.variantId().toString() : null,
                 item.variantName(),
                 item.quantity(),
                 item.unitPrice(),
                 item.getSubtotal(),
                 item.thumbnailUrl(),
-                item.sellerId(),
+                item.sellerId().toString(),
                 sellerName,
                 stock,
                 isAvailable

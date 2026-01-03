@@ -10,14 +10,14 @@ import java.util.*;
  */
 public class Product {
 
-    private final String id;
-    private final String sellerId;
+    private final UUID id;
+    private final UUID sellerId;
     private String name;
     private String description;
     private BigDecimal basePrice;
     private ProductStatus status;
     private final List<ProductVariant> variants;
-    private final List<String> categoryIds;
+    private final List<UUID> categoryIds;
     private final List<String> imageUrls;
     private final Map<String, String> specifications;
     private int totalStockQuantity;
@@ -25,7 +25,7 @@ public class Product {
     private LocalDateTime updatedAt;
 
     private Product(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.sellerId = builder.sellerId;
         this.name = builder.name;
         this.description = builder.description;
@@ -103,7 +103,7 @@ public class Product {
     /**
      * 변형 상품 제거
      */
-    public void removeVariant(String variantId) {
+    public void removeVariant(UUID variantId) {
         validateEditable();
         variants.removeIf(v -> v.id().equals(variantId));
         updateStockStatus();
@@ -113,7 +113,7 @@ public class Product {
     /**
      * 재고 차감
      */
-    public void decreaseStock(String variantId, int quantity) {
+    public void decreaseStock(UUID variantId, int quantity) {
         // Optional.ifPresentOrElse로 변형/단일 상품 분기 (함수형)
         Optional.ofNullable(variantId)
                 .ifPresentOrElse(
@@ -133,7 +133,7 @@ public class Product {
     /**
      * 재고 추가
      */
-    public void increaseStock(String variantId, int quantity) {
+    public void increaseStock(UUID variantId, int quantity) {
         // Optional.ifPresentOrElse로 변형/단일 상품 분기 (함수형)
         Optional.ofNullable(variantId)
                 .ifPresentOrElse(
@@ -148,7 +148,7 @@ public class Product {
     /**
      * 카테고리 추가
      */
-    public void addCategory(String categoryId) {
+    public void addCategory(UUID categoryId) {
         validateEditable();
         if (!categoryIds.contains(categoryId)) {
             categoryIds.add(categoryId);
@@ -159,7 +159,7 @@ public class Product {
     /**
      * 카테고리 제거
      */
-    public void removeCategory(String categoryId) {
+    public void removeCategory(UUID categoryId) {
         validateEditable();
         if (categoryIds.remove(categoryId)) {
             this.updatedAt = LocalDateTime.now();
@@ -230,7 +230,7 @@ public class Product {
     /**
      * 변형 상품 조회
      */
-    public Optional<ProductVariant> findVariant(String variantId) {
+    public Optional<ProductVariant> findVariant(UUID variantId) {
         return variants.stream()
                 .filter(v -> v.id().equals(variantId))
                 .findFirst();
@@ -253,7 +253,7 @@ public class Product {
     /**
      * 최종 가격 계산 (변형 상품 추가 가격 포함)
      */
-    public BigDecimal calculatePrice(String variantId) {
+    public BigDecimal calculatePrice(UUID variantId) {
         if (variantId == null) {
             return basePrice;
         }
@@ -266,11 +266,11 @@ public class Product {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getSellerId() {
+    public UUID getSellerId() {
         return sellerId;
     }
 
@@ -294,7 +294,7 @@ public class Product {
         return Collections.unmodifiableList(variants);
     }
 
-    public List<String> getCategoryIds() {
+    public List<UUID> getCategoryIds() {
         return Collections.unmodifiableList(categoryIds);
     }
 
@@ -323,24 +323,24 @@ public class Product {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String sellerId;
+        private UUID id;
+        private UUID sellerId;
         private String name;
         private String description;
         private BigDecimal basePrice;
         private ProductStatus status;
         private List<ProductVariant> variants = new ArrayList<>();
-        private List<String> categoryIds = new ArrayList<>();
+        private List<UUID> categoryIds = new ArrayList<>();
         private List<String> imageUrls = new ArrayList<>();
         private Map<String, String> specifications = new HashMap<>();
         private LocalDateTime createdAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder sellerId(String sellerId) {
+        public Builder sellerId(UUID sellerId) {
             this.sellerId = sellerId;
             return this;
         }
@@ -375,7 +375,7 @@ public class Product {
             return this;
         }
 
-        public Builder categoryIds(List<String> categoryIds) {
+        public Builder categoryIds(List<UUID> categoryIds) {
             this.categoryIds = new ArrayList<>(categoryIds);
             return this;
         }
@@ -401,7 +401,7 @@ public class Product {
         }
 
         private void validateRequired() {
-            if (sellerId == null || sellerId.isBlank()) {
+            if (sellerId == null) {
                 throw new IllegalArgumentException("sellerId is required");
             }
             if (name == null || name.isBlank()) {

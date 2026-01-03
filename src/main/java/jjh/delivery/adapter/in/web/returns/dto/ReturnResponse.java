@@ -31,9 +31,9 @@ public record ReturnResponse(
                 .toList();
 
         return new ReturnResponse(
-                productReturn.getId(),
-                productReturn.getOrderId(),
-                productReturn.getCustomerId(),
+                productReturn.getId().toString(),
+                productReturn.getOrderId().toString(),
+                productReturn.getCustomerId().toString(),
                 productReturn.getReturnType(),
                 productReturn.getReason(),
                 productReturn.getReason().getDisplayName(),

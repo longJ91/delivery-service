@@ -4,12 +4,13 @@ import jjh.delivery.domain.order.Order;
 import jjh.delivery.domain.order.OrderStatus;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Order Status Changed Domain Event
  */
 public record OrderStatusChangedEvent(
-        String orderId,
+        UUID orderId,
         OrderStatus previousStatus,
         OrderStatus newStatus,
         LocalDateTime occurredAt

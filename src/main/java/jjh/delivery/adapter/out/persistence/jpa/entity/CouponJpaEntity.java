@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Coupon JPA Entity
@@ -24,8 +25,7 @@ import java.time.LocalDateTime;
 public class CouponJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String code;
@@ -53,8 +53,8 @@ public class CouponJpaEntity {
     @Column(nullable = false, length = 20)
     private CouponScope scope;
 
-    @Column(name = "scope_target_id", length = 36)
-    private String scopeTargetId;
+    @Column(name = "scope_target_id")
+    private UUID scopeTargetId;
 
     @Column(name = "total_quantity")
     private int totalQuantity;
@@ -82,7 +82,7 @@ public class CouponJpaEntity {
 
     @Builder
     public CouponJpaEntity(
-            String id,
+            UUID id,
             String code,
             String name,
             String description,
@@ -91,7 +91,7 @@ public class CouponJpaEntity {
             BigDecimal minimumOrderAmount,
             BigDecimal maximumDiscountAmount,
             CouponScope scope,
-            String scopeTargetId,
+            UUID scopeTargetId,
             int totalQuantity,
             int usedQuantity,
             LocalDateTime validFrom,

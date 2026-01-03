@@ -9,19 +9,19 @@ import java.util.UUID;
  * 장바구니 상품 항목
  */
 public record CartItem(
-        String id,
-        String productId,
+        UUID id,
+        UUID productId,
         String productName,
-        String variantId,
+        UUID variantId,
         String variantName,
-        String sellerId,
+        UUID sellerId,
         int quantity,
         BigDecimal unitPrice,
         String thumbnailUrl,
         LocalDateTime addedAt
 ) {
     public CartItem {
-        if (productId == null || productId.isBlank()) {
+        if (productId == null) {
             throw new IllegalArgumentException("productId is required");
         }
         if (quantity < 1) {
@@ -36,17 +36,17 @@ public record CartItem(
      * 새 장바구니 항목 생성
      */
     public static CartItem create(
-            String productId,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
-            String sellerId,
+            UUID sellerId,
             int quantity,
             BigDecimal unitPrice,
             String thumbnailUrl
     ) {
         return new CartItem(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 productId,
                 productName,
                 variantId,

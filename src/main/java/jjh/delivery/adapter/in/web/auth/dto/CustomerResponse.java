@@ -4,6 +4,7 @@ import jjh.delivery.domain.customer.Customer;
 import jjh.delivery.domain.customer.CustomerStatus;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * 고객 정보 응답
@@ -20,7 +21,7 @@ public record CustomerResponse(
 ) {
     public static CustomerResponse from(Customer customer) {
         return new CustomerResponse(
-                customer.getId(),
+                customer.getId().toString(),
                 customer.getEmail(),
                 customer.getName(),
                 customer.getPhoneNumber(),

@@ -5,11 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Category JPA Repository
  */
-public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, String> {
+public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, UUID> {
 
     /**
      * 활성 카테고리 전체 조회 (정렬: depth, displayOrder)
@@ -20,7 +21,7 @@ public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, 
     /**
      * 부모 ID로 자식 카테고리 조회
      */
-    List<CategoryJpaEntity> findByParentIdAndIsActiveTrueOrderByDisplayOrder(String parentId);
+    List<CategoryJpaEntity> findByParentIdAndIsActiveTrueOrderByDisplayOrder(UUID parentId);
 
     /**
      * 최상위 카테고리 조회 (parentId = null)

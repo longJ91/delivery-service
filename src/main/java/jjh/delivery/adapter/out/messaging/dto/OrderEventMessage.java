@@ -28,10 +28,10 @@ public sealed interface OrderEventMessage {
 
         public static OrderCreatedMessage from(OrderCreatedEvent event) {
             return new OrderCreatedMessage(
-                    event.orderId(),
+                    event.orderId().toString(),
                     "ORDER_CREATED",
-                    event.customerId(),
-                    event.sellerId(),
+                    event.customerId().toString(),
+                    event.sellerId().toString(),
                     event.totalAmount(),
                     event.shippingAddress(),
                     event.occurredAt()
@@ -49,7 +49,7 @@ public sealed interface OrderEventMessage {
 
         public static OrderStatusChangedMessage from(OrderStatusChangedEvent event) {
             return new OrderStatusChangedMessage(
-                    event.orderId(),
+                    event.orderId().toString(),
                     "ORDER_STATUS_CHANGED",
                     event.previousStatus(),
                     event.newStatus(),

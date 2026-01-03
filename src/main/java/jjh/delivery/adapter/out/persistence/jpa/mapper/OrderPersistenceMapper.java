@@ -8,6 +8,7 @@ import jjh.delivery.domain.order.OrderItem;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Order Persistence Mapper (v2 - Product Delivery)
@@ -53,6 +54,7 @@ public class OrderPersistenceMapper {
 
     private OrderItemJpaEntity toItemEntity(OrderItem item) {
         return new OrderItemJpaEntity(
+                UUID.randomUUID(),
                 item.productId(),
                 item.productName(),
                 item.variantId(),

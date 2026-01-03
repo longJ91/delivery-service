@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 /**
@@ -33,23 +34,28 @@ public class ReviewService implements ManageReviewUseCase {
 
     @Override
     public Review createReview(CreateReviewCommand command) {
+        UUID orderId = UUID.fromString(command.orderId());
+        UUID customerId = UUID.fromString(command.customerId());
+        UUID sellerId = UUID.fromString(command.sellerId());
+        UUID productId = UUID.fromString(command.productId());
+
         // 이미 해당 주문에 대한 리뷰가 있는지 확인
-        if (loadReviewPort.existsByOrderId(command.orderId())) {
+        if (loadReviewPort.existsByOrderId(orderId)) {
             throw new IllegalStateException("이미 해당 주문에 대한 리뷰가 존재합니다: " + command.orderId());
         }
 
         // Optional + IntStream으로 이미지 처리 (성능 개선: O(n²) → O(n))
         List<ReviewImage> images = Optional.ofNullable(command.imageUrls())
                 .map(urls -> IntStream.range(0, urls.size())
-                        .mapToObj(i -> ReviewImage.ofNew(urls.get(i), i))
+                        .mapToObj(i -> ReviewImage.ofNew(UUID.randomUUID(), urls.get(i), i))
                         .toList())
                 .orElse(List.of());
 
         Review review = Review.builder()
-                .orderId(command.orderId())
-                .customerId(command.customerId())
-                .sellerId(command.sellerId())
-                .productId(command.productId())
+                .orderId(orderId)
+                .customerId(customerId)
+                .sellerId(sellerId)
+                .productId(productId)
                 .rating(command.rating())
                 .content(command.content())
                 .images(images)
@@ -60,11 +66,14 @@ public class ReviewService implements ManageReviewUseCase {
 
     @Override
     public Review updateReview(UpdateReviewCommand command) {
-        Review review = loadReviewPort.findById(command.reviewId())
+        UUID reviewId = UUID.fromString(command.reviewId());
+        UUID customerId = UUID.fromString(command.customerId());
+
+        Review review = loadReviewPort.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException(command.reviewId()));
 
         // 리뷰 작성자만 수정 가능
-        if (!review.getCustomerId().equals(command.customerId())) {
+        if (!review.getCustomerId().equals(customerId)) {
             throw new IllegalArgumentException("리뷰를 수정할 권한이 없습니다");
         }
 
@@ -73,7 +82,7 @@ public class ReviewService implements ManageReviewUseCase {
         // Optional + IntStream으로 이미지 교체 (함수형)
         Optional.ofNullable(command.imageUrls())
                 .map(urls -> IntStream.range(0, urls.size())
-                        .mapToObj(i -> ReviewImage.ofNew(urls.get(i), i))
+                        .mapToObj(i -> ReviewImage.ofNew(UUID.randomUUID(), urls.get(i), i))
                         .toList())
                 .ifPresent(review::replaceImages);
 
@@ -81,9 +90,9 @@ public class ReviewService implements ManageReviewUseCase {
     }
 
     @Override
-    public void deleteReview(String reviewId, String customerId) {
+    public void deleteReview(UUID reviewId, UUID customerId) {
         Review review = loadReviewPort.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId.toString()));
 
         // 리뷰 작성자만 삭제 가능
         if (!review.getCustomerId().equals(customerId)) {
@@ -95,26 +104,26 @@ public class ReviewService implements ManageReviewUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Review getReview(String reviewId) {
+    public Review getReview(UUID reviewId) {
         return loadReviewPort.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId.toString()));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> getReviewsByProductId(String productId, Pageable pageable) {
+    public Page<Review> getReviewsByProductId(UUID productId, Pageable pageable) {
         return loadReviewPort.findByProductId(productId, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> getMyReviews(String customerId, Pageable pageable) {
+    public Page<Review> getMyReviews(UUID customerId, Pageable pageable) {
         return loadReviewPort.findByCustomerId(customerId, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ReviewRatingInfo getProductRatingInfo(String productId) {
+    public ReviewRatingInfo getProductRatingInfo(UUID productId) {
         double averageRating = loadReviewStatsPort.getAverageRatingByProductId(productId);
         long totalCount = loadReviewPort.countByProductId(productId);
         Map<Integer, Long> ratingDistribution = loadReviewStatsPort.getRatingDistributionByProductId(productId);
@@ -123,9 +132,9 @@ public class ReviewService implements ManageReviewUseCase {
     }
 
     @Override
-    public Review addReply(String reviewId, String sellerId, String content) {
+    public Review addReply(UUID reviewId, UUID sellerId, String content) {
         Review review = loadReviewPort.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId.toString()));
 
         review.addReply(sellerId, content);
 
@@ -133,9 +142,9 @@ public class ReviewService implements ManageReviewUseCase {
     }
 
     @Override
-    public Review updateReply(String reviewId, String sellerId, String content) {
+    public Review updateReply(UUID reviewId, UUID sellerId, String content) {
         Review review = loadReviewPort.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId.toString()));
 
         review.updateReply(sellerId, content);
 
@@ -143,9 +152,9 @@ public class ReviewService implements ManageReviewUseCase {
     }
 
     @Override
-    public Review deleteReply(String reviewId, String sellerId) {
+    public Review deleteReply(UUID reviewId, UUID sellerId) {
         Review review = loadReviewPort.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(reviewId));
+                .orElseThrow(() -> new ReviewNotFoundException(reviewId.toString()));
 
         review.deleteReply(sellerId);
 

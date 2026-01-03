@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +34,7 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Customer> findById(String customerId) {
+    public Optional<Customer> findById(UUID customerId) {
         return repository.findByIdWithAddresses(customerId)
                 .map(mapper::toDomain);
     }
@@ -51,7 +52,7 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort {
     }
 
     @Override
-    public boolean existsById(String customerId) {
+    public boolean existsById(UUID customerId) {
         return repository.existsById(customerId);
     }
 
@@ -75,7 +76,7 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort {
 
     @Override
     @Transactional
-    public void delete(String customerId) {
+    public void delete(UUID customerId) {
         repository.deleteById(customerId);
     }
 
@@ -94,7 +95,7 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort {
     }
 
     private void syncAddresses(CustomerJpaEntity existing, Customer customer) {
-        Set<String> domainAddressIds = customer.getAddresses().stream()
+        Set<UUID> domainAddressIds = customer.getAddresses().stream()
                 .map(CustomerAddress::id)
                 .collect(Collectors.toSet());
 

@@ -6,6 +6,7 @@ import jjh.delivery.domain.returns.ReturnType;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Return Use Case - Driving Port (Inbound)
@@ -20,52 +21,52 @@ public interface ManageReturnUseCase {
     /**
      * 반품 승인
      */
-    ProductReturn approveReturn(String returnId);
+    ProductReturn approveReturn(UUID returnId);
 
     /**
      * 반품 거절
      */
-    ProductReturn rejectReturn(String returnId, String reason);
+    ProductReturn rejectReturn(UUID returnId, String reason);
 
     /**
      * 수거 예정 등록
      */
-    ProductReturn schedulePickup(String returnId);
+    ProductReturn schedulePickup(UUID returnId);
 
     /**
      * 수거 완료
      */
-    ProductReturn completePickup(String returnId);
+    ProductReturn completePickup(UUID returnId);
 
     /**
      * 검수 시작
      */
-    ProductReturn startInspection(String returnId);
+    ProductReturn startInspection(UUID returnId);
 
     /**
      * 반품 완료 (환불 처리)
      */
-    ProductReturn completeReturn(String returnId);
+    ProductReturn completeReturn(UUID returnId);
 
     /**
      * 반품 취소
      */
-    ProductReturn cancelReturn(String returnId);
+    ProductReturn cancelReturn(UUID returnId);
 
     /**
      * 반품 조회
      */
-    ProductReturn getReturn(String returnId);
+    ProductReturn getReturn(UUID returnId);
 
     /**
      * 고객별 반품 목록 조회
      */
-    List<ProductReturn> getReturnsByCustomerId(String customerId);
+    List<ProductReturn> getReturnsByCustomerId(UUID customerId);
 
     /**
      * 주문별 반품 목록 조회
      */
-    List<ProductReturn> getReturnsByOrderId(String orderId);
+    List<ProductReturn> getReturnsByOrderId(UUID orderId);
 
     // ==================== Commands ====================
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.ProductCategories.PRODUCT_CATEGORIES;
 import static jjh.delivery.adapter.out.persistence.jooq.generated.tables.ProductVariants.PRODUCT_VARIANTS;
@@ -31,7 +32,7 @@ public class ProductJooqRepository {
      * Compile-time type-safe version of:
      * SELECT DISTINCT p FROM ProductJpaEntity p LEFT JOIN FETCH p.variants WHERE p.id = :id
      */
-    public Optional<ProductWithVariants> findByIdWithVariants(String id) {
+    public Optional<ProductWithVariants> findByIdWithVariants(UUID id) {
         Result<Record> result = dsl
                 .select()
                 .from(PRODUCTS)
@@ -53,7 +54,7 @@ public class ProductJooqRepository {
      * SELECT COUNT(p) FROM ProductJpaEntity p
      * WHERE :categoryId MEMBER OF p.categoryIds AND p.status = 'ACTIVE'
      */
-    public long countByCategoryIdAndActive(String categoryId) {
+    public long countByCategoryIdAndActive(UUID categoryId) {
         return dsl
                 .select(count())
                 .from(PRODUCTS)

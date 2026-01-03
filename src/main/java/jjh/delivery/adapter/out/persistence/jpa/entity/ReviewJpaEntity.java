@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Review JPA Entity
@@ -25,20 +26,19 @@ import java.util.List;
 public class ReviewJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "order_id", nullable = false, unique = true, length = 36)
-    private String orderId;
+    @Column(name = "order_id", nullable = false, unique = true)
+    private UUID orderId;
 
-    @Column(name = "customer_id", nullable = false, length = 36)
-    private String customerId;
+    @Column(name = "customer_id", nullable = false)
+    private UUID customerId;
 
-    @Column(name = "seller_id", nullable = false, length = 36)
-    private String sellerId;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
-    @Column(name = "product_id", nullable = false, length = 36)
-    private String productId;
+    @Column(name = "product_id", nullable = false)
+    private UUID productId;
 
     @Column(nullable = false)
     private int rating;
@@ -67,11 +67,11 @@ public class ReviewJpaEntity {
 
     @Builder
     public ReviewJpaEntity(
-            String id,
-            String orderId,
-            String customerId,
-            String sellerId,
-            String productId,
+            UUID id,
+            UUID orderId,
+            UUID customerId,
+            UUID sellerId,
+            UUID productId,
             int rating,
             String content,
             boolean isVisible,

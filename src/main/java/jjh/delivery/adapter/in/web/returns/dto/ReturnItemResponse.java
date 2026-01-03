@@ -19,11 +19,11 @@ public record ReturnItemResponse(
 ) {
     public static ReturnItemResponse from(ReturnItem item) {
         return new ReturnItemResponse(
-                item.id(),
-                item.orderItemId(),
-                item.productId(),
+                item.id().toString(),
+                item.orderItemId().toString(),
+                item.productId().toString(),
                 item.productName(),
-                item.variantId(),
+                item.variantId() != null ? item.variantId().toString() : null,
                 item.variantName(),
                 item.quantity(),
                 item.refundAmount()

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Product REST Controller - Driving Adapter (Inbound)
@@ -54,8 +55,8 @@ public class ProductController {
             @RequestParam(defaultValue = "20") int size
     ) {
         SearchProductQuery query = SearchProductQuery.builder()
-                .categoryId(categoryId)
-                .sellerId(sellerId)
+                .categoryId(categoryId != null ? UUID.fromString(categoryId) : null)
+                .sellerId(sellerId != null ? UUID.fromString(sellerId) : null)
                 .keyword(keyword)
                 .minPrice(minPrice)
                 .maxPrice(maxPrice)
@@ -79,9 +80,9 @@ public class ProductController {
      * 상품 상세 조회
      */
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDetailResponse> getProduct(@PathVariable String productId) {
+    public ResponseEntity<ProductDetailResponse> getProduct(@PathVariable UUID productId) {
         Product product = loadProductPort.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductNotFoundException(productId.toString()));
 
         String sellerName = loadSellerInfoPort.findBusinessNameById(product.getSellerId()).orElse("Unknown");
         double ratingAvg = loadReviewStatsPort.getAverageRatingByProductId(productId);
@@ -95,14 +96,14 @@ public class ProductController {
      */
     @GetMapping("/{productId}/reviews")
     public ResponseEntity<ReviewListResponse> getProductReviews(
-            @PathVariable String productId,
+            @PathVariable UUID productId,
             @RequestParam(defaultValue = "recent") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         // 상품 존재 확인
         if (!loadProductPort.existsById(productId)) {
-            throw new ProductNotFoundException(productId);
+            throw new ProductNotFoundException(productId.toString());
         }
 
         Pageable pageable = createReviewPageable(sort, page, size);

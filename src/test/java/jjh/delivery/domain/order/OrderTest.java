@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -30,16 +31,22 @@ class OrderTest {
         );
     }
 
-    private OrderItem createOrderItem(String productId, String productName, int quantity, BigDecimal unitPrice) {
+    // Deterministic UUIDs for testing
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID PRODUCT_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID PRODUCT_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000004");
+
+    private OrderItem createOrderItem(UUID productId, String productName, int quantity, BigDecimal unitPrice) {
         return OrderItem.of(productId, productName, quantity, unitPrice);
     }
 
     private Order.Builder createValidOrderBuilder() {
         return Order.builder()
-                .customerId("customer-123")
-                .sellerId("seller-456")
+                .customerId(CUSTOMER_ID)
+                .sellerId(SELLER_ID)
                 .shippingAddress(createShippingAddress())
-                .addItem(createOrderItem("product-1", "테스트 상품", 2, new BigDecimal("10000")));
+                .addItem(createOrderItem(PRODUCT_ID_1, "테스트 상품", 2, new BigDecimal("10000")));
     }
 
     // =====================================================
@@ -59,8 +66,8 @@ class OrderTest {
             // then
             assertThat(order.getId()).isNotNull();
             assertThat(order.getOrderNumber()).startsWith("ORD-");
-            assertThat(order.getCustomerId()).isEqualTo("customer-123");
-            assertThat(order.getSellerId()).isEqualTo("seller-456");
+            assertThat(order.getCustomerId()).isEqualTo(CUSTOMER_ID);
+            assertThat(order.getSellerId()).isEqualTo(SELLER_ID);
             assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
             assertThat(order.getItems()).hasSize(1);
             assertThat(order.getCreatedAt()).isNotNull();
@@ -71,9 +78,9 @@ class OrderTest {
         void createOrderWithoutCustomerIdThrowsException() {
             assertThatThrownBy(() ->
                     Order.builder()
-                            .sellerId("seller-456")
+                            .sellerId(SELLER_ID)
                             .shippingAddress(createShippingAddress())
-                            .addItem(createOrderItem("product-1", "상품", 1, new BigDecimal("10000")))
+                            .addItem(createOrderItem(PRODUCT_ID_1, "상품", 1, new BigDecimal("10000")))
                             .build()
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("customerId");
@@ -84,9 +91,9 @@ class OrderTest {
         void createOrderWithoutSellerIdThrowsException() {
             assertThatThrownBy(() ->
                     Order.builder()
-                            .customerId("customer-123")
+                            .customerId(CUSTOMER_ID)
                             .shippingAddress(createShippingAddress())
-                            .addItem(createOrderItem("product-1", "상품", 1, new BigDecimal("10000")))
+                            .addItem(createOrderItem(PRODUCT_ID_1, "상품", 1, new BigDecimal("10000")))
                             .build()
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("sellerId");
@@ -97,9 +104,9 @@ class OrderTest {
         void createOrderWithoutShippingAddressThrowsException() {
             assertThatThrownBy(() ->
                     Order.builder()
-                            .customerId("customer-123")
-                            .sellerId("seller-456")
-                            .addItem(createOrderItem("product-1", "상품", 1, new BigDecimal("10000")))
+                            .customerId(CUSTOMER_ID)
+                            .sellerId(SELLER_ID)
+                            .addItem(createOrderItem(PRODUCT_ID_1, "상품", 1, new BigDecimal("10000")))
                             .build()
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("shippingAddress");
@@ -110,8 +117,8 @@ class OrderTest {
         void createOrderWithoutItemsThrowsException() {
             assertThatThrownBy(() ->
                     Order.builder()
-                            .customerId("customer-123")
-                            .sellerId("seller-456")
+                            .customerId(CUSTOMER_ID)
+                            .sellerId(SELLER_ID)
                             .shippingAddress(createShippingAddress())
                             .build()
             ).isInstanceOf(IllegalArgumentException.class)
@@ -123,14 +130,14 @@ class OrderTest {
         void createOrderWithMultipleItems() {
             // given
             List<OrderItem> items = List.of(
-                    createOrderItem("product-1", "상품1", 2, new BigDecimal("10000")),
-                    createOrderItem("product-2", "상품2", 3, new BigDecimal("20000"))
+                    createOrderItem(PRODUCT_ID_1, "상품1", 2, new BigDecimal("10000")),
+                    createOrderItem(PRODUCT_ID_2, "상품2", 3, new BigDecimal("20000"))
             );
 
             // when
             Order order = Order.builder()
-                    .customerId("customer-123")
-                    .sellerId("seller-456")
+                    .customerId(CUSTOMER_ID)
+                    .sellerId(SELLER_ID)
                     .shippingAddress(createShippingAddress())
                     .items(items)
                     .build();
@@ -155,14 +162,14 @@ class OrderTest {
         void calculateSubtotalAmount() {
             // given
             List<OrderItem> items = List.of(
-                    createOrderItem("product-1", "상품1", 2, new BigDecimal("10000")),  // 20,000
-                    createOrderItem("product-2", "상품2", 3, new BigDecimal("5000"))    // 15,000
+                    createOrderItem(PRODUCT_ID_1, "상품1", 2, new BigDecimal("10000")),  // 20,000
+                    createOrderItem(PRODUCT_ID_2, "상품2", 3, new BigDecimal("5000"))    // 15,000
             );
 
             // when
             Order order = Order.builder()
-                    .customerId("customer-123")
-                    .sellerId("seller-456")
+                    .customerId(CUSTOMER_ID)
+                    .sellerId(SELLER_ID)
                     .shippingAddress(createShippingAddress())
                     .items(items)
                     .build();
@@ -176,10 +183,10 @@ class OrderTest {
         void calculateTotalAmountWithShippingAndDiscount() {
             // given & when
             Order order = Order.builder()
-                    .customerId("customer-123")
-                    .sellerId("seller-456")
+                    .customerId(CUSTOMER_ID)
+                    .sellerId(SELLER_ID)
                     .shippingAddress(createShippingAddress())
-                    .addItem(createOrderItem("product-1", "상품", 2, new BigDecimal("10000")))
+                    .addItem(createOrderItem(PRODUCT_ID_1, "상품", 2, new BigDecimal("10000")))
                     .shippingFee(new BigDecimal("3000"))
                     .discountAmount(new BigDecimal("2000"))
                     .build();
@@ -475,11 +482,11 @@ class OrderTest {
         void getItemCount() {
             // given
             Order order = Order.builder()
-                    .customerId("customer-123")
-                    .sellerId("seller-456")
+                    .customerId(CUSTOMER_ID)
+                    .sellerId(SELLER_ID)
                     .shippingAddress(createShippingAddress())
-                    .addItem(createOrderItem("product-1", "상품1", 2, new BigDecimal("10000")))
-                    .addItem(createOrderItem("product-2", "상품2", 3, new BigDecimal("5000")))
+                    .addItem(createOrderItem(PRODUCT_ID_1, "상품1", 2, new BigDecimal("10000")))
+                    .addItem(createOrderItem(PRODUCT_ID_2, "상품2", 3, new BigDecimal("5000")))
                     .build();
 
             // then
@@ -491,11 +498,11 @@ class OrderTest {
         void getTotalQuantity() {
             // given
             Order order = Order.builder()
-                    .customerId("customer-123")
-                    .sellerId("seller-456")
+                    .customerId(CUSTOMER_ID)
+                    .sellerId(SELLER_ID)
                     .shippingAddress(createShippingAddress())
-                    .addItem(createOrderItem("product-1", "상품1", 2, new BigDecimal("10000")))
-                    .addItem(createOrderItem("product-2", "상품2", 3, new BigDecimal("5000")))
+                    .addItem(createOrderItem(PRODUCT_ID_1, "상품1", 2, new BigDecimal("10000")))
+                    .addItem(createOrderItem(PRODUCT_ID_2, "상품2", 3, new BigDecimal("5000")))
                     .build();
 
             // then
@@ -509,8 +516,8 @@ class OrderTest {
             Order order = createValidOrderBuilder().build();
 
             // then
-            assertThat(order.containsProduct("product-1")).isTrue();
-            assertThat(order.containsProduct("product-999")).isFalse();
+            assertThat(order.containsProduct(PRODUCT_ID_1)).isTrue();
+            assertThat(order.containsProduct(UUID.fromString("00000000-0000-0000-0000-000000000999"))).isFalse();
         }
 
         @Test
@@ -521,7 +528,7 @@ class OrderTest {
             List<OrderItem> items = order.getItems();
 
             // when & then
-            assertThatThrownBy(() -> items.add(createOrderItem("new", "신규", 1, BigDecimal.ONE)))
+            assertThatThrownBy(() -> items.add(createOrderItem(UUID.fromString("00000000-0000-0000-0000-000000000999"), "신규", 1, BigDecimal.ONE)))
                     .isInstanceOf(UnsupportedOperationException.class);
         }
     }

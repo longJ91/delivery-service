@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -14,6 +15,10 @@ import static org.assertj.core.api.Assertions.*;
  */
 @DisplayName("ProductVariant 도메인 테스트")
 class ProductVariantTest {
+
+    // Deterministic UUIDs for testing
+    private static final UUID VARIANT_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID VARIANT_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     // =====================================================
     // 생성 테스트
@@ -49,7 +54,7 @@ class ProductVariantTest {
         @DisplayName("name 없이 생성 시 예외 발생")
         void createWithoutNameThrowsException() {
             assertThatThrownBy(() ->
-                    new ProductVariant("id", null, "SKU", Map.of(), BigDecimal.ZERO, 10, true)
+                    new ProductVariant(VARIANT_ID_1, null, "SKU", Map.of(), BigDecimal.ZERO, 10, true)
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("name");
         }
@@ -58,7 +63,7 @@ class ProductVariantTest {
         @DisplayName("빈 name으로 생성 시 예외 발생")
         void createWithBlankNameThrowsException() {
             assertThatThrownBy(() ->
-                    new ProductVariant("id", "  ", "SKU", Map.of(), BigDecimal.ZERO, 10, true)
+                    new ProductVariant(VARIANT_ID_1, "  ", "SKU", Map.of(), BigDecimal.ZERO, 10, true)
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("name");
         }
@@ -67,7 +72,7 @@ class ProductVariantTest {
         @DisplayName("음수 재고로 생성 시 예외 발생")
         void createWithNegativeStockThrowsException() {
             assertThatThrownBy(() ->
-                    new ProductVariant("id", "옵션", "SKU", Map.of(), BigDecimal.ZERO, -1, true)
+                    new ProductVariant(VARIANT_ID_1, "옵션", "SKU", Map.of(), BigDecimal.ZERO, -1, true)
             ).isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Stock quantity");
         }
@@ -77,7 +82,7 @@ class ProductVariantTest {
         void nullAdditionalPriceBecomesZero() {
             // given & when
             ProductVariant variant = new ProductVariant(
-                    "id", "옵션", "SKU", Map.of(), null, 10, true
+                    VARIANT_ID_1, "옵션", "SKU", Map.of(), null, 10, true
             );
 
             // then
@@ -89,7 +94,7 @@ class ProductVariantTest {
         void nullOptionValuesBecomesEmptyMap() {
             // given & when
             ProductVariant variant = new ProductVariant(
-                    "id", "옵션", "SKU", null, BigDecimal.ZERO, 10, true
+                    VARIANT_ID_1, "옵션", "SKU", null, BigDecimal.ZERO, 10, true
             );
 
             // then
@@ -231,7 +236,7 @@ class ProductVariantTest {
         void activate() {
             // given
             ProductVariant variant = new ProductVariant(
-                    "id", "옵션", "SKU", Map.of(), BigDecimal.ZERO, 10, false
+                    VARIANT_ID_1, "옵션", "SKU", Map.of(), BigDecimal.ZERO, 10, false
             );
             assertThat(variant.isActive()).isFalse();
 
@@ -334,10 +339,10 @@ class ProductVariantTest {
         void equalVariantsAreEqual() {
             // given
             ProductVariant variant1 = new ProductVariant(
-                    "id-1", "옵션", "SKU", Map.of("색상", "빨강"), new BigDecimal("1000"), 10, true
+                    VARIANT_ID_1, "옵션", "SKU", Map.of("색상", "빨강"), new BigDecimal("1000"), 10, true
             );
             ProductVariant variant2 = new ProductVariant(
-                    "id-1", "옵션", "SKU", Map.of("색상", "빨강"), new BigDecimal("1000"), 10, true
+                    VARIANT_ID_1, "옵션", "SKU", Map.of("색상", "빨강"), new BigDecimal("1000"), 10, true
             );
 
             // then
@@ -350,10 +355,10 @@ class ProductVariantTest {
         void differentIdsAreNotEqual() {
             // given
             ProductVariant variant1 = new ProductVariant(
-                    "id-1", "옵션", "SKU", Map.of(), BigDecimal.ZERO, 10, true
+                    VARIANT_ID_1, "옵션", "SKU", Map.of(), BigDecimal.ZERO, 10, true
             );
             ProductVariant variant2 = new ProductVariant(
-                    "id-2", "옵션", "SKU", Map.of(), BigDecimal.ZERO, 10, true
+                    VARIANT_ID_2, "옵션", "SKU", Map.of(), BigDecimal.ZERO, 10, true
             );
 
             // then

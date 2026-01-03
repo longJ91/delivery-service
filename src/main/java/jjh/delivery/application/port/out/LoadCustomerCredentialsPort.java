@@ -1,6 +1,7 @@
 package jjh.delivery.application.port.out;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Load Customer Credentials Port - Driven Port (Outbound)
@@ -10,5 +11,5 @@ public interface LoadCustomerCredentialsPort {
 
     Optional<String> findPasswordByEmail(String email);
 
-    Optional<String> findPasswordByCustomerId(String customerId);
+    Optional<String> findPasswordByCustomerId(UUID customerId);
 }

@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Order Application Service (v2 - Product Delivery)
@@ -43,13 +44,13 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     @Transactional
     public Order createOrder(CreateOrderCommand command) {
         Order order = Order.builder()
-                .customerId(command.customerId())
-                .sellerId(command.sellerId())
+                .customerId(UUID.fromString(command.customerId()))
+                .sellerId(UUID.fromString(command.sellerId()))
                 .items(toOrderItems(command.items()))
                 .shippingAddress(command.shippingAddress())
                 .orderMemo(command.orderMemo())
                 .shippingMemo(command.shippingMemo())
-                .couponId(command.couponId())
+                .couponId(command.couponId() != null ? UUID.fromString(command.couponId()) : null)
                 .build();
 
         Order savedOrder = saveOrderPort.save(order);
@@ -66,11 +67,12 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     private List<OrderItem> toOrderItems(List<OrderItemCommand> commands) {
         return commands.stream()
                 .map(cmd -> {
+                    UUID productId = UUID.fromString(cmd.productId());
                     if (cmd.variantId() != null) {
                         return OrderItem.ofVariant(
-                                cmd.productId(),
+                                productId,
                                 cmd.productName(),
-                                cmd.variantId(),
+                                UUID.fromString(cmd.variantId()),
                                 cmd.variantName(),
                                 cmd.sku(),
                                 cmd.optionValues(),
@@ -79,7 +81,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
                         );
                     } else {
                         return OrderItem.of(
-                                cmd.productId(),
+                                productId,
                                 cmd.productName(),
                                 cmd.quantity(),
                                 cmd.unitPrice()
@@ -92,21 +94,21 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     // ==================== GetOrderUseCase ====================
 
     @Override
-    public Optional<Order> getOrder(String orderId) {
+    public Optional<Order> getOrder(UUID orderId) {
         return loadOrderPort.findById(orderId);
     }
 
     @Override
-    public Order getOrderOrThrow(String orderId) {
+    public Order getOrderOrThrow(UUID orderId) {
         return loadOrderPort.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId.toString()));
     }
 
     // ==================== UpdateOrderStatusUseCase ====================
 
     @Override
     @Transactional
-    public Order payOrder(String orderId) {
+    public Order payOrder(UUID orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
@@ -117,7 +119,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order confirmOrder(String orderId) {
+    public Order confirmOrder(UUID orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
@@ -128,7 +130,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order startPreparing(String orderId) {
+    public Order startPreparing(UUID orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
@@ -139,7 +141,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order shipOrder(String orderId) {
+    public Order shipOrder(UUID orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
@@ -150,7 +152,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order cancelOrder(String orderId) {
+    public Order cancelOrder(UUID orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
@@ -161,7 +163,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order requestReturn(String orderId) {
+    public Order requestReturn(UUID orderId) {
         Order order = getOrderOrThrow(orderId);
         OrderStatus previousStatus = order.getStatus();
 
@@ -172,7 +174,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
 
     @Override
     @Transactional
-    public Order updateStatus(String orderId, OrderStatus newStatus) {
+    public Order updateStatus(UUID orderId, OrderStatus newStatus) {
         return switch (newStatus) {
             case PAID -> payOrder(orderId);
             case CONFIRMED -> confirmOrder(orderId);
@@ -200,12 +202,12 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     }
 
     @Override
-    public List<Order> findByCustomerId(String customerId) {
+    public List<Order> findByCustomerId(UUID customerId) {
         return orderSearchPort.findByCustomerId(customerId);
     }
 
     @Override
-    public List<Order> findBySellerId(String sellerId) {
+    public List<Order> findBySellerId(UUID sellerId) {
         return orderSearchPort.findBySellerId(sellerId);
     }
 }

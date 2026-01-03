@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Order Elasticsearch Document (v2 - Product Delivery)
@@ -21,16 +22,16 @@ import java.util.Map;
 public class OrderDocument {
 
     @Id
-    private String id;
+    private UUID id;
 
     @Field(type = FieldType.Keyword)
     private String orderNumber;
 
     @Field(type = FieldType.Keyword)
-    private String customerId;
+    private UUID customerId;
 
     @Field(type = FieldType.Keyword)
-    private String sellerId;
+    private UUID sellerId;
 
     @Field(type = FieldType.Nested)
     private List<OrderItemDocument> items;
@@ -111,7 +112,7 @@ public class OrderDocument {
     }
 
     // Getters
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -119,11 +120,11 @@ public class OrderDocument {
         return orderNumber;
     }
 
-    public String getCustomerId() {
+    public UUID getCustomerId() {
         return customerId;
     }
 
-    public String getSellerId() {
+    public UUID getSellerId() {
         return sellerId;
     }
 
@@ -156,9 +157,9 @@ public class OrderDocument {
     }
 
     public record OrderItemDocument(
-            String productId,
+            UUID productId,
             String productName,
-            String variantId,
+            UUID variantId,
             String variantName,
             String sku,
             Map<String, String> optionValues,

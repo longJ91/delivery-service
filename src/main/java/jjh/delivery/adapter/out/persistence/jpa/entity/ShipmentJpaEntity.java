@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Shipment JPA Entity
@@ -26,11 +27,10 @@ import java.util.List;
 public class ShipmentJpaEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    private UUID id;
 
-    @Column(name = "order_id", nullable = false, length = 36)
-    private String orderId;
+    @Column(name = "order_id", nullable = false)
+    private UUID orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -67,8 +67,8 @@ public class ShipmentJpaEntity {
 
     @Builder
     public ShipmentJpaEntity(
-            String id,
-            String orderId,
+            UUID id,
+            UUID orderId,
             ShippingCarrier carrier,
             String trackingNumber,
             ShipmentStatus status,

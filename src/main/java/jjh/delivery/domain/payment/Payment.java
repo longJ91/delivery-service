@@ -10,8 +10,8 @@ import java.util.UUID;
  */
 public class Payment {
 
-    private final String id;
-    private final String orderId;
+    private final UUID id;
+    private final UUID orderId;
     private PaymentMethodType paymentMethodType;
     private String paymentGateway;
     private String transactionId;
@@ -24,7 +24,7 @@ public class Payment {
     private LocalDateTime paidAt;
 
     private Payment(Builder builder) {
-        this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
+        this.id = builder.id != null ? builder.id : UUID.randomUUID();
         this.orderId = builder.orderId;
         this.paymentMethodType = builder.paymentMethodType;
         this.paymentGateway = builder.paymentGateway;
@@ -136,11 +136,11 @@ public class Payment {
     // Getters
     // =====================================================
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getOrderId() {
+    public UUID getOrderId() {
         return orderId;
     }
 
@@ -189,8 +189,8 @@ public class Payment {
     // =====================================================
 
     public static class Builder {
-        private String id;
-        private String orderId;
+        private UUID id;
+        private UUID orderId;
         private PaymentMethodType paymentMethodType;
         private String paymentGateway;
         private String transactionId;
@@ -201,12 +201,12 @@ public class Payment {
         private LocalDateTime createdAt;
         private LocalDateTime paidAt;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
 
-        public Builder orderId(String orderId) {
+        public Builder orderId(UUID orderId) {
             this.orderId = orderId;
             return this;
         }
@@ -262,7 +262,7 @@ public class Payment {
         }
 
         private void validateRequired() {
-            if (orderId == null || orderId.isBlank()) {
+            if (orderId == null) {
                 throw new IllegalArgumentException("orderId is required");
             }
             if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {

@@ -1,5 +1,7 @@
 package jjh.delivery.application.port.out;
 
+import java.util.UUID;
+
 /**
  * Update Customer Credentials Port - Driven Port (Outbound)
  * 고객 인증 정보 업데이트를 위한 포트
@@ -7,5 +9,5 @@ package jjh.delivery.application.port.out;
  */
 public interface UpdateCustomerCredentialsPort {
 
-    void updatePassword(String customerId, String encodedPassword);
+    void updatePassword(UUID customerId, String encodedPassword);
 }

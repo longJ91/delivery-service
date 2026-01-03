@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -14,13 +15,16 @@ import static org.assertj.core.api.Assertions.*;
 @DisplayName("Shipment 도메인 테스트")
 class ShipmentTest {
 
+    // Deterministic UUIDs for testing
+    private static final UUID ORDER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     // =====================================================
     // Test Fixtures
     // =====================================================
 
     private Shipment.Builder createValidShipmentBuilder() {
         return Shipment.builder()
-                .orderId("order-123")
+                .orderId(ORDER_ID)
                 .estimatedDeliveryDate(LocalDateTime.now().plusDays(3));
     }
 
@@ -40,7 +44,7 @@ class ShipmentTest {
 
             // then
             assertThat(shipment.getId()).isNotNull();
-            assertThat(shipment.getOrderId()).isEqualTo("order-123");
+            assertThat(shipment.getOrderId()).isEqualTo(ORDER_ID);
             assertThat(shipment.getStatus()).isEqualTo(ShipmentStatus.PENDING);
             assertThat(shipment.getTrackingEvents()).isEmpty();
             assertThat(shipment.getCreatedAt()).isNotNull();

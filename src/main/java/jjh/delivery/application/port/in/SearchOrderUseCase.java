@@ -5,6 +5,7 @@ import jjh.delivery.domain.order.OrderStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Search Order Use Case - Driving Port (Inbound)
@@ -14,9 +15,9 @@ public interface SearchOrderUseCase {
 
     List<Order> searchOrders(SearchOrderQuery query);
 
-    List<Order> findByCustomerId(String customerId);
+    List<Order> findByCustomerId(UUID customerId);
 
-    List<Order> findBySellerId(String sellerId);
+    List<Order> findBySellerId(UUID sellerId);
 
     record SearchOrderQuery(
             String customerId,

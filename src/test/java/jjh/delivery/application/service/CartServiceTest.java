@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,9 +53,9 @@ class CartServiceTest {
     // Test Fixtures
     // =====================================================
 
-    private static final String CUSTOMER_ID = "customer-123";
-    private static final String PRODUCT_ID = "product-456";
-    private static final String SELLER_ID = "seller-789";
+    private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID SELLER_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
 
     private Product createActiveProduct() {
         return Product.builder()
@@ -93,6 +94,8 @@ class CartServiceTest {
         cart.addItem(PRODUCT_ID, "상품", null, null, SELLER_ID, 2, new BigDecimal("10000"), null);
         return cart;
     }
+
+    private static final UUID NON_EXISTENT_UUID = UUID.fromString("00000000-0000-0000-0000-000000000099");
 
     // =====================================================
     // 장바구니 조회 테스트
@@ -149,7 +152,7 @@ class CartServiceTest {
         void addItemToNewCartSuccess() {
             // given
             Product product = createActiveProduct();
-            AddCartItemCommand command = new AddCartItemCommand(product.getId(), null, 2);
+            AddCartItemCommand command = new AddCartItemCommand(product.getId().toString(), null, 2);
 
             given(loadProductPort.findById(product.getId()))
                     .willReturn(Optional.of(product));
@@ -173,7 +176,7 @@ class CartServiceTest {
             // given
             Product product = createActiveProduct();
             Cart cart = createEmptyCart();
-            AddCartItemCommand command = new AddCartItemCommand(product.getId(), null, 3);
+            AddCartItemCommand command = new AddCartItemCommand(product.getId().toString(), null, 3);
 
             given(loadProductPort.findById(product.getId()))
                     .willReturn(Optional.of(product));
@@ -193,8 +196,8 @@ class CartServiceTest {
         void addItemWithVariantSuccess() {
             // given
             Product product = createActiveProductWithVariants();
-            String variantId = product.getVariants().get(0).id();
-            AddCartItemCommand command = new AddCartItemCommand(product.getId(), variantId, 1);
+            UUID variantId = product.getVariants().get(0).id();
+            AddCartItemCommand command = new AddCartItemCommand(product.getId().toString(), variantId.toString(), 1);
 
             given(loadProductPort.findById(product.getId()))
                     .willReturn(Optional.of(product));
@@ -215,9 +218,9 @@ class CartServiceTest {
         @DisplayName("존재하지 않는 상품 추가 시 예외")
         void addItemProductNotFoundThrowsException() {
             // given
-            AddCartItemCommand command = new AddCartItemCommand("non-existent", null, 1);
+            AddCartItemCommand command = new AddCartItemCommand(NON_EXISTENT_UUID.toString(), null, 1);
 
-            given(loadProductPort.findById("non-existent"))
+            given(loadProductPort.findById(NON_EXISTENT_UUID))
                     .willReturn(Optional.empty());
 
             // when & then
@@ -241,7 +244,7 @@ class CartServiceTest {
                             ProductVariant.of("기본", "SKU-DEFAULT", Map.of(), BigDecimal.ZERO, 100)
                     ))
                     .build();
-            AddCartItemCommand command = new AddCartItemCommand(product.getId(), null, 1);
+            AddCartItemCommand command = new AddCartItemCommand(product.getId().toString(), null, 1);
 
             given(loadProductPort.findById(product.getId()))
                     .willReturn(Optional.of(product));
@@ -268,7 +271,7 @@ class CartServiceTest {
                     .status(ProductStatus.ACTIVE)
                     .variants(List.of(inStockVariant, outOfStockVariant))
                     .build();
-            AddCartItemCommand command = new AddCartItemCommand(product.getId(), outOfStockVariant.id(), 1);
+            AddCartItemCommand command = new AddCartItemCommand(product.getId().toString(), outOfStockVariant.id().toString(), 1);
 
             given(loadProductPort.findById(product.getId()))
                     .willReturn(Optional.of(product));
@@ -295,7 +298,7 @@ class CartServiceTest {
         void updateItemQuantitySuccess() {
             // given
             Cart cart = createCartWithItem();
-            String itemId = cart.getItems().get(0).id();
+            UUID itemId = cart.getItems().get(0).id();
 
             given(loadCartPort.findByCustomerId(CUSTOMER_ID))
                     .willReturn(Optional.of(cart));
@@ -316,7 +319,7 @@ class CartServiceTest {
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> cartService.updateItemQuantity(CUSTOMER_ID, "item-id", 5))
+            assertThatThrownBy(() -> cartService.updateItemQuantity(CUSTOMER_ID, NON_EXISTENT_UUID, 5))
                     .isInstanceOf(CartItemNotFoundException.class);
 
             verify(saveCartPort, never()).save(any());
@@ -332,7 +335,7 @@ class CartServiceTest {
                     .willReturn(Optional.of(cart));
 
             // when & then
-            assertThatThrownBy(() -> cartService.updateItemQuantity(CUSTOMER_ID, "non-existent", 5))
+            assertThatThrownBy(() -> cartService.updateItemQuantity(CUSTOMER_ID, NON_EXISTENT_UUID, 5))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not found");
         }
@@ -351,7 +354,7 @@ class CartServiceTest {
         void removeItemSuccess() {
             // given
             Cart cart = createCartWithItem();
-            String itemId = cart.getItems().get(0).id();
+            UUID itemId = cart.getItems().get(0).id();
 
             given(loadCartPort.findByCustomerId(CUSTOMER_ID))
                     .willReturn(Optional.of(cart));
@@ -372,7 +375,7 @@ class CartServiceTest {
                     .willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> cartService.removeItem(CUSTOMER_ID, "item-id"))
+            assertThatThrownBy(() -> cartService.removeItem(CUSTOMER_ID, NON_EXISTENT_UUID))
                     .isInstanceOf(CartItemNotFoundException.class);
 
             verify(saveCartPort, never()).save(any());

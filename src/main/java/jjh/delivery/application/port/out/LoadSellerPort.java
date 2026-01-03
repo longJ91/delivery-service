@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Seller 조회 Port - Driven Port (Outbound)
@@ -16,12 +17,12 @@ public interface LoadSellerPort {
     /**
      * 판매자 존재 여부 확인
      */
-    boolean existsById(String sellerId);
+    boolean existsById(UUID sellerId);
 
     /**
      * ID로 판매자 조회
      */
-    Optional<Seller> findById(String sellerId);
+    Optional<Seller> findById(UUID sellerId);
 
     /**
      * 사업자번호로 판매자 조회

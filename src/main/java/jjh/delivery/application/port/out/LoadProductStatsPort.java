@@ -1,5 +1,7 @@
 package jjh.delivery.application.port.out;
 
+import java.util.UUID;
+
 /**
  * Load Product Stats Port - Driven Port (Outbound)
  * 상품 통계 조회를 위한 포트
@@ -10,5 +12,5 @@ public interface LoadProductStatsPort {
     /**
      * 카테고리별 활성 상품 수 조회
      */
-    long countByCategoryId(String categoryId);
+    long countByCategoryId(UUID categoryId);
 }
