@@ -118,6 +118,18 @@ jwt:
   access-token-expiration: 3600000  # 1 hour
   refresh-token-expiration: 604800000  # 7 days
 
+# Outbox Pattern
+outbox:
+  publisher:
+    enabled: true
+    fixed-delay: 1000        # 1초마다 폴링
+    batch-size: 100          # 배치 크기
+    timeout-seconds: 10      # Kafka 전송 타임아웃
+  cleanup:
+    enabled: true
+    retention-days: 7        # 7일 보관
+    cron: "0 0 3 * * ?"      # 매일 새벽 3시
+
 # Logging
 logging:
   level:

@@ -374,6 +374,24 @@ CREATE TABLE return_items (
 );
 
 -- =====================================================
+-- Outbox Pattern Tables (Transactional Outbox)
+-- =====================================================
+CREATE TABLE outbox_events (
+    id UUID PRIMARY KEY,
+    aggregate_type VARCHAR(100) NOT NULL,
+    aggregate_id VARCHAR(100) NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    payload JSONB NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    processed_at TIMESTAMP,
+    retry_count INT NOT NULL DEFAULT 0,
+    error_message TEXT,
+
+    CONSTRAINT chk_outbox_status CHECK (status IN ('PENDING', 'SENT', 'FAILED'))
+);
+
+-- =====================================================
 -- Indexes
 -- =====================================================
 CREATE INDEX idx_customers_email ON customers(email);
@@ -420,3 +438,8 @@ CREATE INDEX idx_webhook_subscriptions_is_active ON webhook_subscriptions(is_act
 CREATE INDEX idx_webhook_deliveries_subscription_id ON webhook_deliveries(subscription_id);
 CREATE INDEX idx_webhook_deliveries_status ON webhook_deliveries(status);
 CREATE INDEX idx_webhook_deliveries_created_at ON webhook_deliveries(created_at);
+
+-- Outbox Pattern 인덱스
+CREATE INDEX idx_outbox_pending ON outbox_events(status, created_at) WHERE status = 'PENDING';
+CREATE INDEX idx_outbox_aggregate ON outbox_events(aggregate_type, aggregate_id);
+CREATE INDEX idx_outbox_cleanup ON outbox_events(status, processed_at) WHERE status = 'SENT';

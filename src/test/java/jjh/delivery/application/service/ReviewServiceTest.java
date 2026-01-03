@@ -1,5 +1,6 @@
 package jjh.delivery.application.service;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageReviewUseCase.CreateReviewCommand;
 import jjh.delivery.application.port.in.ManageReviewUseCase.ReviewRatingInfo;
 import jjh.delivery.application.port.in.ManageReviewUseCase.UpdateReviewCommand;
@@ -16,10 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -292,34 +289,36 @@ class ReviewServiceTest {
         @DisplayName("상품별 리뷰 목록 조회")
         void getReviewsByProductIdSuccess() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Review> reviews = new PageImpl<>(List.of(createReview()));
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Review> cursorPageResponse = new CursorPageResponse<>(List.of(createReview()), size, false, null);
 
-            given(loadReviewPort.findByProductId(PRODUCT_ID, pageable))
-                    .willReturn(reviews);
+            given(loadReviewPort.findByProductId(PRODUCT_ID, cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Review> result = reviewService.getReviewsByProductId(PRODUCT_ID, pageable);
+            CursorPageResponse<Review> result = reviewService.getReviewsByProductId(PRODUCT_ID, cursor, size);
 
             // then
-            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.content()).hasSize(1);
         }
 
         @Test
         @DisplayName("내 리뷰 목록 조회")
         void getMyReviewsSuccess() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Review> reviews = new PageImpl<>(List.of(createReview()));
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Review> cursorPageResponse = new CursorPageResponse<>(List.of(createReview()), size, false, null);
 
-            given(loadReviewPort.findByCustomerId(CUSTOMER_ID, pageable))
-                    .willReturn(reviews);
+            given(loadReviewPort.findByCustomerId(CUSTOMER_ID, cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Review> result = reviewService.getMyReviews(CUSTOMER_ID, pageable);
+            CursorPageResponse<Review> result = reviewService.getMyReviews(CUSTOMER_ID, cursor, size);
 
             // then
-            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.content()).hasSize(1);
         }
 
         @Test

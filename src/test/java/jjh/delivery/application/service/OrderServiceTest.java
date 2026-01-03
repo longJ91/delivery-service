@@ -1,5 +1,6 @@
 package jjh.delivery.application.service;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.CreateOrderUseCase.CreateOrderCommand;
 import jjh.delivery.application.port.in.CreateOrderUseCase.OrderItemCommand;
 import jjh.delivery.application.port.in.SearchOrderUseCase.SearchOrderQuery;
@@ -474,14 +475,16 @@ class OrderServiceTest {
                     .customerId(CUSTOMER_ID.toString())
                     .build();
 
+            CursorPageResponse<Order> cursorPageResponse = new CursorPageResponse<>(orders, 10, false, null);
+
             given(orderSearchPort.search(query))
-                    .willReturn(orders);
+                    .willReturn(cursorPageResponse);
 
             // when
-            List<Order> result = orderService.searchOrders(query);
+            CursorPageResponse<Order> result = orderService.searchOrders(query);
 
             // then
-            assertThat(result).hasSize(1);
+            assertThat(result.content()).hasSize(1);
         }
     }
 }

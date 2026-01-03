@@ -1,5 +1,6 @@
 package jjh.delivery.application.service;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageSellerUseCase.*;
 import jjh.delivery.application.port.out.LoadSellerPort;
 import jjh.delivery.application.port.out.SaveSellerPort;
@@ -13,10 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -528,64 +525,70 @@ class SellerServiceTest {
         @DisplayName("전체 판매자 조회")
         void getAllSellersSuccess() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Seller> expectedPage = new PageImpl<>(
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Seller> cursorPageResponse = new CursorPageResponse<>(
                     List.of(createActiveSeller()),
-                    pageable,
-                    1
+                    size,
+                    false,
+                    null
             );
 
-            given(loadSellerPort.findAll(pageable))
-                    .willReturn(expectedPage);
+            given(loadSellerPort.findAll(cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Seller> result = sellerService.getAllSellers(pageable);
+            CursorPageResponse<Seller> result = sellerService.getAllSellers(cursor, size);
 
             // then
-            assertThat(result.getTotalElements()).isEqualTo(1);
+            assertThat(result.content()).hasSize(1);
         }
 
         @Test
         @DisplayName("상태별 판매자 조회")
         void getSellersByStatusSuccess() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Seller> expectedPage = new PageImpl<>(
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Seller> cursorPageResponse = new CursorPageResponse<>(
                     List.of(createPendingSeller()),
-                    pageable,
-                    1
+                    size,
+                    false,
+                    null
             );
 
-            given(loadSellerPort.findByStatus(SellerStatus.PENDING, pageable))
-                    .willReturn(expectedPage);
+            given(loadSellerPort.findByStatus(SellerStatus.PENDING, cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Seller> result = sellerService.getSellersByStatus(SellerStatus.PENDING, pageable);
+            CursorPageResponse<Seller> result = sellerService.getSellersByStatus(SellerStatus.PENDING, cursor, size);
 
             // then
-            assertThat(result.getTotalElements()).isEqualTo(1);
-            assertThat(result.getContent().get(0).getStatus()).isEqualTo(SellerStatus.PENDING);
+            assertThat(result.content()).hasSize(1);
+            assertThat(result.content().get(0).getStatus()).isEqualTo(SellerStatus.PENDING);
         }
 
         @Test
         @DisplayName("승인 대기 판매자 조회")
         void getPendingSellersSuccess() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Seller> expectedPage = new PageImpl<>(
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Seller> cursorPageResponse = new CursorPageResponse<>(
                     List.of(createPendingSeller()),
-                    pageable,
-                    1
+                    size,
+                    false,
+                    null
             );
 
-            given(loadSellerPort.findByStatus(SellerStatus.PENDING, pageable))
-                    .willReturn(expectedPage);
+            given(loadSellerPort.findByStatus(SellerStatus.PENDING, cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Seller> result = sellerService.getPendingSellers(pageable);
+            CursorPageResponse<Seller> result = sellerService.getPendingSellers(cursor, size);
 
             // then
-            assertThat(result.getTotalElements()).isEqualTo(1);
+            assertThat(result.content()).hasSize(1);
         }
     }
 

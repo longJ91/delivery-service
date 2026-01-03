@@ -1,5 +1,6 @@
 package jjh.delivery.application.service;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageCouponUseCase.CreateCouponCommand;
 import jjh.delivery.application.port.in.ManageCouponUseCase.CouponValidationResult;
 import jjh.delivery.application.port.in.ManageCouponUseCase.UpdateCouponCommand;
@@ -15,10 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -408,34 +405,36 @@ class CouponServiceTest {
         @DisplayName("전체 쿠폰 조회")
         void getAllCoupons() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Coupon> coupons = new PageImpl<>(List.of(createCoupon()));
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Coupon> cursorPageResponse = new CursorPageResponse<>(List.of(createCoupon()), size, false, null);
 
-            given(loadCouponPort.findAll(pageable))
-                    .willReturn(coupons);
+            given(loadCouponPort.findAll(cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Coupon> result = couponService.getAllCoupons(pageable);
+            CursorPageResponse<Coupon> result = couponService.getAllCoupons(cursor, size);
 
             // then
-            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.content()).hasSize(1);
         }
 
         @Test
         @DisplayName("활성 쿠폰 조회")
         void getActiveCoupons() {
             // given
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Coupon> coupons = new PageImpl<>(List.of(createCoupon()));
+            String cursor = null;
+            int size = 10;
+            CursorPageResponse<Coupon> cursorPageResponse = new CursorPageResponse<>(List.of(createCoupon()), size, false, null);
 
-            given(loadCouponPort.findByActiveStatus(true, pageable))
-                    .willReturn(coupons);
+            given(loadCouponPort.findByActiveStatus(true, cursor, size))
+                    .willReturn(cursorPageResponse);
 
             // when
-            Page<Coupon> result = couponService.getActiveCoupons(pageable);
+            CursorPageResponse<Coupon> result = couponService.getActiveCoupons(cursor, size);
 
             // then
-            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.content()).hasSize(1);
         }
 
         @Test
