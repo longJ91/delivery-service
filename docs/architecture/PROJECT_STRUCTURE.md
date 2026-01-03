@@ -54,8 +54,13 @@ src/main/java/jjh/delivery/
 │   ├── promotion/                        # 프로모션 도메인
 │   │   ├── Promotion.java
 │   │   └── exception/
-│   └── webhook/                          # 웹훅 도메인
-│       └── Webhook.java
+│   ├── webhook/                          # 웹훅 도메인
+│   │   └── Webhook.java
+│   ├── outbox/                           # Outbox Pattern 도메인
+│   │   ├── OutboxEvent.java              # 이벤트 저장 엔티티
+│   │   └── OutboxStatus.java             # 상태 (PENDING, SENT, FAILED)
+│   └── idempotency/                      # Consumer 멱등성 도메인
+│       └── ProcessedEvent.java           # 처리된 이벤트 기록
 │
 ├── application/                          # Application Layer (Use Cases)
 │   ├── port/
@@ -66,9 +71,14 @@ src/main/java/jjh/delivery/
 │   │       ├── Load{Entity}Port.java         # Read Port
 │   │       ├── Save{Entity}Port.java         # Write Port
 │   │       ├── Load{Entity}StatsPort.java    # Statistics Port (jOOQ)
-│   │       └── {Entity}SearchPort.java       # Search Port (ES)
+│   │       ├── {Entity}SearchPort.java       # Search Port (ES)
+│   │       ├── SaveOutboxEventPort.java      # Outbox 저장 Port
+│   │       ├── LoadOutboxEventPort.java      # Outbox 조회 Port
+│   │       └── ProcessedEventPort.java       # 멱등성 체크 Port
 │   └── service/
-│       └── {Entity}Service.java          # Use Case 구현체
+│       ├── {Entity}Service.java          # Use Case 구현체
+│       ├── OutboxEventPublisher.java     # Outbox → Kafka 발행 스케줄러
+│       └── OutboxEventCleaner.java       # Outbox 정리 스케줄러
 │
 ├── adapter/                              # Adapter Layer (Infrastructure)
 │   ├── in/                               # Driving Adapters
@@ -90,19 +100,23 @@ src/main/java/jjh/delivery/
 │       ├── persistence/
 │       │   ├── jpa/                      # JPA: CRUD, Fetch Join
 │       │   │   ├── entity/
-│       │   │   │   └── {Entity}JpaEntity.java
+│       │   │   │   ├── {Entity}JpaEntity.java
+│       │   │   │   ├── OutboxEventJpaEntity.java     # Outbox 엔티티
+│       │   │   │   └── ProcessedEventJpaEntity.java  # 멱등성 엔티티
 │       │   │   ├── repository/
-│       │   │   │   └── {Entity}JpaRepository.java
+│       │   │   │   ├── {Entity}JpaRepository.java
+│       │   │   │   ├── OutboxEventJpaRepository.java
+│       │   │   │   └── ProcessedEventJpaRepository.java
 │       │   │   ├── mapper/
 │       │   │   │   └── {Entity}PersistenceMapper.java
-│       │   │   └── adapter/
-│       │   │       └── {Entity}JpaAdapter.java
+│       │   │   ├── OutboxEventJpaAdapter.java        # Outbox Port 구현
+│       │   │   └── ProcessedEventJpaAdapter.java     # 멱등성 Port 구현
 │       │   └── jooq/                     # jOOQ: 통계, Projection
 │       │       ├── repository/
 │       │       │   └── {Entity}JooqRepository.java
 │       │       └── {Entity}JooqAdapter.java
 │       ├── messaging/
-│       │   └── {Entity}KafkaAdapter.java
+│       │   └── OrderOutboxAdapter.java   # Outbox Pattern 이벤트 발행
 │       └── search/
 │           └── {Entity}ElasticsearchAdapter.java
 │
@@ -113,6 +127,8 @@ src/main/java/jjh/delivery/
     ├── ElasticsearchConfig.java
     ├── OpenApiConfig.java                # Swagger/OpenAPI 설정
     ├── WebConfig.java
+    ├── SchedulingConfig.java             # @EnableScheduling (Outbox)
+    ├── JacksonConfig.java                # ObjectMapper 설정
     └── security/                         # Security 설정
         ├── SecurityConfig.java
         ├── JwtProperties.java

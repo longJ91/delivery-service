@@ -417,44 +417,146 @@ sequenceDiagram
 
 ## Event Publishing Pattern
 
-### Spring Application Events
+### Transactional Outbox Pattern
 
+이벤트 발행의 신뢰성을 보장하기 위해 **Transactional Outbox Pattern**을 사용합니다.
+
+```mermaid
+sequenceDiagram
+    participant S as Service
+    participant DB as Database
+    participant P as OutboxPublisher
+    participant K as Kafka
+
+    S->>DB: 1. 비즈니스 로직 + Outbox 저장 (동일 트랜잭션)
+    Note over S,DB: 원자성 보장
+
+    loop 폴링 (1초마다)
+        P->>DB: 2. PENDING 이벤트 조회
+        P->>K: 3. Kafka 발행
+        P->>DB: 4. 상태 SENT로 업데이트
+    end
+```
+
+**핵심 컴포넌트:**
+
+| Component | Description |
+|-----------|-------------|
+| `OutboxEvent` | 이벤트 저장 도메인 (id, aggregateType, payload, status) |
+| `OrderOutboxAdapter` | OrderEventPort 구현, 이벤트를 Outbox 테이블에 저장 |
+| `OutboxEventPublisher` | 스케줄러, PENDING 이벤트를 Kafka로 발행 |
+| `OutboxEventCleaner` | 정리 스케줄러, 오래된 SENT 이벤트 삭제 |
+
+**설정:**
+```yaml
+outbox:
+  publisher:
+    enabled: true
+    fixed-delay: 1000        # 1초마다 폴링
+    batch-size: 100          # 배치 크기
+    timeout-seconds: 10      # Kafka 전송 타임아웃
+  cleanup:
+    enabled: true
+    retention-days: 7        # 7일 보관
+    cron: "0 0 3 * * ?"      # 매일 새벽 3시
+```
+
+**이벤트 발행 흐름:**
 ```java
-// Domain Event 정의
-public record OrderPaidEvent(
-    String orderId,
-    String paymentId,
-    LocalDateTime paidAt
-) implements DomainEvent {}
+// Service Layer
+@Transactional
+public Order createOrder(CreateOrderCommand command) {
+    Order order = Order.create(...);
+    orderRepository.save(order);
 
-// Event 발행
-@Service
-public class OrderService {
-    private final ApplicationEventPublisher eventPublisher;
+    // 동일 트랜잭션 내에서 Outbox에 저장
+    orderEventPort.publish(OrderCreatedEvent.from(order));
 
-    public void completePayment(Order order, Payment payment) {
-        order.markAsPaid(payment.getId());
-        orderRepository.save(order);
-
-        eventPublisher.publishEvent(new OrderPaidEvent(
-            order.getId(),
-            payment.getId(),
-            LocalDateTime.now()
-        ));
-    }
+    return order;
 }
 
-// Event Handler
+// OrderOutboxAdapter (Port 구현체)
 @Component
-public class OrderPaidEventHandler {
-
-    @EventListener
-    @Async
-    public void handleOrderPaid(OrderPaidEvent event) {
-        // 판매자 알림 발송
-        notificationService.notifySeller(event.orderId());
+public class OrderOutboxAdapter implements OrderEventPort {
+    @Override
+    public void publish(OrderEvent event) {
+        OutboxEvent outboxEvent = toOutboxEvent(event);
+        saveOutboxEventPort.save(outboxEvent);  // DB 저장
     }
 }
+```
+
+---
+
+### Consumer Idempotency (멱등성)
+
+At-Least-Once 전달 보장으로 인한 중복 메시지를 처리하기 위해 **Event ID 기반 멱등성**을 구현합니다.
+
+```mermaid
+sequenceDiagram
+    participant K as Kafka
+    participant L as KafkaListener
+    participant DB as Database
+    participant S as Service
+
+    K->>L: 메시지 수신 (eventId 헤더 포함)
+    L->>DB: 1. eventId 존재 여부 확인
+
+    alt 이미 처리됨
+        L->>K: ACK (스킵)
+    else 미처리
+        L->>S: 2. 비즈니스 로직 실행
+        L->>DB: 3. eventId 저장 (processed_events)
+        L->>K: ACK
+    end
+```
+
+**핵심 컴포넌트:**
+
+| Component | Description |
+|-----------|-------------|
+| `ProcessedEvent` | 처리된 이벤트 도메인 (eventId, eventType, processedAt) |
+| `ProcessedEventPort` | 중복 체크 및 저장 포트 |
+| `ProcessedEventJpaAdapter` | 포트 구현체 |
+
+**Consumer 구현:**
+```java
+@KafkaListener(topics = "shipment.delivered")
+@Transactional
+public void handleDeliveryCompleted(
+        @Payload ShipmentDeliveredEvent event,
+        @Headers MessageHeaders headers,
+        Acknowledgment acknowledgment
+) {
+    String eventId = extractHeader(headers, "eventId");
+
+    // 멱등성 체크
+    if (eventId != null && processedEventPort.existsByEventId(eventId)) {
+        log.info("Skipping duplicate event: eventId={}", eventId);
+        acknowledgment.acknowledge();
+        return;
+    }
+
+    // 비즈니스 로직 실행
+    updateOrderStatusUseCase.updateStatus(...);
+
+    // 처리 완료 기록
+    if (eventId != null) {
+        processedEventPort.save(ProcessedEvent.of(eventId, eventType));
+    }
+
+    acknowledgment.acknowledge();
+}
+```
+
+**DB 스키마:**
+```sql
+CREATE TABLE processed_events (
+    event_id VARCHAR(100) PRIMARY KEY,
+    event_type VARCHAR(100) NOT NULL,
+    processed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_processed_events_processed_at ON processed_events(processed_at);
 ```
 
 ---

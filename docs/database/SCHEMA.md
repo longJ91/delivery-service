@@ -5,7 +5,7 @@
 물품 배송 서비스를 위한 PostgreSQL 데이터베이스 스키마 설계 문서입니다.
 
 - **Database**: PostgreSQL 15+
-- **Total Tables**: 28개
+- **Total Tables**: 30개
 - **Version**: 2.0.0
 - **Type**: Product Delivery Service (물품 배송)
 
@@ -161,6 +161,13 @@
 | `reviews` | 리뷰 | 1-5점 평점, 상품별 리뷰 |
 | `review_images` | 리뷰 이미지 | 다중 이미지 |
 | `review_replies` | 판매자 답글 | 리뷰당 1개 |
+
+### 10. Event Infrastructure (2 tables)
+
+| Table | Description | Key Features |
+|-------|-------------|--------------|
+| `outbox_events` | Transactional Outbox | At-Least-Once 이벤트 발행 보장 |
+| `processed_events` | Consumer Idempotency | 중복 이벤트 처리 방지 |
 
 ## Order Status Flow
 

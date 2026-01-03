@@ -391,6 +391,13 @@ CREATE TABLE outbox_events (
     CONSTRAINT chk_outbox_status CHECK (status IN ('PENDING', 'SENT', 'FAILED'))
 );
 
+-- Consumer Idempotency (중복 이벤트 처리 방지)
+CREATE TABLE processed_events (
+    event_id VARCHAR(100) PRIMARY KEY,
+    event_type VARCHAR(100) NOT NULL,
+    processed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 -- =====================================================
 -- Indexes
 -- =====================================================
@@ -443,3 +450,6 @@ CREATE INDEX idx_webhook_deliveries_created_at ON webhook_deliveries(created_at)
 CREATE INDEX idx_outbox_pending ON outbox_events(status, created_at) WHERE status = 'PENDING';
 CREATE INDEX idx_outbox_aggregate ON outbox_events(aggregate_type, aggregate_id);
 CREATE INDEX idx_outbox_cleanup ON outbox_events(status, processed_at) WHERE status = 'SENT';
+
+-- Consumer Idempotency 인덱스 (오래된 이벤트 정리용)
+CREATE INDEX idx_processed_events_processed_at ON processed_events(processed_at);

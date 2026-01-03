@@ -6,12 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import jjh.delivery.application.port.out.LoadOutboxEventPort;
 import jjh.delivery.application.port.out.SaveOutboxEventPort;
 import jjh.delivery.domain.outbox.OutboxEvent;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -80,14 +83,20 @@ public class OutboxEventPublisher {
 
     /**
      * Kafka로 이벤트 전송 (동기)
+     * eventId 헤더를 포함하여 Consumer에서 멱등성 처리 가능
      */
     private void sendToKafka(OutboxEvent event) throws ExecutionException, InterruptedException, TimeoutException {
         String topic = resolveTopic(event);
         String key = event.getAggregateId();
         String payload = event.getPayload();
 
+        // ProducerRecord 생성 (eventId 헤더 포함)
+        ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, payload);
+        record.headers().add(new RecordHeader("eventId", event.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("eventType", event.getEventType().getBytes(StandardCharsets.UTF_8)));
+
         // 동기 전송: 응답 대기하여 전송 성공 확인
-        kafkaTemplate.send(topic, key, payload)
+        kafkaTemplate.send(record)
                 .get(timeoutSeconds, TimeUnit.SECONDS);
     }
 
