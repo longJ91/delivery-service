@@ -1,7 +1,10 @@
 package jjh.delivery.adapter.out.search;
 
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+import jjh.delivery.adapter.in.web.dto.CursorValue;
 import jjh.delivery.adapter.out.search.document.OrderDocument;
 import jjh.delivery.adapter.out.search.repository.OrderElasticsearchRepository;
 import jjh.delivery.application.port.in.SearchOrderUseCase.SearchOrderQuery;
@@ -11,13 +14,16 @@ import jjh.delivery.domain.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -58,7 +64,7 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
     }
 
     @Override
-    public List<Order> search(SearchOrderQuery query) {
+    public CursorPageResponse<Order> search(SearchOrderQuery query) {
         List<Query> mustQueries = new ArrayList<>();
 
         if (query.customerId() != null) {
@@ -90,20 +96,40 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
             boolQueryBuilder.must(mustQueries);
         }
 
-        NativeQuery searchQuery = NativeQuery.builder()
+        // Cursor 기반 쿼리 빌드
+        NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(Query.of(q -> q.bool(boolQueryBuilder.build())))
-                .withPageable(PageRequest.of(query.page(), query.size()))
-                .build();
+                .withSort(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .withSort(Sort.by(Sort.Direction.DESC, "id"))
+                .withMaxResults(query.size() + 1);  // hasNext 판단을 위해 +1
+
+        // 커서 디코딩 및 search_after 설정
+        CursorValue cursorValue = CursorValue.decode(query.cursor());
+        if (cursorValue != null) {
+            queryBuilder.withSearchAfter(List.of(
+                    cursorValue.createdAt().toEpochMilli(),
+                    cursorValue.id().toString()
+            ));
+        }
+
+        NativeQuery searchQuery = queryBuilder.build();
 
         SearchHits<OrderDocument> searchHits = elasticsearchOperations.search(
                 searchQuery,
                 OrderDocument.class
         );
 
-        return searchHits.getSearchHits().stream()
+        List<Order> orders = searchHits.getSearchHits().stream()
                 .map(SearchHit::getContent)
                 .map(OrderDocument::toDomain)
                 .toList();
+
+        return CursorPageResponse.of(
+                orders,
+                query.size(),
+                order -> order.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                Order::getId
+        );
     }
 
     @Override

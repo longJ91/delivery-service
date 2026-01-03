@@ -2,6 +2,8 @@ package jjh.delivery.adapter.out.persistence.jpa;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+import jjh.delivery.adapter.in.web.dto.CursorValue;
 import jjh.delivery.adapter.out.persistence.jpa.entity.WebhookDeliveryJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.entity.WebhookSubscriptionJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.WebhookPersistenceMapper;
@@ -13,11 +15,10 @@ import jjh.delivery.domain.webhook.WebhookDelivery;
 import jjh.delivery.domain.webhook.WebhookDeliveryStatus;
 import jjh.delivery.domain.webhook.WebhookEventType;
 import jjh.delivery.domain.webhook.WebhookSubscription;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,9 +59,27 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
     }
 
     @Override
-    public Page<WebhookSubscription> findAllSubscriptions(Pageable pageable) {
-        return subscriptionRepository.findAll(pageable)
-                .map(mapper::toSubscriptionDomain);
+    public CursorPageResponse<WebhookSubscription> findAllSubscriptions(String cursor, int size) {
+        CursorValue cursorValue = CursorValue.decode(cursor);
+
+        List<WebhookSubscriptionJpaEntity> entities;
+        if (cursorValue != null) {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            entities = subscriptionRepository.findAllWithCursor(cursorCreatedAt, cursorValue.id(), size + 1);
+        } else {
+            entities = subscriptionRepository.findAllOrderByCreatedAtDesc(size + 1);
+        }
+
+        List<WebhookSubscription> subscriptions = entities.stream()
+                .map(mapper::toSubscriptionDomain)
+                .toList();
+
+        return CursorPageResponse.of(
+                subscriptions,
+                size,
+                sub -> sub.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                WebhookSubscription::getId
+        );
     }
 
     // ==================== LoadWebhookPort - Delivery ====================
@@ -72,9 +91,27 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
     }
 
     @Override
-    public Page<WebhookDelivery> findDeliveriesBySubscriptionId(UUID subscriptionId, Pageable pageable) {
-        return deliveryRepository.findBySubscriptionId(subscriptionId, pageable)
-                .map(mapper::toDeliveryDomain);
+    public CursorPageResponse<WebhookDelivery> findDeliveriesBySubscriptionId(UUID subscriptionId, String cursor, int size) {
+        CursorValue cursorValue = CursorValue.decode(cursor);
+
+        List<WebhookDeliveryJpaEntity> entities;
+        if (cursorValue != null) {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            entities = deliveryRepository.findBySubscriptionIdWithCursor(subscriptionId, cursorCreatedAt, cursorValue.id(), size + 1);
+        } else {
+            entities = deliveryRepository.findBySubscriptionIdOrderByCreatedAtDesc(subscriptionId, size + 1);
+        }
+
+        List<WebhookDelivery> deliveries = entities.stream()
+                .map(mapper::toDeliveryDomain)
+                .toList();
+
+        return CursorPageResponse.of(
+                deliveries,
+                size,
+                delivery -> delivery.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                WebhookDelivery::getId
+        );
     }
 
     @Override

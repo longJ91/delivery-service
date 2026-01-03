@@ -1,5 +1,6 @@
 package jjh.delivery.application.port.out;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.SearchOrderUseCase.SearchOrderQuery;
 import jjh.delivery.domain.order.Order;
 
@@ -16,7 +17,10 @@ public interface OrderSearchPort {
 
     void delete(UUID orderId);
 
-    List<Order> search(SearchOrderQuery query);
+    /**
+     * 커서 기반 주문 검색
+     */
+    CursorPageResponse<Order> search(SearchOrderQuery query);
 
     List<Order> findByCustomerId(UUID customerId);
 

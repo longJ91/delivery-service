@@ -1,10 +1,9 @@
 package jjh.delivery.application.port.in;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.webhook.WebhookDelivery;
 import jjh.delivery.domain.webhook.WebhookEventType;
 import jjh.delivery.domain.webhook.WebhookSubscription;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Set;
@@ -61,14 +60,14 @@ public interface ManageWebhookUseCase {
     List<WebhookSubscription> getSellerSubscriptions(UUID sellerId);
 
     /**
-     * 전체 구독 목록 조회 (Admin)
+     * 전체 구독 목록 조회 (Admin, 커서 기반 페이지네이션)
      */
-    Page<WebhookSubscription> getAllSubscriptions(Pageable pageable);
+    CursorPageResponse<WebhookSubscription> getAllSubscriptions(String cursor, int size);
 
     /**
-     * 전송 기록 조회
+     * 전송 기록 조회 (커서 기반 페이지네이션)
      */
-    Page<WebhookDelivery> getDeliveryHistory(UUID subscriptionId, Pageable pageable);
+    CursorPageResponse<WebhookDelivery> getDeliveryHistory(UUID subscriptionId, String cursor, int size);
 
     /**
      * 웹훅 테스트

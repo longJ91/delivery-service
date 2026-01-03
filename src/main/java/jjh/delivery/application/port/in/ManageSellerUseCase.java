@@ -1,11 +1,10 @@
 package jjh.delivery.application.port.in;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.seller.Seller;
 import jjh.delivery.domain.seller.SellerStatus;
 import jjh.delivery.domain.seller.SellerType;
 import jjh.delivery.domain.seller.WarehouseAddress;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -90,19 +89,19 @@ public interface ManageSellerUseCase {
     Seller getSellerByBusinessNumber(String businessNumber);
 
     /**
-     * 전체 판매자 조회
+     * 전체 판매자 조회 (커서 기반 페이지네이션)
      */
-    Page<Seller> getAllSellers(Pageable pageable);
+    CursorPageResponse<Seller> getAllSellers(String cursor, int size);
 
     /**
-     * 상태별 판매자 조회
+     * 상태별 판매자 조회 (커서 기반 페이지네이션)
      */
-    Page<Seller> getSellersByStatus(SellerStatus status, Pageable pageable);
+    CursorPageResponse<Seller> getSellersByStatus(SellerStatus status, String cursor, int size);
 
     /**
-     * 승인 대기 판매자 조회
+     * 승인 대기 판매자 조회 (커서 기반 페이지네이션)
      */
-    Page<Seller> getPendingSellers(Pageable pageable);
+    CursorPageResponse<Seller> getPendingSellers(String cursor, int size);
 
     // ==================== Commands ====================
 

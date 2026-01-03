@@ -106,9 +106,16 @@ psql -U postgres -d delivery -f docs/database/schema.sql
 ### Multi-Database Strategy
 | Technology | Usage |
 |------------|-------|
-| JPA | CRUD, 단순 쿼리 |
-| jOOQ | 복잡한 쿼리, 통계 |
+| JPA | CRUD, Fetch Join, Entity 관계 로딩 |
+| jOOQ | 통계/집계, 단순 Projection |
 | Elasticsearch | 전문 검색 |
+
+### Security
+| Feature | Implementation |
+|---------|---------------|
+| Authentication | JWT Token (Bearer) |
+| Library | jjwt 0.12.6 |
+| Token Provider | `JwtTokenProvider` |
 
 ### Event-Driven Architecture
 - Kafka를 통한 도메인 이벤트 발행/구독

@@ -1,9 +1,8 @@
 package jjh.delivery.application.port.out;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.seller.Seller;
 import jjh.delivery.domain.seller.SellerStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -35,14 +34,14 @@ public interface LoadSellerPort {
     Optional<Seller> findByEmail(String email);
 
     /**
-     * 전체 판매자 조회
+     * 전체 판매자 조회 (커서 기반 페이지네이션)
      */
-    Page<Seller> findAll(Pageable pageable);
+    CursorPageResponse<Seller> findAll(String cursor, int size);
 
     /**
-     * 상태별 판매자 조회
+     * 상태별 판매자 조회 (커서 기반 페이지네이션)
      */
-    Page<Seller> findByStatus(SellerStatus status, Pageable pageable);
+    CursorPageResponse<Seller> findByStatus(SellerStatus status, String cursor, int size);
 
     /**
      * 사업자번호 존재 여부 확인

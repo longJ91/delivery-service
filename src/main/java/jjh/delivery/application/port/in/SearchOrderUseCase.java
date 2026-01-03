@@ -3,6 +3,8 @@ package jjh.delivery.application.port.in;
 import jjh.delivery.domain.order.Order;
 import jjh.delivery.domain.order.OrderStatus;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -13,12 +15,20 @@ import java.util.UUID;
  */
 public interface SearchOrderUseCase {
 
-    List<Order> searchOrders(SearchOrderQuery query);
+    /**
+     * 커서 기반 주문 검색
+     * @return 커서 페이지 응답 (hasNext, nextCursor 포함)
+     */
+    CursorPageResponse<Order> searchOrders(SearchOrderQuery query);
 
     List<Order> findByCustomerId(UUID customerId);
 
     List<Order> findBySellerId(UUID sellerId);
 
+    /**
+     * 커서 기반 검색 쿼리
+     * @param cursor 이전 페이지의 마지막 커서 값 (첫 페이지는 null)
+     */
     record SearchOrderQuery(
             String customerId,
             String sellerId,
@@ -26,11 +36,10 @@ public interface SearchOrderUseCase {
             LocalDateTime fromDate,
             LocalDateTime toDate,
             String keyword,
-            int page,
+            String cursor,
             int size
     ) {
         public SearchOrderQuery {
-            if (page < 0) page = 0;
             if (size <= 0) size = 20;
             if (size > 100) size = 100;
         }
@@ -46,7 +55,7 @@ public interface SearchOrderUseCase {
             private LocalDateTime fromDate;
             private LocalDateTime toDate;
             private String keyword;
-            private int page = 0;
+            private String cursor;
             private int size = 20;
 
             public Builder customerId(String customerId) {
@@ -79,8 +88,8 @@ public interface SearchOrderUseCase {
                 return this;
             }
 
-            public Builder page(int page) {
-                this.page = page;
+            public Builder cursor(String cursor) {
+                this.cursor = cursor;
                 return this;
             }
 
@@ -91,7 +100,7 @@ public interface SearchOrderUseCase {
 
             public SearchOrderQuery build() {
                 return new SearchOrderQuery(
-                        customerId, sellerId, status, fromDate, toDate, keyword, page, size
+                        customerId, sellerId, status, fromDate, toDate, keyword, cursor, size
                 );
             }
         }

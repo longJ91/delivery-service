@@ -301,7 +301,7 @@ paths:
           schema:
             type: string
             enum: [recent, price_asc, price_desc, rating, sales]
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -340,7 +340,7 @@ paths:
           schema:
             type: string
             enum: [recent, rating_high, rating_low]
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -375,7 +375,7 @@ paths:
       operationId: getSellerProducts
       parameters:
         - $ref: '#/components/parameters/SellerId'
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -484,7 +484,7 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/OrderStatus'
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -704,7 +704,7 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ReturnStatus'
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -901,7 +901,7 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ProductStatus'
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -993,7 +993,7 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/OrderStatus'
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -1060,7 +1060,7 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/ReturnStatus'
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -1110,7 +1110,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
@@ -1224,18 +1224,20 @@ components:
       bearerFormat: JWT
 
   parameters:
-    Page:
-      name: page
+    Cursor:
+      name: cursor
       in: query
+      description: 이전 응답의 nextCursor 값 (첫 페이지 요청 시 생략)
       schema:
-        type: integer
-        default: 0
+        type: string
     Size:
       name: size
       in: query
+      description: 페이지당 항목 수 (기본값 20, 최대 100)
       schema:
         type: integer
         default: 20
+        maximum: 100
     OrderId:
       name: orderId
       in: path
@@ -1807,14 +1809,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductSummaryResponse'
-        page:
-          type: integer
         size:
           type: integer
-        totalElements:
-          type: integer
-        totalPages:
-          type: integer
+          description: 요청한 페이지 크기
+        hasNext:
+          type: boolean
+          description: 다음 페이지 존재 여부
+        nextCursor:
+          type: string
+          nullable: true
+          description: 다음 페이지 요청에 사용할 커서 (hasNext가 false면 null)
 
     ProductSummaryResponse:
       type: object
@@ -2087,12 +2091,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderSummaryResponse'
-        page:
-          type: integer
         size:
           type: integer
-        totalElements:
-          type: integer
+          description: 요청한 페이지 크기
+        hasNext:
+          type: boolean
+          description: 다음 페이지 존재 여부
+        nextCursor:
+          type: string
+          nullable: true
+          description: 다음 페이지 요청에 사용할 커서 (hasNext가 false면 null)
 
     OrderSummaryResponse:
       type: object
@@ -2267,12 +2275,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReturnSummaryResponse'
-        page:
-          type: integer
         size:
           type: integer
-        totalElements:
-          type: integer
+          description: 요청한 페이지 크기
+        hasNext:
+          type: boolean
+          description: 다음 페이지 존재 여부
+        nextCursor:
+          type: string
+          nullable: true
+          description: 다음 페이지 요청에 사용할 커서 (hasNext가 false면 null)
 
     ReturnSummaryResponse:
       type: object
@@ -2339,14 +2351,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReviewSummaryResponse'
-        page:
-          type: integer
         size:
           type: integer
-        totalElements:
-          type: integer
-        totalPages:
-          type: integer
+          description: 요청한 페이지 크기
+        hasNext:
+          type: boolean
+          description: 다음 페이지 존재 여부
+        nextCursor:
+          type: string
+          nullable: true
+          description: 다음 페이지 요청에 사용할 커서 (hasNext가 false면 null)
         ratingDistribution:
           type: object
           additionalProperties:

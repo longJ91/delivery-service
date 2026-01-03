@@ -1,8 +1,7 @@
 package jjh.delivery.application.port.out;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.promotion.Coupon;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,9 +17,9 @@ public interface LoadCouponPort {
 
     Optional<Coupon> findByCode(String code);
 
-    Page<Coupon> findAll(Pageable pageable);
+    CursorPageResponse<Coupon> findAll(String cursor, int size);
 
-    Page<Coupon> findByActiveStatus(boolean isActive, Pageable pageable);
+    CursorPageResponse<Coupon> findByActiveStatus(boolean isActive, String cursor, int size);
 
     List<Coupon> findUsableCoupons();
 }

@@ -1,26 +1,24 @@
 package jjh.delivery.adapter.in.web.product.dto;
 
-import org.springframework.data.domain.Page;
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 
 import java.util.List;
 
 /**
- * 상품 목록 응답
+ * 상품 목록 응답 (커서 기반 페이지네이션)
  */
 public record ProductListResponse(
         List<ProductListItemResponse> content,
-        int page,
         int size,
-        long totalElements,
-        int totalPages
+        boolean hasNext,
+        String nextCursor
 ) {
-    public static ProductListResponse from(Page<ProductListItemResponse> productPage) {
+    public static ProductListResponse from(CursorPageResponse<ProductListItemResponse> cursorPage) {
         return new ProductListResponse(
-                productPage.getContent(),
-                productPage.getNumber(),
-                productPage.getSize(),
-                productPage.getTotalElements(),
-                productPage.getTotalPages()
+                cursorPage.content(),
+                cursorPage.size(),
+                cursorPage.hasNext(),
+                cursorPage.nextCursor()
         );
     }
 }

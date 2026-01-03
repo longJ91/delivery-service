@@ -1,8 +1,7 @@
 package jjh.delivery.application.port.out;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.review.Review;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,9 +18,9 @@ public interface LoadReviewPort {
     Optional<Review> findById(UUID reviewId);
 
     /**
-     * 상품별 리뷰 목록 조회
+     * 상품별 리뷰 목록 조회 (커서 기반 페이지네이션)
      */
-    Page<Review> findByProductId(UUID productId, Pageable pageable);
+    CursorPageResponse<Review> findByProductId(UUID productId, String cursor, int size);
 
     /**
      * 상품별 리뷰 수 조회
@@ -29,14 +28,14 @@ public interface LoadReviewPort {
     long countByProductId(UUID productId);
 
     /**
-     * 고객별 리뷰 목록 조회
+     * 고객별 리뷰 목록 조회 (커서 기반 페이지네이션)
      */
-    Page<Review> findByCustomerId(UUID customerId, Pageable pageable);
+    CursorPageResponse<Review> findByCustomerId(UUID customerId, String cursor, int size);
 
     /**
-     * 판매자별 리뷰 목록 조회
+     * 판매자별 리뷰 목록 조회 (커서 기반 페이지네이션)
      */
-    Page<Review> findBySellerId(UUID sellerId, Pageable pageable);
+    CursorPageResponse<Review> findBySellerId(UUID sellerId, String cursor, int size);
 
     /**
      * 주문에 대한 리뷰 존재 여부 확인

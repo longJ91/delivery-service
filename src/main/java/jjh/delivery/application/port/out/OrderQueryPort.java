@@ -1,5 +1,6 @@
 package jjh.delivery.application.port.out;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.order.Order;
 import jjh.delivery.domain.order.OrderStatus;
 
@@ -15,12 +16,20 @@ import java.util.UUID;
  */
 public interface OrderQueryPort {
 
-    List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria);
+    /**
+     * 커서 기반 복잡한 조건 검색
+     */
+    CursorPageResponse<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria);
 
     List<OrderStatistics> getOrderStatisticsBySeller(UUID sellerId, LocalDateTime from, LocalDateTime to);
 
     List<Order> findOrdersForReport(ReportCriteria criteria);
 
+    /**
+     * 커서 기반 복잡한 쿼리 조건
+     * @param cursor 이전 페이지의 마지막 커서 값 (첫 페이지는 null)
+     * @param size 조회할 아이템 수
+     */
     record ComplexQueryCriteria(
             List<UUID> sellerIds,
             List<OrderStatus> statuses,
@@ -30,8 +39,8 @@ public interface OrderQueryPort {
             LocalDateTime toDate,
             String sortBy,
             boolean ascending,
-            int offset,
-            int limit
+            String cursor,
+            int size
     ) {}
 
     record ReportCriteria(

@@ -21,6 +21,60 @@
 | Spring Validation | Validation | Bean Validation (JSR-380) |
 | Spring Actuator | Monitoring | Health Check, Metrics |
 | Spring WebClient | HTTP Client | 외부 API 호출 |
+| Spring Security | Security | 인증/인가, JWT 토큰 기반 |
+
+## Security
+
+### JWT Authentication
+
+JWT (JSON Web Token) 기반 인증 구현:
+
+| Component | Purpose |
+|-----------|---------|
+| `JwtTokenProvider` | 토큰 생성/검증/파싱 |
+| `JwtProperties` | JWT 설정 (secret, expiration) |
+| `JwtAuthenticationFilter` | 요청별 토큰 검증 필터 |
+| `AuthenticatedUser` | 인증된 사용자 정보 래퍼 |
+
+### Authentication Flow
+
+```
+1. POST /auth/login (email, password)
+      ↓
+2. Validate credentials
+      ↓
+3. Generate JWT tokens (access + refresh)
+      ↓
+4. Return TokenResponse
+      ↓
+5. Client includes "Authorization: Bearer {token}" in requests
+      ↓
+6. JwtAuthenticationFilter validates token
+      ↓
+7. Set SecurityContext with authenticated user
+```
+
+### Controller Authentication Pattern
+
+```java
+@GetMapping
+public ResponseEntity<OrderListResponse> getMyOrders(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestParam(required = false) String status
+) {
+    UUID customerId = UUID.fromString(userDetails.getUsername());
+    // ... business logic
+}
+```
+
+### Dependencies
+
+```groovy
+// JWT
+implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+```
 
 ## Lombok Usage Patterns
 
@@ -268,6 +322,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // API Documentation
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'

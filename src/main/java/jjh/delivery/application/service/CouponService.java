@@ -2,12 +2,11 @@ package jjh.delivery.application.service;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageCouponUseCase;
 import jjh.delivery.application.port.out.LoadCouponPort;
 import jjh.delivery.application.port.out.SaveCouponPort;
 import jjh.delivery.domain.promotion.Coupon;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -154,14 +153,14 @@ public class CouponService implements ManageCouponUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Coupon> getAllCoupons(Pageable pageable) {
-        return loadCouponPort.findAll(pageable);
+    public CursorPageResponse<Coupon> getAllCoupons(String cursor, int size) {
+        return loadCouponPort.findAll(cursor, size);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Coupon> getActiveCoupons(Pageable pageable) {
-        return loadCouponPort.findByActiveStatus(true, pageable);
+    public CursorPageResponse<Coupon> getActiveCoupons(String cursor, int size) {
+        return loadCouponPort.findByActiveStatus(true, cursor, size);
     }
 
     @Override

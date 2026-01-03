@@ -3,18 +3,20 @@ package jjh.delivery.adapter.out.persistence.jpa;
 import lombok.RequiredArgsConstructor;
 
 import jakarta.persistence.criteria.Predicate;
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+import jjh.delivery.adapter.in.web.dto.CursorValue;
 import jjh.delivery.adapter.out.persistence.jpa.entity.ProductJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.ProductPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.ProductJpaRepository;
 import jjh.delivery.application.port.out.LoadProductPort;
 import jjh.delivery.domain.product.Product;
 import jjh.delivery.domain.product.ProductStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +24,7 @@ import java.util.UUID;
 
 /**
  * Product JPA Adapter - Driven Adapter (Outbound)
- * JPA를 사용한 상품 조회 구현
+ * JPA를 사용한 상품 조회 구현 (커서 기반 페이지네이션)
  * Note: 통계 쿼리(countByCategoryId)는 ProductJooqAdapter로 분리됨
  */
 @Component
@@ -41,21 +43,68 @@ public class ProductJpaAdapter implements LoadProductPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> searchProducts(SearchProductQuery query, Pageable pageable) {
+    public CursorPageResponse<Product> searchProducts(SearchProductQuery query) {
         Specification<ProductJpaEntity> spec = buildSpecification(query);
-        return repository.findAll(spec, pageable)
-                .map(mapper::toDomain);
+
+        // 커서 조건 추가
+        CursorValue cursorValue = CursorValue.decode(query.cursor());
+        if (cursorValue != null) {
+            spec = spec.and(buildCursorCondition(cursorValue));
+        }
+
+        // size + 1 조회하여 hasNext 판단
+        List<ProductJpaEntity> entities = repository.findAll(spec,
+                org.springframework.data.domain.PageRequest.of(0, query.size() + 1,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Order.desc("createdAt"),
+                                org.springframework.data.domain.Sort.Order.desc("id")
+                        ))).getContent();
+
+        List<Product> products = entities.stream()
+                .map(mapper::toDomain)
+                .toList();
+
+        return CursorPageResponse.of(
+                products,
+                query.size(),
+                product -> product.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                Product::getId
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> findBySellerId(UUID sellerId, ProductStatus status, Pageable pageable) {
-        if (status != null) {
-            return repository.findBySellerIdAndStatus(sellerId, status, pageable)
-                    .map(mapper::toDomain);
+    public CursorPageResponse<Product> findBySellerId(UUID sellerId, ProductStatus status, String cursor, int size) {
+        CursorValue cursorValue = CursorValue.decode(cursor);
+
+        List<ProductJpaEntity> entities;
+        if (cursorValue != null) {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            if (status != null) {
+                entities = repository.findBySellerIdAndStatusWithCursor(
+                        sellerId, status, cursorCreatedAt, cursorValue.id(), size + 1);
+            } else {
+                entities = repository.findBySellerIdWithCursor(
+                        sellerId, cursorCreatedAt, cursorValue.id(), size + 1);
+            }
+        } else {
+            if (status != null) {
+                entities = repository.findBySellerIdAndStatusOrderByCreatedAtDesc(sellerId, status, size + 1);
+            } else {
+                entities = repository.findBySellerIdOrderByCreatedAtDesc(sellerId, size + 1);
+            }
         }
-        return repository.findBySellerId(sellerId, pageable)
-                .map(mapper::toDomain);
+
+        List<Product> products = entities.stream()
+                .map(mapper::toDomain)
+                .toList();
+
+        return CursorPageResponse.of(
+                products,
+                size,
+                product -> product.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                Product::getId
+        );
     }
 
     @Override
@@ -95,6 +144,23 @@ public class ProductJpaAdapter implements LoadProductPort {
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /**
+     * 커서 조건을 위한 Specification 생성
+     * Keyset pagination: (created_at, id) DESC 순서
+     */
+    private Specification<ProductJpaEntity> buildCursorCondition(CursorValue cursorValue) {
+        return (root, criteriaQuery, cb) -> {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            return cb.or(
+                    cb.lessThan(root.get("createdAt"), cursorCreatedAt),
+                    cb.and(
+                            cb.equal(root.get("createdAt"), cursorCreatedAt),
+                            cb.lessThan(root.get("id"), cursorValue.id())
+                    )
+            );
         };
     }
 }

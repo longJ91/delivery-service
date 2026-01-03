@@ -4,13 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import jjh.delivery.adapter.in.web.coupon.dto.*;
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageCouponUseCase;
 import jjh.delivery.application.port.in.ManageCouponUseCase.*;
 import jjh.delivery.domain.promotion.Coupon;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -145,25 +142,31 @@ public class CouponController {
     }
 
     /**
-     * 전체 쿠폰 조회
+     * 전체 쿠폰 조회 (커서 기반 페이지네이션)
+     *
+     * @param cursor 이전 페이지의 nextCursor 값 (첫 페이지는 생략)
      */
     @GetMapping
     public ResponseEntity<CouponListResponse> getAllCoupons(
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        Page<Coupon> coupons = manageCouponUseCase.getAllCoupons(pageable);
+        CursorPageResponse<Coupon> coupons = manageCouponUseCase.getAllCoupons(cursor, size);
 
         return ResponseEntity.ok(CouponListResponse.from(coupons));
     }
 
     /**
-     * 활성 쿠폰 조회
+     * 활성 쿠폰 조회 (커서 기반 페이지네이션)
+     *
+     * @param cursor 이전 페이지의 nextCursor 값 (첫 페이지는 생략)
      */
     @GetMapping("/active")
     public ResponseEntity<CouponListResponse> getActiveCoupons(
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        Page<Coupon> coupons = manageCouponUseCase.getActiveCoupons(pageable);
+        CursorPageResponse<Coupon> coupons = manageCouponUseCase.getActiveCoupons(cursor, size);
 
         return ResponseEntity.ok(CouponListResponse.from(coupons));
     }

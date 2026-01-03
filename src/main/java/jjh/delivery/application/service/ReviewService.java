@@ -2,6 +2,7 @@ package jjh.delivery.application.service;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageReviewUseCase;
 import jjh.delivery.application.port.out.LoadReviewPort;
 import jjh.delivery.application.port.out.LoadReviewStatsPort;
@@ -9,8 +10,6 @@ import jjh.delivery.application.port.out.SaveReviewPort;
 import jjh.delivery.domain.review.Review;
 import jjh.delivery.domain.review.ReviewImage;
 import jjh.delivery.domain.review.exception.ReviewNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,14 +110,14 @@ public class ReviewService implements ManageReviewUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> getReviewsByProductId(UUID productId, Pageable pageable) {
-        return loadReviewPort.findByProductId(productId, pageable);
+    public CursorPageResponse<Review> getReviewsByProductId(UUID productId, String cursor, int size) {
+        return loadReviewPort.findByProductId(productId, cursor, size);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Review> getMyReviews(UUID customerId, Pageable pageable) {
-        return loadReviewPort.findByCustomerId(customerId, pageable);
+    public CursorPageResponse<Review> getMyReviews(UUID customerId, String cursor, int size) {
+        return loadReviewPort.findByCustomerId(customerId, cursor, size);
     }
 
     @Override

@@ -76,7 +76,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
             } else {
                 Category parent = categoryMap.get(entity.getParentId());
                 if (parent != null) {
-                    parent.getChildren().add(category);
+                    parent.addChild(category);
                 }
             }
         }

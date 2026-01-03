@@ -3,14 +3,11 @@ package jjh.delivery.adapter.in.web.review;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.adapter.in.web.review.dto.*;
 import jjh.delivery.application.port.in.ManageReviewUseCase;
 import jjh.delivery.application.port.in.ManageReviewUseCase.*;
 import jjh.delivery.domain.review.Review;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -106,28 +103,34 @@ public class ReviewController {
     }
 
     /**
-     * 내 리뷰 목록 조회
+     * 내 리뷰 목록 조회 (커서 기반 페이지네이션)
+     *
+     * @param cursor 이전 페이지의 nextCursor 값 (첫 페이지는 생략)
      */
     @GetMapping("/my")
     public ResponseEntity<ReviewListResponse> getMyReviews(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int size
     ) {
         UUID customerId = UUID.fromString(userDetails.getUsername());
-        Page<Review> reviews = manageReviewUseCase.getMyReviews(customerId, pageable);
+        CursorPageResponse<Review> reviews = manageReviewUseCase.getMyReviews(customerId, cursor, size);
 
         return ResponseEntity.ok(ReviewListResponse.from(reviews));
     }
 
     /**
-     * 상품별 리뷰 목록 조회
+     * 상품별 리뷰 목록 조회 (커서 기반 페이지네이션)
+     *
+     * @param cursor 이전 페이지의 nextCursor 값 (첫 페이지는 생략)
      */
     @GetMapping("/product/{productId}")
     public ResponseEntity<ReviewListResponse> getReviewsByProductId(
             @PathVariable UUID productId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Review> reviews = manageReviewUseCase.getReviewsByProductId(productId, pageable);
+        CursorPageResponse<Review> reviews = manageReviewUseCase.getReviewsByProductId(productId, cursor, size);
 
         return ResponseEntity.ok(ReviewListResponse.from(reviews));
     }

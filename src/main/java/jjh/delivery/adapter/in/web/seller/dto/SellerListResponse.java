@@ -1,33 +1,29 @@
 package jjh.delivery.adapter.in.web.seller.dto;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.seller.Seller;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 /**
- * 판매자 목록 응답
+ * 판매자 목록 응답 (커서 기반 페이지네이션)
  */
 public record SellerListResponse(
-        List<SellerResponse> sellers,
-        int page,
+        List<SellerResponse> content,
         int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext
+        boolean hasNext,
+        String nextCursor
 ) {
-    public static SellerListResponse from(Page<Seller> page) {
-        List<SellerResponse> sellers = page.getContent().stream()
+    public static SellerListResponse from(CursorPageResponse<Seller> cursorPage) {
+        List<SellerResponse> content = cursorPage.content().stream()
                 .map(SellerResponse::from)
                 .toList();
 
         return new SellerListResponse(
-                sellers,
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.hasNext()
+                content,
+                cursorPage.size(),
+                cursorPage.hasNext(),
+                cursorPage.nextCursor()
         );
     }
 }

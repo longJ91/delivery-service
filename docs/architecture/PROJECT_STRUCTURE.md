@@ -73,10 +73,12 @@ src/main/java/jjh/delivery/
 ├── adapter/                              # Adapter Layer (Infrastructure)
 │   ├── in/                               # Driving Adapters
 │   │   ├── web/
-│   │   │   ├── {Entity}Controller.java
-│   │   │   ├── dto/
-│   │   │   │   ├── {Action}{Entity}Request.java
-│   │   │   │   └── {Entity}Response.java
+│   │   │   ├── {domain}/                 # 도메인별 하위 디렉토리
+│   │   │   │   ├── {Entity}Controller.java
+│   │   │   │   └── dto/
+│   │   │   │       ├── {Action}{Entity}Request.java
+│   │   │   │       └── {Entity}Response.java
+│   │   │   ├── dto/                      # 공통 DTO
 │   │   │   ├── mapper/
 │   │   │   │   └── {Entity}WebMapper.java
 │   │   │   └── exception/
@@ -109,8 +111,12 @@ src/main/java/jjh/delivery/
     ├── JooqConfig.java
     ├── KafkaConfig.java
     ├── ElasticsearchConfig.java
-    ├── SecurityConfig.java
-    └── WebConfig.java
+    ├── OpenApiConfig.java                # Swagger/OpenAPI 설정
+    ├── WebConfig.java
+    └── security/                         # Security 설정
+        ├── SecurityConfig.java
+        ├── JwtProperties.java
+        └── JwtTokenProvider.java
 
 src/main/resources/
 ├── application.yaml                      # Application Configuration

@@ -1,33 +1,29 @@
 package jjh.delivery.adapter.in.web.review.dto;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.review.Review;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 /**
- * 리뷰 목록 응답
+ * 리뷰 목록 응답 (커서 기반 페이지네이션)
  */
 public record ReviewListResponse(
         List<ReviewDetailResponse> reviews,
-        int page,
         int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext
+        boolean hasNext,
+        String nextCursor
 ) {
-    public static ReviewListResponse from(Page<Review> page) {
-        List<ReviewDetailResponse> reviews = page.getContent().stream()
+    public static ReviewListResponse from(CursorPageResponse<Review> cursorPage) {
+        List<ReviewDetailResponse> reviews = cursorPage.content().stream()
                 .map(ReviewDetailResponse::from)
                 .toList();
 
         return new ReviewListResponse(
                 reviews,
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.hasNext()
+                cursorPage.size(),
+                cursorPage.hasNext(),
+                cursorPage.nextCursor()
         );
     }
 }

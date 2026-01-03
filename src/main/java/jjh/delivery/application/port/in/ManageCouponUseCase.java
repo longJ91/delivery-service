@@ -1,10 +1,9 @@
 package jjh.delivery.application.port.in;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.promotion.Coupon;
 import jjh.delivery.domain.promotion.CouponScope;
 import jjh.delivery.domain.promotion.DiscountType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -76,14 +75,14 @@ public interface ManageCouponUseCase {
     Coupon getCouponByCode(String code);
 
     /**
-     * 전체 쿠폰 조회
+     * 전체 쿠폰 조회 (커서 기반 페이지네이션)
      */
-    Page<Coupon> getAllCoupons(Pageable pageable);
+    CursorPageResponse<Coupon> getAllCoupons(String cursor, int size);
 
     /**
-     * 활성 쿠폰 조회
+     * 활성 쿠폰 조회 (커서 기반 페이지네이션)
      */
-    Page<Coupon> getActiveCoupons(Pageable pageable);
+    CursorPageResponse<Coupon> getActiveCoupons(String cursor, int size);
 
     /**
      * 사용 가능한 쿠폰 목록

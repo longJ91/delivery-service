@@ -2,13 +2,12 @@ package jjh.delivery.application.service;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageSellerUseCase;
 import jjh.delivery.application.port.out.LoadSellerPort;
 import jjh.delivery.application.port.out.SaveSellerPort;
 import jjh.delivery.domain.seller.Seller;
 import jjh.delivery.domain.seller.SellerStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -174,19 +173,19 @@ public class SellerService implements ManageSellerUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Seller> getAllSellers(Pageable pageable) {
-        return loadSellerPort.findAll(pageable);
+    public CursorPageResponse<Seller> getAllSellers(String cursor, int size) {
+        return loadSellerPort.findAll(cursor, size);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Seller> getSellersByStatus(SellerStatus status, Pageable pageable) {
-        return loadSellerPort.findByStatus(status, pageable);
+    public CursorPageResponse<Seller> getSellersByStatus(SellerStatus status, String cursor, int size) {
+        return loadSellerPort.findByStatus(status, cursor, size);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Seller> getPendingSellers(Pageable pageable) {
-        return loadSellerPort.findByStatus(SellerStatus.PENDING, pageable);
+    public CursorPageResponse<Seller> getPendingSellers(String cursor, int size) {
+        return loadSellerPort.findByStatus(SellerStatus.PENDING, cursor, size);
     }
 }

@@ -1,33 +1,29 @@
 package jjh.delivery.adapter.in.web.coupon.dto;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.promotion.Coupon;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 /**
- * 쿠폰 목록 응답
+ * 쿠폰 목록 응답 (커서 기반 페이지네이션)
  */
 public record CouponListResponse(
-        List<CouponResponse> coupons,
-        int page,
+        List<CouponResponse> content,
         int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext
+        boolean hasNext,
+        String nextCursor
 ) {
-    public static CouponListResponse from(Page<Coupon> page) {
-        List<CouponResponse> coupons = page.getContent().stream()
+    public static CouponListResponse from(CursorPageResponse<Coupon> cursorPage) {
+        List<CouponResponse> content = cursorPage.content().stream()
                 .map(CouponResponse::from)
                 .toList();
 
         return new CouponListResponse(
-                coupons,
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.hasNext()
+                content,
+                cursorPage.size(),
+                cursorPage.hasNext(),
+                cursorPage.nextCursor()
         );
     }
 }

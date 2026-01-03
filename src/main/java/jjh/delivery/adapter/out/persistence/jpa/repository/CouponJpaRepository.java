@@ -1,7 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jpa.repository;
 
 import jjh.delivery.adapter.out.persistence.jpa.entity.CouponJpaEntity;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,7 +21,64 @@ public interface CouponJpaRepository extends JpaRepository<CouponJpaEntity, UUID
 
     Optional<CouponJpaEntity> findByCode(String code);
 
-    Page<CouponJpaEntity> findByIsActive(boolean isActive, Pageable pageable);
+    // ==================== Cursor-based Pagination ====================
+
+    /**
+     * 전체 쿠폰 조회 (커서 기반)
+     */
+    @Query("SELECT c FROM CouponJpaEntity c " +
+            "WHERE (c.createdAt < :cursorCreatedAt OR (c.createdAt = :cursorCreatedAt AND c.id < :cursorId)) " +
+            "ORDER BY c.createdAt DESC, c.id DESC")
+    List<CouponJpaEntity> findAllWithCursor(
+            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+            @Param("cursorId") UUID cursorId,
+            Pageable pageable);
+
+    default List<CouponJpaEntity> findAllWithCursor(LocalDateTime cursorCreatedAt, UUID cursorId, int limit) {
+        return findAllWithCursor(cursorCreatedAt, cursorId, PageRequest.of(0, limit));
+    }
+
+    /**
+     * 전체 쿠폰 조회 (첫 페이지)
+     */
+    @Query("SELECT c FROM CouponJpaEntity c ORDER BY c.createdAt DESC, c.id DESC")
+    List<CouponJpaEntity> findAllOrderByCreatedAtDesc(Pageable pageable);
+
+    default List<CouponJpaEntity> findAllOrderByCreatedAtDesc(int limit) {
+        return findAllOrderByCreatedAtDesc(PageRequest.of(0, limit));
+    }
+
+    /**
+     * 활성 상태별 쿠폰 조회 (커서 기반)
+     */
+    @Query("SELECT c FROM CouponJpaEntity c WHERE c.isActive = :isActive " +
+            "AND (c.createdAt < :cursorCreatedAt OR (c.createdAt = :cursorCreatedAt AND c.id < :cursorId)) " +
+            "ORDER BY c.createdAt DESC, c.id DESC")
+    List<CouponJpaEntity> findByIsActiveWithCursor(
+            @Param("isActive") boolean isActive,
+            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+            @Param("cursorId") UUID cursorId,
+            Pageable pageable);
+
+    default List<CouponJpaEntity> findByIsActiveWithCursor(
+            boolean isActive, LocalDateTime cursorCreatedAt, UUID cursorId, int limit) {
+        return findByIsActiveWithCursor(isActive, cursorCreatedAt, cursorId, PageRequest.of(0, limit));
+    }
+
+    /**
+     * 활성 상태별 쿠폰 조회 (첫 페이지)
+     */
+    @Query("SELECT c FROM CouponJpaEntity c WHERE c.isActive = :isActive " +
+            "ORDER BY c.createdAt DESC, c.id DESC")
+    List<CouponJpaEntity> findByIsActiveOrderByCreatedAtDesc(
+            @Param("isActive") boolean isActive,
+            Pageable pageable);
+
+    default List<CouponJpaEntity> findByIsActiveOrderByCreatedAtDesc(boolean isActive, int limit) {
+        return findByIsActiveOrderByCreatedAtDesc(isActive, PageRequest.of(0, limit));
+    }
+
+    // ==================== Usable Coupons ====================
 
     @Query("SELECT c FROM CouponJpaEntity c WHERE c.isActive = true " +
             "AND (c.validFrom IS NULL OR c.validFrom <= :now) " +

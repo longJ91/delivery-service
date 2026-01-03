@@ -1,5 +1,7 @@
 package jjh.delivery.adapter.out.persistence.jooq;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+import jjh.delivery.adapter.in.web.dto.CursorValue;
 import jjh.delivery.application.port.out.OrderQueryPort;
 import jjh.delivery.domain.order.Order;
 import jjh.delivery.domain.order.OrderItem;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +40,7 @@ public class OrderJooqAdapter implements OrderQueryPort {
     private final DSLContext dsl;
 
     @Override
-    public List<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria) {
+    public CursorPageResponse<Order> findOrdersWithComplexCriteria(ComplexQueryCriteria criteria) {
         // Stream + Optional로 동적 조건 구성 (함수형)
         Condition combinedCondition = Stream.of(
                         toCondition(criteria.sellerIds(), ids -> field("seller_id").in(ids)),
@@ -52,17 +55,31 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .reduce(Condition::and)
                 .orElse(DSL.trueCondition());
 
-        var sortField = Optional.ofNullable(criteria.sortBy()).orElse("created_at");
-        var orderField = criteria.ascending()
-                ? field(sortField).asc()
-                : field(sortField).desc();
+        // 커서 기반 페이징 조건 추가
+        CursorValue cursorValue = CursorValue.decode(criteria.cursor());
+        if (cursorValue != null) {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            // Keyset pagination: (created_at, id) 조합으로 정확한 위치 지정
+            Condition cursorCondition = criteria.ascending()
+                    ? field("created_at").gt(cursorCreatedAt)
+                        .or(field("created_at").eq(cursorCreatedAt).and(field("id").gt(cursorValue.id())))
+                    : field("created_at").lt(cursorCreatedAt)
+                        .or(field("created_at").eq(cursorCreatedAt).and(field("id").lt(cursorValue.id())));
+            combinedCondition = combinedCondition.and(cursorCondition);
+        }
 
+        var sortField = Optional.ofNullable(criteria.sortBy()).orElse("created_at");
+        // 항상 id를 보조 정렬 키로 사용하여 tie-breaking
+        var orderFields = criteria.ascending()
+                ? new org.jooq.SortField[]{field(sortField).asc(), field("id").asc()}
+                : new org.jooq.SortField[]{field(sortField).desc(), field("id").desc()};
+
+        // size + 1 개 조회하여 hasNext 판단
         List<Record> records = dsl.select()
                 .from(table("orders"))
                 .where(combinedCondition)
-                .orderBy(orderField)
-                .offset(criteria.offset())
-                .limit(criteria.limit())
+                .orderBy(orderFields)
+                .limit(criteria.size() + 1)
                 .fetch();
 
         List<UUID> orderIds = records.stream()
@@ -71,9 +88,16 @@ public class OrderJooqAdapter implements OrderQueryPort {
 
         Map<UUID, List<OrderItem>> itemsMap = fetchOrderItems(orderIds);
 
-        return records.stream()
+        List<Order> orders = records.stream()
                 .map(r -> mapToOrder(r, itemsMap.getOrDefault(r.get("id", UUID.class), List.of())))
                 .toList();
+
+        return CursorPageResponse.of(
+                orders,
+                criteria.size(),
+                order -> order.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                Order::getId
+        );
     }
 
     /**

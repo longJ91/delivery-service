@@ -2,14 +2,13 @@ package jjh.delivery.application.service;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.ManageWebhookUseCase;
 import jjh.delivery.application.port.out.LoadWebhookPort;
 import jjh.delivery.application.port.out.SaveWebhookPort;
 import jjh.delivery.domain.webhook.WebhookDelivery;
 import jjh.delivery.domain.webhook.WebhookEventType;
 import jjh.delivery.domain.webhook.WebhookSubscription;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,14 +117,14 @@ public class WebhookService implements ManageWebhookUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WebhookSubscription> getAllSubscriptions(Pageable pageable) {
-        return loadWebhookPort.findAllSubscriptions(pageable);
+    public CursorPageResponse<WebhookSubscription> getAllSubscriptions(String cursor, int size) {
+        return loadWebhookPort.findAllSubscriptions(cursor, size);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WebhookDelivery> getDeliveryHistory(UUID subscriptionId, Pageable pageable) {
-        return loadWebhookPort.findDeliveriesBySubscriptionId(subscriptionId, pageable);
+    public CursorPageResponse<WebhookDelivery> getDeliveryHistory(UUID subscriptionId, String cursor, int size) {
+        return loadWebhookPort.findDeliveriesBySubscriptionId(subscriptionId, cursor, size);
     }
 
     @Override

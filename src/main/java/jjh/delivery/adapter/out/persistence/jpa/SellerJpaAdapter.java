@@ -2,6 +2,8 @@ package jjh.delivery.adapter.out.persistence.jpa;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+import jjh.delivery.adapter.in.web.dto.CursorValue;
 import jjh.delivery.adapter.out.persistence.jpa.entity.SellerJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.SellerPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.SellerJpaRepository;
@@ -9,11 +11,12 @@ import jjh.delivery.application.port.out.LoadSellerPort;
 import jjh.delivery.application.port.out.SaveSellerPort;
 import jjh.delivery.domain.seller.Seller;
 import jjh.delivery.domain.seller.SellerStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,16 +63,52 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Seller> findAll(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(mapper::toDomain);
+    public CursorPageResponse<Seller> findAll(String cursor, int size) {
+        CursorValue cursorValue = CursorValue.decode(cursor);
+
+        List<SellerJpaEntity> entities;
+        if (cursorValue != null) {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            entities = repository.findAllWithCursor(cursorCreatedAt, cursorValue.id(), size + 1);
+        } else {
+            entities = repository.findAllOrderByCreatedAtDesc(size + 1);
+        }
+
+        List<Seller> sellers = entities.stream()
+                .map(mapper::toDomain)
+                .toList();
+
+        return CursorPageResponse.of(
+                sellers,
+                size,
+                seller -> seller.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                Seller::getId
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Seller> findByStatus(SellerStatus status, Pageable pageable) {
-        return repository.findByStatus(status, pageable)
-                .map(mapper::toDomain);
+    public CursorPageResponse<Seller> findByStatus(SellerStatus status, String cursor, int size) {
+        CursorValue cursorValue = CursorValue.decode(cursor);
+
+        List<SellerJpaEntity> entities;
+        if (cursorValue != null) {
+            LocalDateTime cursorCreatedAt = LocalDateTime.ofInstant(cursorValue.createdAt(), ZoneId.systemDefault());
+            entities = repository.findByStatusWithCursor(status, cursorCreatedAt, cursorValue.id(), size + 1);
+        } else {
+            entities = repository.findByStatusOrderByCreatedAtDesc(status, size + 1);
+        }
+
+        List<Seller> sellers = entities.stream()
+                .map(mapper::toDomain)
+                .toList();
+
+        return CursorPageResponse.of(
+                sellers,
+                size,
+                seller -> seller.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
+                Seller::getId
+        );
     }
 
     @Override

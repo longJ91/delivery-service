@@ -1,8 +1,7 @@
 package jjh.delivery.application.port.in;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.domain.review.Review;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -34,14 +33,14 @@ public interface ManageReviewUseCase {
     Review getReview(UUID reviewId);
 
     /**
-     * 상품별 리뷰 목록 조회
+     * 상품별 리뷰 목록 조회 (커서 기반 페이지네이션)
      */
-    Page<Review> getReviewsByProductId(UUID productId, Pageable pageable);
+    CursorPageResponse<Review> getReviewsByProductId(UUID productId, String cursor, int size);
 
     /**
-     * 내 리뷰 목록 조회
+     * 내 리뷰 목록 조회 (커서 기반 페이지네이션)
      */
-    Page<Review> getMyReviews(UUID customerId, Pageable pageable);
+    CursorPageResponse<Review> getMyReviews(UUID customerId, String cursor, int size);
 
     /**
      * 상품별 평점 정보

@@ -2,6 +2,7 @@ package jjh.delivery.application.service;
 
 import lombok.RequiredArgsConstructor;
 
+import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
 import jjh.delivery.application.port.in.CreateOrderUseCase;
 import jjh.delivery.application.port.in.GetOrderUseCase;
 import jjh.delivery.application.port.in.SearchOrderUseCase;
@@ -197,7 +198,7 @@ public class OrderService implements CreateOrderUseCase, GetOrderUseCase,
     // ==================== SearchOrderUseCase ====================
 
     @Override
-    public List<Order> searchOrders(SearchOrderQuery query) {
+    public CursorPageResponse<Order> searchOrders(SearchOrderQuery query) {
         return orderSearchPort.search(query);
     }
 

@@ -180,7 +180,7 @@ GET /categories
 
 ### 상품 목록 조회
 ```http
-GET /products?categoryId={categoryId}&keyword={keyword}&minPrice={min}&maxPrice={max}&sort={sort}&page={page}&size={size}
+GET /products?categoryId={categoryId}&keyword={keyword}&minPrice={min}&maxPrice={max}&sort={sort}&cursor={cursor}&size={size}
 ```
 
 **Query Parameters**
@@ -192,7 +192,7 @@ GET /products?categoryId={categoryId}&keyword={keyword}&minPrice={min}&maxPrice=
 | minPrice | number | 최소 가격 |
 | maxPrice | number | 최대 가격 |
 | sort | string | 정렬 (recent, price_asc, price_desc, rating, sales) |
-| page | number | 페이지 (0부터 시작) |
+| cursor | string | 이전 응답의 nextCursor 값 (첫 페이지는 생략) |
 | size | number | 페이지 크기 (기본 20) |
 
 **Response** `200 OK`
@@ -211,10 +211,9 @@ GET /products?categoryId={categoryId}&keyword={keyword}&minPrice={min}&maxPrice=
       "sellerName": "애플스토어"
     }
   ],
-  "page": 0,
   "size": 20,
-  "totalElements": 100,
-  "totalPages": 5
+  "hasNext": true,
+  "nextCursor": "eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDEwOjAwOjAwWiIsImlkIjoicHJvZC11dWlkLTEyMyJ9"
 }
 ```
 
@@ -267,15 +266,15 @@ GET /products/{productId}
 
 ### 상품 리뷰 목록 조회
 ```http
-GET /products/{productId}/reviews?sort={sort}&page={page}&size={size}
+GET /products/{productId}/reviews?sort={sort}&cursor={cursor}&size={size}
 ```
 
 **Query Parameters**
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | sort | string | 정렬 (recent, rating_high, rating_low) |
-| page | number | 페이지 |
-| size | number | 페이지 크기 |
+| cursor | string | 이전 응답의 nextCursor 값 (첫 페이지는 생략) |
+| size | number | 페이지 크기 (기본 10) |
 
 **Response** `200 OK`
 ```json
@@ -300,10 +299,9 @@ GET /products/{productId}/reviews?sort={sort}&page={page}&size={size}
       "createdAt": "2025-01-01T14:00:00"
     }
   ],
-  "page": 0,
   "size": 10,
-  "totalElements": 128,
-  "totalPages": 13,
+  "hasNext": true,
+  "nextCursor": "eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDE0OjAwOjAwWiIsImlkIjoicmV2aWV3LXV1aWQtMTIzIn0=",
   "ratingDistribution": {
     "5": 80,
     "4": 30,
@@ -477,7 +475,7 @@ Content-Type: application/json
 
 ### 내 주문 목록 조회
 ```http
-GET /orders?status={status}&page={page}&size={size}
+GET /orders?status={status}&cursor={cursor}&size={size}
 Authorization: Bearer {token}
 ```
 
@@ -485,8 +483,8 @@ Authorization: Bearer {token}
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | status | string | 상태 필터 (PENDING, PAID, SHIPPED, DELIVERED 등) |
-| page | number | 페이지 |
-| size | number | 페이지 크기 |
+| cursor | string | 이전 응답의 nextCursor 값 (첫 페이지는 생략) |
+| size | number | 페이지 크기 (기본 20) |
 
 **Response** `200 OK`
 ```json
@@ -505,9 +503,9 @@ Authorization: Bearer {token}
       "deliveredAt": "2025-01-03T14:00:00"
     }
   ],
-  "page": 0,
   "size": 10,
-  "totalElements": 50
+  "hasNext": true,
+  "nextCursor": "eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDEwOjAwOjAwWiIsImlkIjoib3JkZXItdXVpZC0xMjMifQ=="
 }
 ```
 
@@ -779,9 +777,16 @@ Content-Type: application/json
 
 ### 반품 목록 조회
 ```http
-GET /returns?status={status}&page={page}&size={size}
+GET /returns?status={status}&cursor={cursor}&size={size}
 Authorization: Bearer {token}
 ```
+
+**Query Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| status | string | 상태 필터 (REQUESTED, APPROVED, COMPLETED 등) |
+| cursor | string | 이전 응답의 nextCursor 값 (첫 페이지는 생략) |
+| size | number | 페이지 크기 (기본 20) |
 
 **Response** `200 OK`
 ```json
@@ -799,9 +804,9 @@ Authorization: Bearer {token}
       "completedAt": "2025-01-10T14:00:00"
     }
   ],
-  "page": 0,
   "size": 10,
-  "totalElements": 5
+  "hasNext": false,
+  "nextCursor": null
 }
 ```
 
@@ -998,9 +1003,16 @@ Authorization: Bearer {token}
 
 ### 내 상품 목록
 ```http
-GET /sellers/me/products?status={status}&page={page}&size={size}
+GET /sellers/me/products?status={status}&cursor={cursor}&size={size}
 Authorization: Bearer {token}
 ```
+
+**Query Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| status | string | 상태 필터 (DRAFT, ACTIVE, OUT_OF_STOCK 등) |
+| cursor | string | 이전 응답의 nextCursor 값 (첫 페이지는 생략) |
+| size | number | 페이지 크기 (기본 20) |
 
 **Response** `200 OK`
 
@@ -1045,9 +1057,16 @@ Content-Type: application/json
 
 ### 주문 목록 (판매자)
 ```http
-GET /sellers/me/orders?status={status}&page={page}&size={size}
+GET /sellers/me/orders?status={status}&cursor={cursor}&size={size}
 Authorization: Bearer {token}
 ```
+
+**Query Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| status | string | 상태 필터 (PENDING, PAID, CONFIRMED 등) |
+| cursor | string | 이전 응답의 nextCursor 값 (첫 페이지는 생략) |
+| size | number | 페이지 크기 (기본 20) |
 
 **Response** `200 OK`
 
@@ -1151,6 +1170,55 @@ POST /webhooks/shipments/{carrier}
 | `lotte` | 롯데택배 |
 | `logen` | 로젠택배 |
 | `post` | 우체국택배 |
+
+---
+
+## Cursor-Based Pagination
+
+모든 목록 조회 API는 커서 기반 페이지네이션을 사용합니다.
+
+### 요청 파라미터
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| cursor | string | No | 이전 응답의 `nextCursor` 값. 첫 페이지 요청 시 생략 |
+| size | number | No | 페이지당 항목 수 (기본값: 20, 최대: 100) |
+
+### 응답 형식
+
+```json
+{
+  "content": [...],
+  "size": 20,
+  "hasNext": true,
+  "nextCursor": "eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDEwOjAwOjAwWiIsImlkIjoidXVpZC0xMjMifQ=="
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| content | array | 현재 페이지의 데이터 목록 |
+| size | number | 요청한 페이지 크기 |
+| hasNext | boolean | 다음 페이지 존재 여부 |
+| nextCursor | string | 다음 페이지 요청에 사용할 커서 (hasNext가 false면 null) |
+
+### 사용 예시
+
+**첫 번째 페이지 요청**
+```http
+GET /orders?size=20
+```
+
+**다음 페이지 요청**
+```http
+GET /orders?cursor=eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDEwOjAwOjAwWiIsImlkIjoidXVpZC0xMjMifQ==&size=20
+```
+
+### 장점
+
+- **성능**: 대용량 데이터셋에서도 일정한 성능 보장
+- **일관성**: 데이터 변경 시에도 중복/누락 없이 안정적인 페이지네이션
+- **확장성**: 분산 시스템에서 효율적인 처리 가능
 
 ---
 
