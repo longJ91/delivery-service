@@ -1,4 +1,4 @@
-package jjh.delivery.adapter.out.persistence.jpa.adapter;
+package jjh.delivery.adapter.out.persistence.jpa;
 
 import lombok.RequiredArgsConstructor;
 
