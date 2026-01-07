@@ -31,4 +31,17 @@ public class SellerJooqRepository {
                 .where(SELLERS.ID.eq(id))
                 .fetchOptional(SELLERS.BUSINESS_NAME);
     }
+
+    /**
+     * Check if seller exists by ID
+     * Compile-time type-safe version of:
+     * SELECT EXISTS(SELECT 1 FROM sellers WHERE id = :id)
+     */
+    public boolean existsById(UUID id) {
+        return dsl.fetchExists(
+                dsl.selectOne()
+                        .from(SELLERS)
+                        .where(SELLERS.ID.eq(id))
+        );
+    }
 }

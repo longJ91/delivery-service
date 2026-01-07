@@ -22,6 +22,7 @@ public class CustomerPersistenceMapper {
                 encodedPassword,
                 customer.getName(),
                 customer.getPhoneNumber(),
+                customer.getProfileImageUrl(),
                 customer.getStatus(),
                 customer.getCreatedAt(),
                 customer.getUpdatedAt(),
@@ -60,6 +61,7 @@ public class CustomerPersistenceMapper {
                 .email(entity.getEmail())
                 .name(entity.getName())
                 .phoneNumber(entity.getPhoneNumber())
+                .profileImageUrl(entity.getProfileImageUrl())
                 .status(entity.getStatus())
                 .addresses(addresses)
                 .createdAt(entity.getCreatedAt())

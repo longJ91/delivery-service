@@ -81,4 +81,29 @@ public record CustomerAddress(
                 id, name, recipientName, phoneNumber, postalCode, address1, address2, isDefault, createdAt
         );
     }
+
+    /**
+     * Create copy with updated fields (keeps same id and createdAt)
+     */
+    public CustomerAddress withUpdated(
+            String name,
+            String recipientName,
+            String phoneNumber,
+            String postalCode,
+            String address1,
+            String address2,
+            boolean isDefault
+    ) {
+        return new CustomerAddress(
+                this.id,
+                name,
+                recipientName,
+                phoneNumber,
+                postalCode,
+                address1,
+                address2,
+                isDefault,
+                this.createdAt
+        );
+    }
 }

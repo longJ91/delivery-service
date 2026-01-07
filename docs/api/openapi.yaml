@@ -114,6 +114,31 @@ paths:
         '401':
           description: 인증 실패
 
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 토큰 갱신
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: 토큰 갱신 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: 유효하지 않은 리프레시 토큰
+
   # ============================================
   # Customer API
   # ============================================
@@ -236,7 +261,8 @@ paths:
   /customers/me/coupons:
     get:
       tags: [Customers]
-      summary: 내 쿠폰 목록
+      summary: 내 쿠폰 목록 (미구현, 향후 추가 예정)
+      description: "⚠️ 이 엔드포인트는 아직 구현되지 않았습니다."
       operationId: getMyCoupons
       security:
         - bearerAuth: []
@@ -403,15 +429,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CartResponse'
 
-    delete:
-      tags: [Cart]
-      summary: 장바구니 비우기
-      operationId: clearCart
-      security:
-        - bearerAuth: []
-      responses:
-        '204':
-          description: 삭제 성공
+  # Note: DELETE /cart (clearCart) - 미구현, 향후 추가 예정
 
   /cart/items:
     post:
@@ -556,37 +574,165 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
-  /orders/{orderId}/confirm-receipt:
+  # Note: POST /orders/{orderId}/confirm-receipt - 미구현, 향후 추가 예정
+
+  /orders/{orderId}/pay:
     post:
       tags: [Orders]
-      summary: 구매 확정
-      operationId: confirmReceipt
+      summary: 결제 처리
+      operationId: payOrder
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
       responses:
         '200':
-          description: 구매 확정 성공
+          description: 결제 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
         '409':
           $ref: '#/components/responses/Conflict'
 
-  /orders/{orderId}/shipment:
-    get:
+  /orders/{orderId}/confirm:
+    post:
       tags: [Orders]
-      summary: 주문 배송 정보 조회
-      operationId: getOrderShipment
+      summary: 주문 확정 (판매자)
+      operationId: confirmOrder
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 주문 확정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /orders/{orderId}/prepare:
+    post:
+      tags: [Orders]
+      summary: 상품 준비 시작
+      operationId: prepareOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 준비 시작 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /orders/{orderId}/ship:
+    post:
+      tags: [Orders]
+      summary: 출고 완료
+      operationId: shipOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 출고 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /orders/{orderId}/return:
+    post:
+      tags: [Orders]
+      summary: 반품 요청
+      operationId: returnOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 반품 요청 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /orders/customer/{customerId}:
+    get:
+      tags: [Orders]
+      summary: 고객별 주문 목록 조회
+      operationId: getOrdersByCustomer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
       responses:
         '200':
           description: 조회 성공
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ShipmentResponse'
+                $ref: '#/components/schemas/OrderListResponse'
+
+  /orders/seller/{sellerId}:
+    get:
+      tags: [Orders]
+      summary: 판매자별 주문 목록 조회
+      operationId: getOrdersBySeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+  # Note: GET /orders/{orderId}/shipment - 미구현, 향후 추가 예정
+
+  /orders/{orderId}/status:
+    patch:
+      tags: [Orders]
+      summary: 주문 상태 변경
+      operationId: updateOrderStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: '#/components/schemas/OrderStatus'
+      responses:
+        '200':
+          description: 상태 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
 
   # ============================================
   # Payment API
@@ -652,9 +798,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentResponse'
 
+  /payments/order/{orderId}:
+    get:
+      tags: [Payments]
+      summary: 주문별 결제 조회
+      operationId: getPaymentByOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
   # ============================================
   # Shipment API
   # ============================================
+  /shipments:
+    post:
+      tags: [Shipments]
+      summary: 배송 생성
+      operationId: createShipment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, carrier, trackingNumber]
+              properties:
+                orderId:
+                  type: string
+                carrier:
+                  $ref: '#/components/schemas/ShippingCarrier'
+                trackingNumber:
+                  type: string
+      responses:
+        '201':
+          description: 배송 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+
   /shipments/{shipmentId}:
     get:
       tags: [Shipments]
@@ -673,14 +865,91 @@ paths:
                 $ref: '#/components/schemas/ShipmentResponse'
 
   /shipments/{shipmentId}/tracking:
-    get:
+    post:
       tags: [Shipments]
-      summary: 배송 추적 조회
-      operationId: getShipmentTracking
+      summary: 배송 추적 이벤트 추가
+      operationId: addTrackingEvent
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ShipmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, location, description]
+              properties:
+                status:
+                  type: string
+                location:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: 추적 이벤트 추가 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+
+  /shipments/{shipmentId}/status:
+    patch:
+      tags: [Shipments]
+      summary: 배송 상태 변경
+      operationId: updateShipmentStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ShipmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: '#/components/schemas/ShipmentStatus'
+      responses:
+        '200':
+          description: 상태 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+
+  /shipments/order/{orderId}:
+    get:
+      tags: [Shipments]
+      summary: 주문별 배송 조회
+      operationId: getShipmentByOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+
+  /shipments/tracking/{trackingNumber}:
+    get:
+      tags: [Shipments]
+      summary: 운송장 번호로 배송 조회
+      operationId: getShipmentByTrackingNumber
+      parameters:
+        - name: trackingNumber
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: 조회 성공
@@ -693,6 +962,27 @@ paths:
   # Return API
   # ============================================
   /returns:
+    post:
+      tags: [Returns]
+      summary: 반품/교환 요청
+      operationId: createReturn
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReturnRequest'
+      responses:
+        '201':
+          description: 요청 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/my:
     get:
       tags: [Returns]
       summary: 내 반품 목록 조회
@@ -714,25 +1004,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReturnListResponse'
 
-    post:
+  /returns/order/{orderId}:
+    get:
       tags: [Returns]
-      summary: 반품/교환 요청
-      operationId: createReturn
+      summary: 주문별 반품 목록 조회
+      operationId: getReturnsByOrder
       security:
         - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateReturnRequest'
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
       responses:
-        '201':
-          description: 요청 성공
+        '200':
+          description: 조회 성공
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReturnResponse'
+                $ref: '#/components/schemas/ReturnListResponse'
 
   /returns/{returnId}:
     get:
@@ -766,6 +1053,114 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+  /returns/{returnId}/approve:
+    post:
+      tags: [Returns]
+      summary: 반품 승인 (판매자)
+      operationId: approveReturn
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 승인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/{returnId}/reject:
+    post:
+      tags: [Returns]
+      summary: 반품 거절 (판매자)
+      operationId: rejectReturn
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectReturnRequest'
+      responses:
+        '200':
+          description: 거절 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/{returnId}/schedule-pickup:
+    post:
+      tags: [Returns]
+      summary: 반품 수거 예약
+      operationId: schedulePickup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 예약 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/{returnId}/complete-pickup:
+    post:
+      tags: [Returns]
+      summary: 반품 수거 완료
+      operationId: completePickup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 수거 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/{returnId}/start-inspection:
+    post:
+      tags: [Returns]
+      summary: 반품 검수 시작
+      operationId: startInspection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 검수 시작
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
+  /returns/{returnId}/complete:
+    post:
+      tags: [Returns]
+      summary: 반품 완료
+      operationId: completeReturn
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReturnId'
+      responses:
+        '200':
+          description: 반품 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnResponse'
+
   # ============================================
   # Review API
   # ============================================
@@ -791,6 +1186,20 @@ paths:
                 $ref: '#/components/schemas/ReviewResponse'
 
   /reviews/{reviewId}:
+    get:
+      tags: [Reviews]
+      summary: 리뷰 상세 조회
+      operationId: getReview
+      parameters:
+        - $ref: '#/components/parameters/ReviewId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+
     put:
       tags: [Reviews]
       summary: 리뷰 수정
@@ -821,292 +1230,11 @@ paths:
         '204':
           description: 삭제 성공
 
-  # ============================================
-  # Coupon API
-  # ============================================
-  /coupons:
+  /reviews/my:
     get:
-      tags: [Coupons]
-      summary: 사용 가능 쿠폰 목록
-      operationId: getAvailableCoupons
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: productId
-          in: query
-          schema:
-            type: string
-        - name: sellerId
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CouponListResponse'
-
-  /coupons/{couponCode}/claim:
-    post:
-      tags: [Coupons]
-      summary: 쿠폰 발급
-      operationId: claimCoupon
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: couponCode
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 발급 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CustomerCouponResponse'
-        '409':
-          description: 이미 발급됨 또는 소진
-
-  # ============================================
-  # Seller Admin API
-  # ============================================
-  /sellers/me:
-    get:
-      tags: [Seller Admin]
-      summary: 내 판매자 정보 조회
-      operationId: getMySellerProfile
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SellerDetailResponse'
-
-  /sellers/me/products:
-    get:
-      tags: [Seller Admin]
-      summary: 내 상품 목록
-      operationId: getMyProducts
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/ProductStatus'
-        - $ref: '#/components/parameters/Cursor'
-        - $ref: '#/components/parameters/Size'
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductListResponse'
-
-    post:
-      tags: [Seller Admin]
-      summary: 상품 등록
-      operationId: createProduct
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductRequest'
-      responses:
-        '201':
-          description: 등록 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDetailResponse'
-
-  /sellers/me/products/{productId}:
-    put:
-      tags: [Seller Admin]
-      summary: 상품 수정
-      operationId: updateProduct
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ProductId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductRequest'
-      responses:
-        '200':
-          description: 수정 성공
-
-    delete:
-      tags: [Seller Admin]
-      summary: 상품 삭제
-      operationId: deleteProduct
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ProductId'
-      responses:
-        '204':
-          description: 삭제 성공
-
-  /sellers/me/products/{productId}/stock:
-    patch:
-      tags: [Seller Admin]
-      summary: 재고 수정
-      operationId: updateProductStock
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ProductId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateStockRequest'
-      responses:
-        '200':
-          description: 수정 성공
-
-  /sellers/me/orders:
-    get:
-      tags: [Seller Admin]
-      summary: 주문 목록 (판매자)
-      operationId: getSellerOrders
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/OrderStatus'
-        - $ref: '#/components/parameters/Cursor'
-        - $ref: '#/components/parameters/Size'
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderListResponse'
-
-  /sellers/me/orders/{orderId}/confirm:
-    post:
-      tags: [Seller Admin]
-      summary: 주문 확정
-      operationId: confirmOrder
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      responses:
-        '200':
-          description: 확정 성공
-
-  /sellers/me/orders/{orderId}/prepare:
-    post:
-      tags: [Seller Admin]
-      summary: 상품 준비 시작
-      operationId: startPreparing
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      responses:
-        '200':
-          description: 준비 시작 성공
-
-  /sellers/me/orders/{orderId}/ship:
-    post:
-      tags: [Seller Admin]
-      summary: 출고 완료 (운송장 등록)
-      operationId: shipOrder
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ShipOrderRequest'
-      responses:
-        '200':
-          description: 출고 성공
-
-  /sellers/me/returns:
-    get:
-      tags: [Seller Admin]
-      summary: 반품 목록 (판매자)
-      operationId: getSellerReturns
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/ReturnStatus'
-        - $ref: '#/components/parameters/Cursor'
-        - $ref: '#/components/parameters/Size'
-      responses:
-        '200':
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReturnListResponse'
-
-  /sellers/me/returns/{returnId}/approve:
-    post:
-      tags: [Seller Admin]
-      summary: 반품 승인
-      operationId: approveReturn
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ReturnId'
-      responses:
-        '200':
-          description: 승인 성공
-
-  /sellers/me/returns/{returnId}/reject:
-    post:
-      tags: [Seller Admin]
-      summary: 반품 거절
-      operationId: rejectReturn
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ReturnId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RejectReturnRequest'
-      responses:
-        '200':
-          description: 거절 성공
-
-  /sellers/me/reviews:
-    get:
-      tags: [Seller Admin]
-      summary: 리뷰 목록 (판매자)
-      operationId: getSellerReviews
+      tags: [Reviews]
+      summary: 내 리뷰 목록 조회
+      operationId: getMyReviews
       security:
         - bearerAuth: []
       parameters:
@@ -1120,10 +1248,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReviewListResponse'
 
-  /sellers/me/reviews/{reviewId}/reply:
+  /reviews/product/{productId}:
+    get:
+      tags: [Reviews]
+      summary: 상품 리뷰 목록 조회
+      operationId: getProductReviews
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+
+  /reviews/product/{productId}/rating:
+    get:
+      tags: [Reviews]
+      summary: 상품 평점 통계 조회
+      operationId: getProductRating
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  averageRating:
+                    type: number
+                  totalReviews:
+                    type: integer
+                  ratingDistribution:
+                    type: object
+                    additionalProperties:
+                      type: integer
+
+  /reviews/{reviewId}/reply:
     post:
-      tags: [Seller Admin]
-      summary: 리뷰 답글 작성
+      tags: [Reviews]
+      summary: 리뷰 답글 작성 (판매자)
       operationId: createReviewReply
       security:
         - bearerAuth: []
@@ -1140,8 +1309,8 @@ paths:
           description: 작성 성공
 
     put:
-      tags: [Seller Admin]
-      summary: 리뷰 답글 수정
+      tags: [Reviews]
+      summary: 리뷰 답글 수정 (판매자)
       operationId: updateReviewReply
       security:
         - bearerAuth: []
@@ -1158,8 +1327,8 @@ paths:
           description: 수정 성공
 
     delete:
-      tags: [Seller Admin]
-      summary: 리뷰 답글 삭제
+      tags: [Reviews]
+      summary: 리뷰 답글 삭제 (판매자)
       operationId: deleteReviewReply
       security:
         - bearerAuth: []
@@ -1170,51 +1339,825 @@ paths:
           description: 삭제 성공
 
   # ============================================
-  # Webhooks
+  # Coupon API
   # ============================================
-  /webhooks/payments/{provider}:
-    post:
-      tags: [Webhooks]
-      summary: 결제 웹훅
-      operationId: handlePaymentWebhook
+  /coupons:
+    get:
+      tags: [Coupons]
+      summary: 전체 쿠폰 조회 (커서 기반)
+      operationId: getAllCoupons
+      security:
+        - bearerAuth: []
       parameters:
-        - name: provider
-          in: path
-          required: true
-          schema:
-            type: string
-            enum: [toss, kakaopay, naverpay]
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponListResponse'
+    post:
+      tags: [Coupons]
+      summary: 쿠폰 생성 (Admin)
+      operationId: createCoupon
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/CreateCouponRequest'
       responses:
-        '200':
-          description: 처리 완료
+        '201':
+          description: 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponResponse'
 
-  /webhooks/shipments/{carrier}:
-    post:
-      tags: [Webhooks]
-      summary: 배송 웹훅
-      operationId: handleShipmentWebhook
+  /coupons/{couponId}:
+    get:
+      tags: [Coupons]
+      summary: 쿠폰 조회
+      operationId: getCoupon
+      security:
+        - bearerAuth: []
       parameters:
-        - name: carrier
+        - name: couponId
           in: path
           required: true
           schema:
             type: string
-            enum: [cj, hanjin, lotte, logen, post]
+            format: uuid
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponResponse'
+        '404':
+          description: 쿠폰 없음
+    put:
+      tags: [Coupons]
+      summary: 쿠폰 수정 (Admin)
+      operationId: updateCoupon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: couponId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/UpdateCouponRequest'
       responses:
         '200':
-          description: 처리 완료
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponResponse'
+    delete:
+      tags: [Coupons]
+      summary: 쿠폰 삭제 (Admin)
+      operationId: deleteCoupon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: couponId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /coupons/{couponId}/activate:
+    post:
+      tags: [Coupons]
+      summary: 쿠폰 활성화 (Admin)
+      operationId: activateCoupon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: couponId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 활성화 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponResponse'
+
+  /coupons/{couponId}/deactivate:
+    post:
+      tags: [Coupons]
+      summary: 쿠폰 비활성화 (Admin)
+      operationId: deactivateCoupon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: couponId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 비활성화 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponResponse'
+
+  /coupons/code/{code}:
+    get:
+      tags: [Coupons]
+      summary: 쿠폰 코드로 조회
+      operationId: getCouponByCode
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponResponse'
+        '404':
+          description: 쿠폰 없음
+
+  /coupons/active:
+    get:
+      tags: [Coupons]
+      summary: 활성 쿠폰 조회 (커서 기반)
+      operationId: getActiveCoupons
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponListResponse'
+
+  /coupons/usable:
+    get:
+      tags: [Coupons]
+      summary: 사용 가능한 쿠폰 목록
+      operationId: getUsableCoupons
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CouponResponse'
+
+  /coupons/validate:
+    post:
+      tags: [Coupons]
+      summary: 쿠폰 유효성 검사
+      operationId: validateCoupon
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCouponRequest'
+      responses:
+        '200':
+          description: 검사 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponValidationResponse'
+
+  /coupons/calculate:
+    get:
+      tags: [Coupons]
+      summary: 할인 금액 계산
+      operationId: calculateDiscount
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: couponCode
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: orderAmount
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 계산 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponValidationResponse'
+
+  # ============================================
+  # Seller Admin API
+  # ============================================
+  /sellers:
+    get:
+      tags: [Seller Admin]
+      summary: 전체 판매자 조회 (커서 기반)
+      operationId: getAllSellers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerListResponse'
+
+  /sellers/register:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 등록 신청
+      operationId: registerSeller
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterSellerRequest'
+      responses:
+        '201':
+          description: 등록 신청 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}:
+    get:
+      tags: [Seller Admin]
+      summary: 판매자 조회
+      operationId: getSeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+        '404':
+          description: 판매자 없음
+    put:
+      tags: [Seller Admin]
+      summary: 판매자 정보 수정
+      operationId: updateSellerInfo
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSellerInfoRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/warehouse-address:
+    put:
+      tags: [Seller Admin]
+      summary: 창고 주소 수정
+      operationId: updateWarehouseAddress
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WarehouseAddressRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/approve:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 승인 (Admin)
+      operationId: approveSeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      responses:
+        '200':
+          description: 승인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/reject:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 거절 (Admin)
+      operationId: rejectSeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectSellerRequest'
+      responses:
+        '204':
+          description: 거절 성공
+
+  /sellers/{sellerId}/suspend:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 정지 (Admin)
+      operationId: suspendSeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspendSellerRequest'
+      responses:
+        '200':
+          description: 정지 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/activate:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 활성화 (Admin)
+      operationId: activateSeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      responses:
+        '200':
+          description: 활성화 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/dormant:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 휴면 전환 (Admin)
+      operationId: makeDormant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      responses:
+        '200':
+          description: 휴면 전환 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/close:
+    post:
+      tags: [Seller Admin]
+      summary: 판매자 폐업 (Admin)
+      operationId: closeSeller
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+      responses:
+        '200':
+          description: 폐업 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/categories/{categoryId}:
+    post:
+      tags: [Seller Admin]
+      summary: 카테고리 추가
+      operationId: addCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '200':
+          description: 추가 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+    delete:
+      tags: [Seller Admin]
+      summary: 카테고리 제거
+      operationId: removeCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '200':
+          description: 제거 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+
+  /sellers/{sellerId}/products:
+    get:
+      tags: [Seller Admin]
+      summary: 판매자의 상품 목록 조회 (커서 기반)
+      operationId: getSellerProducts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SellerId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  /sellers/business-number/{businessNumber}:
+    get:
+      tags: [Seller Admin]
+      summary: 사업자번호로 판매자 조회
+      operationId: getSellerByBusinessNumber
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: businessNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerResponse'
+        '404':
+          description: 판매자 없음
+
+  /sellers/status/{status}:
+    get:
+      tags: [Seller Admin]
+      summary: 상태별 판매자 조회 (커서 기반)
+      operationId: getSellersByStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SellerStatus'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerListResponse'
+
+  /sellers/pending:
+    get:
+      tags: [Seller Admin]
+      summary: 승인 대기 판매자 조회 (커서 기반)
+      operationId: getPendingSellers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerListResponse'
+
+  # ============================================
+  # Webhooks (구독 관리)
+  # ============================================
+  /webhooks:
+    post:
+      tags: [Webhooks]
+      summary: 웹훅 구독 생성
+      operationId: createWebhookSubscription
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookRequest'
+      responses:
+        '201':
+          description: 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionResponse'
+
+  /webhooks/{subscriptionId}:
+    get:
+      tags: [Webhooks]
+      summary: 웹훅 구독 조회
+      operationId: getWebhookSubscription
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionResponse'
+        '403':
+          description: 접근 권한 없음
+    put:
+      tags: [Webhooks]
+      summary: 웹훅 구독 수정
+      operationId: updateWebhookSubscription
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWebhookRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionResponse'
+    delete:
+      tags: [Webhooks]
+      summary: 웹훅 구독 삭제
+      operationId: deleteWebhookSubscription
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 삭제 성공
+
+  /webhooks/{subscriptionId}/activate:
+    post:
+      tags: [Webhooks]
+      summary: 웹훅 구독 활성화
+      operationId: activateWebhookSubscription
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 활성화 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionResponse'
+
+  /webhooks/{subscriptionId}/deactivate:
+    post:
+      tags: [Webhooks]
+      summary: 웹훅 구독 비활성화
+      operationId: deactivateWebhookSubscription
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 비활성화 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionResponse'
+
+  /webhooks/{subscriptionId}/regenerate-secret:
+    post:
+      tags: [Webhooks]
+      summary: 시크릿 재생성
+      operationId: regenerateWebhookSecret
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 재생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionResponse'
+
+  /webhooks/{subscriptionId}/deliveries:
+    get:
+      tags: [Webhooks]
+      summary: 전송 기록 조회 (커서 기반)
+      operationId: getWebhookDeliveryHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryListResponse'
+        '403':
+          description: 접근 권한 없음
+
+  /webhooks/{subscriptionId}/test:
+    post:
+      tags: [Webhooks]
+      summary: 웹훅 테스트
+      operationId: testWebhook
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 테스트 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryResponse'
+
+  /webhooks/my:
+    get:
+      tags: [Webhooks]
+      summary: 내 웹훅 구독 목록 조회
+      operationId: getMyWebhookSubscriptions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebhookSubscriptionResponse'
+
+  /webhooks/event-types:
+    get:
+      tags: [Webhooks]
+      summary: 지원하는 이벤트 타입 목록 조회
+      operationId: getWebhookEventTypes
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventTypeResponse'
 
 components:
   securitySchemes:

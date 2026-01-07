@@ -25,4 +25,10 @@ public class SellerJooqAdapter implements LoadSellerInfoPort {
     public Optional<String> findBusinessNameById(UUID sellerId) {
         return repository.findBusinessNameById(sellerId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID sellerId) {
+        return repository.existsById(sellerId);
+    }
 }

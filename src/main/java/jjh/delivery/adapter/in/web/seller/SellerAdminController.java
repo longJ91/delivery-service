@@ -4,11 +4,23 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import jjh.delivery.adapter.in.web.dto.CursorPageResponse;
+import jjh.delivery.adapter.in.web.product.dto.ProductListItemResponse;
+import jjh.delivery.adapter.in.web.product.dto.ProductListResponse;
 import jjh.delivery.adapter.in.web.seller.dto.*;
 import jjh.delivery.application.port.in.ManageSellerUseCase;
 import jjh.delivery.application.port.in.ManageSellerUseCase.*;
+import jjh.delivery.application.port.out.LoadProductPort;
+import jjh.delivery.application.port.out.LoadProductPort.SearchProductQuery;
+import jjh.delivery.application.port.out.LoadReviewPort;
+import jjh.delivery.application.port.out.LoadReviewStatsPort;
+import jjh.delivery.application.port.out.LoadSellerInfoPort;
+import jjh.delivery.domain.product.Product;
+import jjh.delivery.domain.product.ProductStatus;
 import jjh.delivery.domain.seller.Seller;
 import jjh.delivery.domain.seller.SellerStatus;
+import jjh.delivery.domain.seller.exception.SellerNotFoundException;
+
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +39,10 @@ import java.util.UUID;
 public class SellerAdminController {
 
     private final ManageSellerUseCase manageSellerUseCase;
+    private final LoadProductPort loadProductPort;
+    private final LoadReviewPort loadReviewPort;
+    private final LoadReviewStatsPort loadReviewStatsPort;
+    private final LoadSellerInfoPort loadSellerInfoPort;
 
     // ==================== 판매자 등록 ====================
 
@@ -208,6 +224,41 @@ public class SellerAdminController {
         Seller seller = manageSellerUseCase.getSeller(sellerId);
 
         return ResponseEntity.ok(SellerResponse.from(seller));
+    }
+
+    /**
+     * 판매자의 상품 목록 조회 (커서 기반 페이지네이션)
+     *
+     * @param cursor 이전 페이지의 nextCursor 값 (첫 페이지는 생략)
+     */
+    @GetMapping("/{sellerId}/products")
+    public ResponseEntity<ProductListResponse> getSellerProducts(
+            @PathVariable UUID sellerId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        // 판매자 존재 확인
+        if (!loadSellerInfoPort.existsById(sellerId)) {
+            throw new SellerNotFoundException(sellerId.toString());
+        }
+
+        SearchProductQuery query = SearchProductQuery.builder()
+                .sellerId(sellerId)
+                .statuses(List.of(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK))
+                .cursor(cursor)
+                .size(size)
+                .build();
+
+        CursorPageResponse<Product> products = loadProductPort.searchProducts(query);
+
+        CursorPageResponse<ProductListItemResponse> responsePage = products.map(product -> {
+            double ratingAvg = loadReviewStatsPort.getAverageRatingByProductId(product.getId());
+            long reviewCount = loadReviewPort.countByProductId(product.getId());
+            String sellerName = loadSellerInfoPort.findBusinessNameById(product.getSellerId()).orElse("Unknown");
+            return ProductListItemResponse.from(product, ratingAvg, reviewCount, sellerName);
+        });
+
+        return ResponseEntity.ok(ProductListResponse.from(responsePage));
     }
 
     /**

@@ -32,7 +32,7 @@ public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddr
     @Override
     public Customer updateProfile(UUID customerId, UpdateProfileCommand command) {
         Customer customer = getCustomerOrThrow(customerId);
-        customer.updateProfile(command.name(), command.phoneNumber());
+        customer.updateProfile(command.name(), command.phoneNumber(), command.profileImageUrl());
         return saveCustomerPort.save(customer);
     }
 
@@ -68,6 +68,23 @@ public class CustomerService implements UpdateCustomerProfileUseCase, ManageAddr
                         && addr.recipientName().equals(command.recipientName()))
                 .reduce((first, second) -> second) // 가장 최근 것
                 .orElse(newAddress);
+    }
+
+    @Override
+    public CustomerAddress updateAddress(UUID customerId, UUID addressId, UpdateAddressCommand command) {
+        Customer customer = getCustomerOrThrow(customerId);
+        CustomerAddress updated = customer.updateAddress(
+                addressId,
+                command.name(),
+                command.recipientName(),
+                command.phoneNumber(),
+                command.postalCode(),
+                command.address1(),
+                command.address2(),
+                command.isDefault()
+        );
+        saveCustomerPort.save(customer);
+        return updated;
     }
 
     @Override

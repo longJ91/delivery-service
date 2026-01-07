@@ -25,7 +25,7 @@ public record CustomerResponse(
                 customer.getEmail(),
                 customer.getName(),
                 customer.getPhoneNumber(),
-                null, // profileImageUrl - future enhancement
+                customer.getProfileImageUrl(),
                 customer.getStatus(),
                 0L, // pointBalance - future enhancement
                 customer.getCreatedAt()

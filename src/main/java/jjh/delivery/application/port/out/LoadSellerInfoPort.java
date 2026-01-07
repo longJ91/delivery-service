@@ -14,4 +14,9 @@ public interface LoadSellerInfoPort {
      * ID로 판매자 상호명 조회
      */
     Optional<String> findBusinessNameById(UUID sellerId);
+
+    /**
+     * ID로 판매자 존재 여부 확인
+     */
+    boolean existsById(UUID sellerId);
 }

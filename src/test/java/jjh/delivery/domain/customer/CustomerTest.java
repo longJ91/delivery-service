@@ -97,11 +97,12 @@ class CustomerTest {
             Customer customer = createValidCustomerBuilder().build();
 
             // when
-            customer.updateProfile("김철수", "010-9999-9999");
+            customer.updateProfile("김철수", "010-9999-9999", "https://example.com/new-profile.jpg");
 
             // then
             assertThat(customer.getName()).isEqualTo("김철수");
             assertThat(customer.getPhoneNumber()).isEqualTo("010-9999-9999");
+            assertThat(customer.getProfileImageUrl()).isEqualTo("https://example.com/new-profile.jpg");
         }
 
         @Test
@@ -138,7 +139,7 @@ class CustomerTest {
                     .build();
 
             // when & then
-            assertThatThrownBy(() -> customer.updateProfile("새이름", "010-1111-1111"))
+            assertThatThrownBy(() -> customer.updateProfile("새이름", "010-1111-1111", null))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("not active");
         }

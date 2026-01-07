@@ -39,6 +39,9 @@ public class CustomerJpaEntity {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
+    @Column(name = "profile_image_url", length = 500)
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CustomerStatus status;
@@ -69,6 +72,7 @@ public class CustomerJpaEntity {
             String password,
             String name,
             String phoneNumber,
+            String profileImageUrl,
             CustomerStatus status,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
@@ -79,6 +83,7 @@ public class CustomerJpaEntity {
         this.password = password;
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.profileImageUrl = profileImageUrl;
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -114,6 +119,10 @@ public class CustomerJpaEntity {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void setStatus(CustomerStatus status) {

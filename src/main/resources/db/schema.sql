@@ -11,6 +11,7 @@ CREATE TABLE customers (
     password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20),
+    profile_image_url VARCHAR(500),
     status VARCHAR(20) NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,

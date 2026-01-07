@@ -7,9 +7,11 @@ import jjh.delivery.adapter.in.web.auth.dto.CustomerResponse;
 import jjh.delivery.adapter.in.web.customer.dto.AddAddressRequest;
 import jjh.delivery.adapter.in.web.customer.dto.AddressListResponse;
 import jjh.delivery.adapter.in.web.customer.dto.AddressResponse;
+import jjh.delivery.adapter.in.web.customer.dto.UpdateAddressRequest;
 import jjh.delivery.adapter.in.web.customer.dto.UpdateProfileRequest;
 import jjh.delivery.application.port.in.ManageAddressUseCase;
 import jjh.delivery.application.port.in.ManageAddressUseCase.AddAddressCommand;
+import jjh.delivery.application.port.in.ManageAddressUseCase.UpdateAddressCommand;
 import jjh.delivery.application.port.in.UpdateCustomerProfileUseCase;
 import jjh.delivery.application.port.in.UpdateCustomerProfileUseCase.UpdateProfileCommand;
 import jjh.delivery.application.port.out.LoadCustomerPort;
@@ -58,7 +60,7 @@ public class CustomerController {
             @Valid @RequestBody UpdateProfileRequest request
     ) {
         UUID customerId = getCustomerIdFromAuth(userDetails);
-        UpdateProfileCommand command = new UpdateProfileCommand(request.name(), request.phone());
+        UpdateProfileCommand command = new UpdateProfileCommand(request.name(), request.phone(), request.profileImageUrl());
         Customer updated = updateCustomerProfileUseCase.updateProfile(customerId, command);
         return ResponseEntity.ok(CustomerResponse.from(updated));
     }
@@ -97,6 +99,31 @@ public class CustomerController {
 
         CustomerAddress added = manageAddressUseCase.addAddress(customerId, command);
         return ResponseEntity.status(HttpStatus.CREATED).body(AddressResponse.from(added));
+    }
+
+    /**
+     * 배송지 수정
+     */
+    @PutMapping("/me/addresses/{addressId}")
+    public ResponseEntity<AddressResponse> updateAddress(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID addressId,
+            @Valid @RequestBody UpdateAddressRequest request
+    ) {
+        UUID customerId = getCustomerIdFromAuth(userDetails);
+
+        UpdateAddressCommand command = new UpdateAddressCommand(
+                request.name(),
+                request.recipientName(),
+                request.recipientPhone(),
+                request.postalCode(),
+                request.roadAddress(),
+                request.detailAddress(),
+                request.isDefault()
+        );
+
+        CustomerAddress updated = manageAddressUseCase.updateAddress(customerId, addressId, command);
+        return ResponseEntity.ok(AddressResponse.from(updated));
     }
 
     /**

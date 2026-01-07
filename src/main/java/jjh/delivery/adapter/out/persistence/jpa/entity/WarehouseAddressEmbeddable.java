@@ -60,9 +60,14 @@ public class WarehouseAddressEmbeddable {
 
     /**
      * Convert to domain Value Object
+     * 필수 필드가 모두 존재하는 경우에만 WarehouseAddress 생성
      */
     public WarehouseAddress toDomain() {
-        if (postalCode == null) {
+        // 필수 필드가 하나라도 없으면 null 반환
+        if (postalCode == null || postalCode.isBlank() ||
+            address1 == null || address1.isBlank() ||
+            contactName == null || contactName.isBlank() ||
+            contactPhone == null || contactPhone.isBlank()) {
             return null;
         }
         return new WarehouseAddress(

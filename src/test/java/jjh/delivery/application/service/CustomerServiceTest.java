@@ -91,7 +91,7 @@ class CustomerServiceTest {
         void updateProfileSuccess() {
             // given
             Customer customer = createCustomer();
-            UpdateProfileCommand command = new UpdateProfileCommand("김철수", "010-5555-6666");
+            UpdateProfileCommand command = new UpdateProfileCommand("김철수", "010-5555-6666", "https://example.com/profile.jpg");
 
             given(loadCustomerPort.findById(CUSTOMER_ID))
                     .willReturn(Optional.of(customer));
@@ -111,7 +111,7 @@ class CustomerServiceTest {
         @DisplayName("존재하지 않는 고객 프로필 업데이트 시 예외")
         void updateProfileNotFoundThrowsException() {
             // given
-            UpdateProfileCommand command = new UpdateProfileCommand("김철수", "010-5555-6666");
+            UpdateProfileCommand command = new UpdateProfileCommand("김철수", "010-5555-6666", null);
 
             given(loadCustomerPort.findById(NON_EXISTENT_ID))
                     .willReturn(Optional.empty());

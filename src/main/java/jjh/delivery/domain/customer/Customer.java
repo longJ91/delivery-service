@@ -19,6 +19,7 @@ public class Customer {
     private String email;
     private String name;
     private String phoneNumber;
+    private String profileImageUrl;
     private CustomerStatus status;
     private final List<CustomerAddress> addresses;
     private final LocalDateTime createdAt;
@@ -30,6 +31,7 @@ public class Customer {
         this.email = builder.email;
         this.name = builder.name;
         this.phoneNumber = builder.phoneNumber;
+        this.profileImageUrl = builder.profileImageUrl;
         this.status = builder.status != null ? builder.status : CustomerStatus.ACTIVE;
         this.addresses = new ArrayList<>(builder.addresses);
         this.createdAt = builder.createdAt != null ? builder.createdAt : LocalDateTime.now();
@@ -48,10 +50,11 @@ public class Customer {
     /**
      * 프로필 업데이트
      */
-    public void updateProfile(String name, String phoneNumber) {
+    public void updateProfile(String name, String phoneNumber, String profileImageUrl) {
         validateActiveStatus();
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.profileImageUrl = profileImageUrl;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -121,6 +124,39 @@ public class Customer {
         int index = addresses.indexOf(address);
         addresses.set(index, address.withDefault(true));
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 배송지 수정
+     */
+    public CustomerAddress updateAddress(
+            UUID addressId,
+            String name,
+            String recipientName,
+            String phoneNumber,
+            String postalCode,
+            String address1,
+            String address2,
+            boolean isDefault
+    ) {
+        validateActiveStatus();
+        CustomerAddress existing = findAddress(addressId)
+                .orElseThrow(() -> new IllegalArgumentException("Address not found: " + addressId));
+
+        // 기본 배송지로 변경하면 기존 기본 배송지 해제
+        if (isDefault && !existing.isDefault()) {
+            clearDefaultAddress();
+        }
+
+        CustomerAddress updated = existing.withUpdated(
+                name, recipientName, phoneNumber, postalCode, address1, address2, isDefault
+        );
+
+        int index = addresses.indexOf(existing);
+        addresses.set(index, updated);
+        this.updatedAt = LocalDateTime.now();
+
+        return updated;
     }
 
     private void clearDefaultAddress() {
@@ -234,6 +270,10 @@ public class Customer {
         return phoneNumber;
     }
 
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
     public CustomerStatus getStatus() {
         return status;
     }
@@ -263,6 +303,7 @@ public class Customer {
         private String email;
         private String name;
         private String phoneNumber;
+        private String profileImageUrl;
         private CustomerStatus status;
         private List<CustomerAddress> addresses = new ArrayList<>();
         private LocalDateTime createdAt;
@@ -285,6 +326,11 @@ public class Customer {
 
         public Builder phoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder profileImageUrl(String profileImageUrl) {
+            this.profileImageUrl = profileImageUrl;
             return this;
         }
 

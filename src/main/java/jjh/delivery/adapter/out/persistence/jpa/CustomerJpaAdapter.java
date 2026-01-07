@@ -84,6 +84,7 @@ public class CustomerJpaAdapter implements LoadCustomerPort, SaveCustomerPort {
         existing.setEmail(customer.getEmail());
         existing.setName(customer.getName());
         existing.setPhoneNumber(customer.getPhoneNumber());
+        existing.setProfileImageUrl(customer.getProfileImageUrl());
         existing.setStatus(customer.getStatus());
         existing.setUpdatedAt(customer.getUpdatedAt());
         existing.setLastLoginAt(customer.getLastLoginAt());

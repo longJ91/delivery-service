@@ -13,7 +13,8 @@ public interface UpdateCustomerProfileUseCase {
 
     record UpdateProfileCommand(
             String name,
-            String phoneNumber
+            String phoneNumber,
+            String profileImageUrl
     ) {
         public UpdateProfileCommand {
             if (name == null || name.isBlank()) {

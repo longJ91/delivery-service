@@ -16,6 +16,8 @@ public interface ManageAddressUseCase {
 
     CustomerAddress addAddress(UUID customerId, AddAddressCommand command);
 
+    CustomerAddress updateAddress(UUID customerId, UUID addressId, UpdateAddressCommand command);
+
     void removeAddress(UUID customerId, UUID addressId);
 
     void setDefaultAddress(UUID customerId, UUID addressId);
@@ -30,6 +32,34 @@ public interface ManageAddressUseCase {
             boolean isDefault
     ) {
         public AddAddressCommand {
+            if (name == null || name.isBlank()) {
+                throw new IllegalArgumentException("배송지 이름은 필수입니다");
+            }
+            if (recipientName == null || recipientName.isBlank()) {
+                throw new IllegalArgumentException("수령인 이름은 필수입니다");
+            }
+            if (phoneNumber == null || phoneNumber.isBlank()) {
+                throw new IllegalArgumentException("전화번호는 필수입니다");
+            }
+            if (postalCode == null || postalCode.isBlank()) {
+                throw new IllegalArgumentException("우편번호는 필수입니다");
+            }
+            if (address1 == null || address1.isBlank()) {
+                throw new IllegalArgumentException("기본 주소는 필수입니다");
+            }
+        }
+    }
+
+    record UpdateAddressCommand(
+            String name,
+            String recipientName,
+            String phoneNumber,
+            String postalCode,
+            String address1,
+            String address2,
+            boolean isDefault
+    ) {
+        public UpdateAddressCommand {
             if (name == null || name.isBlank()) {
                 throw new IllegalArgumentException("배송지 이름은 필수입니다");
             }
