@@ -92,7 +92,7 @@ public class OrderJooqAdapter implements OrderQueryPort {
                 .map(r -> mapToOrder(r, itemsMap.getOrDefault(r.get("id", UUID.class), List.of())))
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 orders,
                 criteria.size(),
                 order -> order.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),

@@ -78,7 +78,7 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 sellers,
                 size,
                 seller -> seller.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
@@ -103,7 +103,7 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 sellers,
                 size,
                 seller -> seller.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),

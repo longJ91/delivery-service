@@ -59,7 +59,7 @@ public class CouponJpaAdapter implements LoadCouponPort, SaveCouponPort {
                 .map(couponMapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 coupons,
                 size,
                 coupon -> coupon.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
@@ -83,7 +83,7 @@ public class CouponJpaAdapter implements LoadCouponPort, SaveCouponPort {
                 .map(couponMapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 coupons,
                 size,
                 coupon -> coupon.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),

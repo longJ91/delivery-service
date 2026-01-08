@@ -17,21 +17,24 @@ import java.util.UUID;
 
 /**
  * Order Elasticsearch Document (v2 - Product Delivery)
+ *
+ * Note: UUID 필드는 Elasticsearch에서 올바른 직렬화를 위해 String으로 저장합니다.
+ * UUID는 기본적으로 객체로 직렬화되어 쿼리 시 타입 불일치가 발생할 수 있습니다.
  */
 @Document(indexName = "orders")
 public class OrderDocument {
 
     @Id
-    private UUID id;
+    private String id;
 
     @Field(type = FieldType.Keyword)
     private String orderNumber;
 
     @Field(type = FieldType.Keyword)
-    private UUID customerId;
+    private String customerId;
 
     @Field(type = FieldType.Keyword)
-    private UUID sellerId;
+    private String sellerId;
 
     @Field(type = FieldType.Nested)
     private List<OrderItemDocument> items;
@@ -59,10 +62,10 @@ public class OrderDocument {
 
     public static OrderDocument from(Order order) {
         OrderDocument doc = new OrderDocument();
-        doc.id = order.getId();
+        doc.id = order.getId().toString();
         doc.orderNumber = order.getOrderNumber();
-        doc.customerId = order.getCustomerId();
-        doc.sellerId = order.getSellerId();
+        doc.customerId = order.getCustomerId().toString();
+        doc.sellerId = order.getSellerId().toString();
         doc.items = order.getItems().stream()
                 .map(OrderItemDocument::from)
                 .toList();
@@ -95,10 +98,10 @@ public class OrderDocument {
                 .toList();
 
         return Order.builder()
-                .id(id)
+                .id(UUID.fromString(id))
                 .orderNumber(orderNumber)
-                .customerId(customerId)
-                .sellerId(sellerId)
+                .customerId(UUID.fromString(customerId))
+                .sellerId(UUID.fromString(sellerId))
                 .items(orderItems)
                 .status(OrderStatus.valueOf(status))
                 .shippingAddress(ShippingAddress.of(
@@ -112,7 +115,7 @@ public class OrderDocument {
     }
 
     // Getters
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
@@ -120,11 +123,11 @@ public class OrderDocument {
         return orderNumber;
     }
 
-    public UUID getCustomerId() {
+    public String getCustomerId() {
         return customerId;
     }
 
-    public UUID getSellerId() {
+    public String getSellerId() {
         return sellerId;
     }
 
@@ -157,9 +160,9 @@ public class OrderDocument {
     }
 
     public record OrderItemDocument(
-            UUID productId,
+            String productId,
             String productName,
-            UUID variantId,
+            String variantId,
             String variantName,
             String sku,
             Map<String, String> optionValues,
@@ -168,9 +171,9 @@ public class OrderDocument {
     ) {
         public static OrderItemDocument from(OrderItem item) {
             return new OrderItemDocument(
-                    item.productId(),
+                    item.productId().toString(),
                     item.productName(),
-                    item.variantId(),
+                    item.variantId() != null ? item.variantId().toString() : null,
                     item.variantName(),
                     item.sku(),
                     item.optionValues(),
@@ -182,10 +185,12 @@ public class OrderDocument {
         public OrderItem toDomain() {
             if (variantId != null) {
                 return OrderItem.ofVariant(
-                        productId, productName, variantId, variantName, sku, optionValues, quantity, unitPrice
+                        UUID.fromString(productId), productName,
+                        UUID.fromString(variantId), variantName,
+                        sku, optionValues, quantity, unitPrice
                 );
             }
-            return OrderItem.of(productId, productName, quantity, unitPrice);
+            return OrderItem.of(UUID.fromString(productId), productName, quantity, unitPrice);
         }
     }
 }

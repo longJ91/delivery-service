@@ -56,7 +56,7 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
     @Override
     public void delete(UUID orderId) {
         try {
-            repository.deleteById(orderId);
+            repository.deleteById(orderId.toString());
             log.debug("Deleted order from index: {}", orderId);
         } catch (Exception e) {
             log.error("Failed to delete order from index: {}", orderId, e);
@@ -97,10 +97,11 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
         }
 
         // Cursor 기반 쿼리 빌드
+        // Note: @Id 필드는 _id로 매핑되어 일반 필드로 정렬 불가, orderNumber 사용
         NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(Query.of(q -> q.bool(boolQueryBuilder.build())))
                 .withSort(Sort.by(Sort.Direction.DESC, "createdAt"))
-                .withSort(Sort.by(Sort.Direction.DESC, "id"))
+                .withSort(Sort.by(Sort.Direction.DESC, "orderNumber"))
                 .withMaxResults(query.size() + 1);  // hasNext 판단을 위해 +1
 
         // 커서 디코딩 및 search_after 설정
@@ -108,7 +109,7 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
         if (cursorValue != null) {
             queryBuilder.withSearchAfter(List.of(
                     cursorValue.createdAt().toEpochMilli(),
-                    cursorValue.id().toString()
+                    cursorValue.orderNumber()
             ));
         }
 
@@ -128,20 +129,20 @@ public class OrderElasticsearchAdapter implements OrderSearchPort {
                 orders,
                 query.size(),
                 order -> order.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
-                Order::getId
+                Order::getOrderNumber
         );
     }
 
     @Override
     public List<Order> findByCustomerId(UUID customerId) {
-        return repository.findByCustomerId(customerId).stream()
+        return repository.findByCustomerId(customerId.toString()).stream()
                 .map(OrderDocument::toDomain)
                 .toList();
     }
 
     @Override
     public List<Order> findBySellerId(UUID sellerId) {
-        return repository.findBySellerId(sellerId).stream()
+        return repository.findBySellerId(sellerId.toString()).stream()
                 .map(OrderDocument::toDomain)
                 .toList();
     }

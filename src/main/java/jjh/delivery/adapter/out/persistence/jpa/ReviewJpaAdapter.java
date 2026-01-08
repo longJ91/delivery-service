@@ -55,7 +55,7 @@ public class ReviewJpaAdapter implements LoadReviewPort, SaveReviewPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 reviews,
                 size,
                 review -> review.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
@@ -86,7 +86,7 @@ public class ReviewJpaAdapter implements LoadReviewPort, SaveReviewPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 reviews,
                 size,
                 review -> review.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
@@ -111,7 +111,7 @@ public class ReviewJpaAdapter implements LoadReviewPort, SaveReviewPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 reviews,
                 size,
                 review -> review.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),

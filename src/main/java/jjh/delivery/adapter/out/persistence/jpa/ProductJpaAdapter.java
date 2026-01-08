@@ -64,7 +64,7 @@ public class ProductJpaAdapter implements LoadProductPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 products,
                 query.size(),
                 product -> product.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
@@ -99,7 +99,7 @@ public class ProductJpaAdapter implements LoadProductPort {
                 .map(mapper::toDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 products,
                 size,
                 product -> product.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),

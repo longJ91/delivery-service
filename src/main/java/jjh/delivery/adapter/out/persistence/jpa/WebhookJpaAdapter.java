@@ -74,7 +74,7 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
                 .map(mapper::toSubscriptionDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 subscriptions,
                 size,
                 sub -> sub.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
@@ -106,7 +106,7 @@ public class WebhookJpaAdapter implements LoadWebhookPort, SaveWebhookPort {
                 .map(mapper::toDeliveryDomain)
                 .toList();
 
-        return CursorPageResponse.of(
+        return CursorPageResponse.ofWithUuidId(
                 deliveries,
                 size,
                 delivery -> delivery.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant(),
