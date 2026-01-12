@@ -5,9 +5,11 @@ import jjh.delivery.domain.order.OrderItem;
 import jjh.delivery.domain.order.OrderStatus;
 import jjh.delivery.domain.order.ShippingAddress;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,7 +23,7 @@ import java.util.UUID;
  * Note: UUID 필드는 Elasticsearch에서 올바른 직렬화를 위해 String으로 저장합니다.
  * UUID는 기본적으로 객체로 직렬화되어 쿼리 시 타입 불일치가 발생할 수 있습니다.
  */
-@Document(indexName = "orders")
+@Document(indexName = "orders", createIndex = true)
 public class OrderDocument {
 
     @Id
@@ -48,10 +50,10 @@ public class OrderDocument {
     @Field(type = FieldType.Text, analyzer = "standard")
     private String shippingAddress;
 
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second, pattern = "uuuu-MM-dd'T'HH:mm:ss||uuuu-MM-dd||epoch_millis")
     private LocalDateTime createdAt;
 
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second, pattern = "uuuu-MM-dd'T'HH:mm:ss||uuuu-MM-dd||epoch_millis")
     private LocalDateTime updatedAt;
 
     @Field(type = FieldType.Text, analyzer = "standard")

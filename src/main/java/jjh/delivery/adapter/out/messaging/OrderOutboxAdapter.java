@@ -1,7 +1,5 @@
 package jjh.delivery.adapter.out.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,12 +10,18 @@ import jjh.delivery.domain.order.event.OrderEvent;
 import jjh.delivery.domain.order.event.OrderStatusChangedEvent;
 import jjh.delivery.domain.outbox.OutboxEvent;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Order Outbox Adapter - Driven Adapter (Outbound)
  * Transactional Outbox Pattern을 사용한 이벤트 발행 구현
  *
  * 이벤트를 outbox 테이블에 저장하고, OutboxEventPublisher 스케줄러가 Kafka로 발행
+ *
+ * Jackson 3 변경사항:
+ * - ObjectMapper → JsonMapper
+ * - JsonProcessingException (checked) → JacksonException (unchecked)
+ * - try-catch 블록 불필요 (unchecked exception 자동 전파)
  */
 @Component
 @RequiredArgsConstructor
@@ -27,7 +31,7 @@ public class OrderOutboxAdapter implements OrderEventPort {
     private static final String AGGREGATE_TYPE = "Order";
 
     private final SaveOutboxEventPort saveOutboxEventPort;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     @Override
     public void publish(OrderEvent event) {
@@ -72,12 +76,11 @@ public class OrderOutboxAdapter implements OrderEventPort {
 
     /**
      * 이벤트를 JSON 문자열로 직렬화
+     *
+     * Jackson 3에서는 JacksonException이 unchecked exception이므로
+     * try-catch 블록 없이 예외가 자동 전파됨
      */
     private String serializeToJson(OrderEvent event) {
-        try {
-            return objectMapper.writeValueAsString(event);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize event to JSON: " + event, e);
-        }
+        return jsonMapper.writeValueAsString(event);
     }
 }

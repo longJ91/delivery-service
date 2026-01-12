@@ -9,8 +9,11 @@ import jjh.delivery.adapter.out.persistence.jpa.mapper.SellerPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.SellerJpaRepository;
 import jjh.delivery.application.port.out.LoadSellerPort;
 import jjh.delivery.application.port.out.SaveSellerPort;
+import jjh.delivery.config.cache.CacheNames;
 import jjh.delivery.domain.seller.Seller;
 import jjh.delivery.domain.seller.SellerStatus;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +45,7 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.SELLERS, keyGenerator = CacheNames.ENTITY_KEY_GENERATOR)
     public Optional<Seller> findById(UUID sellerId) {
         return repository.findById(sellerId)
                 .map(mapper::toDomain);
@@ -127,6 +131,7 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.SELLERS, key = "#seller.id.toString()")
     public Seller save(Seller seller) {
         SellerJpaEntity entity = mapper.toEntity(seller);
         SellerJpaEntity savedEntity = repository.save(entity);
@@ -135,6 +140,7 @@ public class SellerJpaAdapter implements LoadSellerPort, SaveSellerPort {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.SELLERS, keyGenerator = CacheNames.ENTITY_KEY_GENERATOR)
     public void delete(UUID sellerId) {
         repository.deleteById(sellerId);
     }

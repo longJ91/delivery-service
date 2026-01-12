@@ -39,6 +39,28 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:localhost:9200}
 
+  # Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+  # Cache
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour default
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "delivery::"
+
 # Server
 server:
   port: 8080
@@ -71,6 +93,8 @@ management:
     elasticsearch:
       enabled: true
     kafka:
+      enabled: true
+    redis:
       enabled: true
     livenessstate:
       enabled: true

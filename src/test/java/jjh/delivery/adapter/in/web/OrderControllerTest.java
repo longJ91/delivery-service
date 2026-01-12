@@ -1,6 +1,7 @@
 package jjh.delivery.adapter.in.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 import jjh.delivery.adapter.in.web.dto.CreateOrderRequest;
 import jjh.delivery.adapter.in.web.dto.OrderResponse;
 import jjh.delivery.adapter.in.web.dto.UpdateOrderStatusRequest;
@@ -50,7 +51,7 @@ class OrderControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper jsonMapper;
 
     @MockitoBean
     private CreateOrderUseCase createOrderUseCase;
@@ -161,7 +162,7 @@ class OrderControllerTest {
             // when & then
             mockMvc.perform(post(BASE_URL)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                            .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(ORDER_ID.toString()))
                     .andExpect(jsonPath("$.customerId").value(CUSTOMER_ID.toString()))
@@ -260,7 +261,7 @@ class OrderControllerTest {
             // when & then
             mockMvc.perform(patch(BASE_URL + "/{orderId}/status", ORDER_ID.toString())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                            .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
         }
     }

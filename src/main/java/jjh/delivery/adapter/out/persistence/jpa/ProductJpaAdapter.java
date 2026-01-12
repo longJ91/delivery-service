@@ -9,8 +9,10 @@ import jjh.delivery.adapter.out.persistence.jpa.entity.ProductJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.ProductPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.ProductJpaRepository;
 import jjh.delivery.application.port.out.LoadProductPort;
+import jjh.delivery.config.cache.CacheNames;
 import jjh.delivery.domain.product.Product;
 import jjh.delivery.domain.product.ProductStatus;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ public class ProductJpaAdapter implements LoadProductPort {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.PRODUCTS, keyGenerator = CacheNames.ENTITY_KEY_GENERATOR)
     public Optional<Product> findById(UUID productId) {
         return repository.findByIdWithVariants(productId)
                 .map(mapper::toDomain);

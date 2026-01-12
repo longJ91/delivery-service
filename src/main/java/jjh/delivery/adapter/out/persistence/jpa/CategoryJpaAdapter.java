@@ -6,7 +6,9 @@ import jjh.delivery.adapter.out.persistence.jpa.entity.CategoryJpaEntity;
 import jjh.delivery.adapter.out.persistence.jpa.mapper.CategoryPersistenceMapper;
 import jjh.delivery.adapter.out.persistence.jpa.repository.CategoryJpaRepository;
 import jjh.delivery.application.port.out.LoadCategoryPort;
+import jjh.delivery.config.cache.CacheNames;
 import jjh.delivery.domain.category.Category;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CATEGORIES, keyGenerator = CacheNames.ENTITY_KEY_GENERATOR)
     public Optional<Category> findById(UUID categoryId) {
         return repository.findById(categoryId)
                 .map(mapper::toDomain);
@@ -34,6 +37,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CATEGORIES, key = "'tree'")
     public List<Category> findAllActiveAsTree() {
         var entities = repository.findAllActiveOrderByDepthAndDisplayOrder();
         return buildTree(entities);
@@ -49,6 +53,7 @@ public class CategoryJpaAdapter implements LoadCategoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheNames.CATEGORIES, key = "'roots'")
     public List<Category> findRootCategories() {
         return repository.findRootCategoriesActive().stream()
                 .map(mapper::toDomain)
